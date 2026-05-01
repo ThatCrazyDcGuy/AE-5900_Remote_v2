@@ -180,7 +180,7 @@ Updaten kann man dann jeweils mit:
 Meine Audioeinstellungen müssen nicht zwangsläufig deine sein.
 Sie dienen hier lediglich als Beispiel.
 
-Pavucontrol:
+- Pavucontrol:
 
 	![AE5900_Remote_v2](/pictures/pavucontrol1.png)
 	![AE5900_Remote_v2](/pictures/pavucontrol2.png)
@@ -190,7 +190,7 @@ Der Bereich "PipeWire Alsa" steuert hier lediglich die Audiovisualisierung.
 	![AE5900_Remote_v2](/pictures/pavucontrol4.png)
 	![AE5900_Remote_v2](/pictures/pavucontrol5.png)
 
-Mumble:
+- Mumble:
 
 	![AE5900_Remote_v2](/pictures/mumble1.png)
 	![AE5900_Remote_v2](/pictures/mumble2.png)
