@@ -50,12 +50,14 @@ Genau deshalb.
 4. Bestenfalls ist das AE5900 bereits auf FM und den Kanal 1 gesetzt.
 5. Stelle an deinem AE5900 Mikrofon TYPE 2 ein, setze deine P1 - P4 Key-Shortcuts. Ich nutze P1 ASQ / P2 VOX / P3 MUTE
 6. Starte Mumble auf dem Host-Rechner und deinem Endgerät (Handy /Laptop etc.)
-7. Führe `python3 ae_5900_v2.py` auf dem Hostrechner aus.
+7. Führe `python3 ae_5900_v2.py` auf dem Hostrechner/Server aus.
 8. Öffne auf dem Endgerät `HOSTNAMEIP:5000` in deinem Browser. Du solltest nun bereits Kontrolle über dein AE5900 haben.
 9. Öffne ganz unten im WebUI das Setup und führe den Sync aus.
 10. Setze die entsprechenden Labels für die P1 bis P4 Tasten so, wie du sie am AE5900 gesetzt hast.
 11. Auf dem Hostrechner solltest du im Lautstärkeregler (pavucontrol) gegebenenfalls Anpassungen machen. Typische Anpassungen wären hier: Menupunkt "Konfiguration" Standard Soundkarte deine im Nachbau verwendete Soundkarte oder einfach alle anderen "aus". Menupunkt "Eingabegeräte" regelt was du vom AE5900 hörst, also dessen Ausgabe. Ich bin da bei "Basis" was etwa 40% entspricht. Menupunkt "Ausgabeeräte" regelt was du über den RJ45 Stecker in das AE5900 rein gibst, also dein Mikrofon. Ist der Filter korrekt aufgebaut, solltest du hier etwa 70 - 90% verwenden. Dies lässt sich aber auch über die WebUI steuern.
 12. Auf dem Hostrechner in Mumble kann nun im In & Output PulseAudio und Standard/Default verwendet werden. Audioeingabe: Die Übertragung sollte auf kontinuierlich gesetzt sein, die Qualität auf c.a 41 kb/s und Audio pro Paket auf 10ms. Audioausgabe: Standardpuffer auf 30 nd die Lautstäre darf auf 100%. Der Rest ist deaktiviert.
+
+Das Script ist derzeitig nur für die Region (EU) ausgelegt. Die anderen Regionen folgen noch, so wie auch der VFO Mode.
 
 Das ist eigentlich alles und wer nicht komplett ahnungslos ist, bekommt das schon hin.
 
