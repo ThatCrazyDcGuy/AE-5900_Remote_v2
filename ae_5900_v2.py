@@ -155,7 +155,7 @@ def get_audio():
         fft = np.abs(np.fft.rfft(data))[:32]
 
         fft = np.where(fft < 40000, 0, fft - 40000)
-        fft_scaled = (fft / 36000) 
+        fft_scaled = (fft / 25000) 
         
         return jsonify(fft_scaled.tolist())
     except:
@@ -173,11 +173,11 @@ def volume_api(action):
         # 2. Aktion berechnen (5% Schritte sind meistens spürbarer als 1%)
         step = 0.05 
         if action == 'up':
-            new_vol = min(1.0, current_vol + step)
+            new_vol = min(1.5, current_vol + step)
         elif action == 'down':
             new_vol = max(0.0, current_vol - step)
         elif action.replace('.','',1).isdigit(): # Falls direkter Wert übergeben wird
-            new_vol = max(0.0, min(1.0, float(action)))
+            new_vol = max(0.0, min(1.5, float(action)))
         else:
             return jsonify({"volume": current_vol})
 
