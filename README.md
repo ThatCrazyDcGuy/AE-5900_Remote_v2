@@ -175,8 +175,9 @@ Updaten kann man dann jeweils mit:
 
 	# git pull
 
-### Meine Audioeinstellungen
+### Meine Audioeinstellungen für den Host/Server
 
+Alle nachfolgenden Einstellungen betreffen den Host / Server.
 Meine Audioeinstellungen müssen nicht zwangsläufig deine sein.
 Sie dienen hier lediglich als Beispiel.
 
