@@ -186,8 +186,16 @@ Sie dienen hier lediglich als Beispiel.
 	![AE5900_Remote_v2](/pictures/pavucontrol2.png)
 Der Bereich "PipeWire Alsa" steuert hier lediglich die Audiovisualisierung.
 
+
 	![AE5900_Remote_v2](/pictures/pavucontrol3.png)
+Wichtig: Ausgabe ist Eingabe und umgekehrt. Der bereich Ausgabe steuert somit dein Mic-Gain.
+Dies lässt sich aber auch über die WebUI regeln.
+
+
 	![AE5900_Remote_v2](/pictures/pavucontrol4.png)
+Der Berich mit 25% steuert was du hörst. Das AE5900 habe ich auf 25 Klicks am Gerätelautstärkeregler eingestellt.
+
+
 	![AE5900_Remote_v2](/pictures/pavucontrol5.png)
 
 - Mumble:
