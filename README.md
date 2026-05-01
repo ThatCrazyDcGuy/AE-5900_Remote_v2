@@ -175,7 +175,29 @@ Updaten kann man dann jeweils mit:
 
 	# git pull
 
-Es empfiehlt sich, zu Hause einen WebSDR zu betreiben. Ich nutze ihn selbst. Nicht nur, um zu überprüfen, ob der richtige Kanal und Modus ausgewählt ist, sondern auch, um den Ton zu prüfen. Außerdem kannst du so die Vorgänge auf allen Kanälen verfolgen. Ein guter WebSDR lässt sich einfach mit OpenWebRX, einem Raspberry Pi, einem RTL-SDR-Dongle (z. B. RTL-SDR Blog V3 oder V4 / Nooelec NESDR V5) und einer Antenne aufbauen.
+### Meine Audioeinstellungen
+
+Meine Audioeinstellungen müssen nicht zwangsläufig deine sein.
+Sie dienen hier lediglich als Beispiel.
+
+Pavucontrol:
+
+	![AE5900_Remote_v2](/pictures/pavucontrol1.png)
+	![AE5900_Remote_v2](/pictures/pavucontrol2.png)
+Der Bereich "PipeWire Alsa" steuert hier lediglich die Audiovisualisierung.
+
+	![AE5900_Remote_v2](/pictures/pavucontrol3.png)
+	![AE5900_Remote_v2](/pictures/pavucontrol4.png)
+	![AE5900_Remote_v2](/pictures/pavucontrol5.png)
+
+Mumble:
+
+	![AE5900_Remote_v2](/pictures/mumble1.png)
+	![AE5900_Remote_v2](/pictures/mumble2.png)
+
+
+Es empfiehlt sich zu Hause einen WebSDR zu betreiben umd die Installation ggf. überrüfen (Kanal/Modulation) zu können.
+Ein guter WebSDR lässt sich einfach mit OpenWebRX, einem Raspberry Pi, einem RTL-SDR-Dongle (z. B. RTL-SDR Blog V3 oder V4 / Nooelec NESDR V5) und einer Antenne aufbauen.
 
 Schau dir einfach OpenwebrxPlus an: https://luarvique.github.io/ppa/ RTL-SDR Blog v4: https://www.rtl-sdr.com/v4/
 
