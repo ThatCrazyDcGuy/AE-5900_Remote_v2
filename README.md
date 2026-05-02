@@ -5,6 +5,8 @@ Eine komplexere LAN/Web-Fernsteuerung für das Albrecht AE-5900 Funkgerät, die 
 
 Entwicklung einer komplexeren LAN/Web-Fernsteuerung für das Albrecht AE-5900.
 Es ist zwar nicht mit rigctl oder hamlib vergleichbar, aber es funktioniert.
+Sinn und Zweck ist schlussendlich auch, den CB-Funk wieder zu beleben und atraktiver zu machen.
+Flexible Lösungen verschaffen besseren Zugang. Und genau das soll dieses Projekt ermöglichen.
 
 Falls Du das Funkgerät nicht kennst: https://www.alan-electronics.de/product-details.aspx?WPParams=50C9D4C6C5D2E6BDA5A98494A895
 Ich habe mein AE5900 von https://gmw-funktechnik.ch/, einem fantastischen Fachgeschäft für klassische CB- und Amateurfunkgeräte.
