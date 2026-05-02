@@ -118,13 +118,14 @@ Da das AE-5900 selbst erst nach einem Handshake mit dem AMM-500 seine Codes frei
 
 Mumble & Mumble Server für die Audioübertragung
 	
-Tailscale auf all den Geräten die für dieses Projekt genutzt werden. :)
-
-	# curl -fsSL https://tailscale.com/install.sh | sh
+Tailscale auf all den Geräten die für dieses Projekt genutzt werden.
 
 Dann wird in die Tasten gehauen oder der nachfolgende Krams einfach kopiert und eingefügt.
+Natürlich jede Zeile einzeln und ohne das "#" am Anfang. :)
 
 	# sudo apt update && sudo apt full-upgrade -y
+
+	# curl -fsSL https://tailscale.com/install.sh | sh
 
 	# sudo apt install git curl openssh-server python3-pyaudio python3-numpy python3-serial python3-flask pipewire pipewire-audio pipewire-alsa pipewire-pulse pipewire pipewire-audio-client-libraries pavucontrol wireplumber libpipewire-0.3-modules ladspa-sdk swh-plugins dbus-user-session mc htop
 	# sudo apt remove pipewire-media-session
