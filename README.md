@@ -108,6 +108,7 @@ Hierzu noch ein Nachtrag: Das Audiosignal lässt sich über EXT-AF abgreifen, oh
 	![AE5900_Remote_v2](/pictures/rj45audiosingle.png)
 
 Das RX Audio wird hier über EXT-AF und GND abgegriffen. Ohne 600:600 Transformator, dafür aber mit 2x 102 Keramikkondensatoren in Reihe zu den Leitungen und 1x 104 Keramikhondensator paralel zu EXT-AF und GND. Die Audiosettings ändern sich dadurch geringfügig. Das lässt sich aber nachregeln im Lautstärkeregler.
+Die HF-Einstrahlung ist deutlich minimiert, das Signal aber einiges leiser. Daher muss das AE5900 am Lautärkeregler fast bis Anschlag aufgedreht sein und in den Audiosettings zurückgeregelt werden.
 
 Falls ihr HF auf der Leitung habt, euch also auf AM und SSB selber hört, weil eure Mantelwellensperre Schrott ist, lötet paralell zu den Ein- und Ausgängen der Audioverbindungen jeweils noch einen Keramikkondensator 104 (100nF). Das hilft. Auch das Anbringen diverser Klappferrite ist hier hilfreich.
 
