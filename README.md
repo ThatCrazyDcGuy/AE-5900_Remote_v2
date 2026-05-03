@@ -112,7 +112,7 @@ Die HF-Einstrahlung ist deutlich minimiert, das Signal aber einiges leiser. Dahe
 
 Falls ihr HF auf der Leitung habt, euch also auf AM und SSB selber hört, weil eure Mantelwellensperre Schrott ist, lötet paralell zu den Ein- und Ausgängen der Audioverbindungen jeweils noch einen Keramikkondensator 104 (100nF). Das hilft. Auch das Anbringen diverser Klappferrite ist hier hilfreich.
 
-### Wie ist das egentlich möglich
+### Wie ist das eigentlich möglich
 
 Das AMM-500 sendet seriell HEX codes an das AE-5900 und das AE-5900 antwrtet entsprechend. Damit ist so eniges möglich.
 Um die Bastelei zu verwirklichen, musste ich zwischen den beiden Geräten mitlesen.
