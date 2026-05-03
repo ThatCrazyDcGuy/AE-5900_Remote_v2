@@ -105,7 +105,7 @@ Hierzu noch ein Nachtrag: Das Audiosignal lässt sich über EXT-AF abgreifen, oh
 
 - Hier eine Version der Bastelei ohne Klinkenstecker
 
-		![AE5900_Remote_v2](/pictures/rj45audiosingle.png)
+	![AE5900_Remote_v2](/pictures/rj45audiosingle.png)
 
 Das RX Audio wird hier über EXT-AF und GND abgegriffen. Ohne 600:600 Transformator, dafür aber mit 2x 102 Keramikkondensatoren in Reihe zu den Leitungen und 1x 104 Keramikhondensator paralel zu EXT-AF und GND. Die Audiosettings ändern sich dadurch geringfügig. Das lässt sich aber nachregeln im Lautstärkeregler.
 
