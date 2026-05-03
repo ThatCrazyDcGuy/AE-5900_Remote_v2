@@ -103,6 +103,12 @@ Es ist auch möglich ohne Klinkenstecker das Audio des AE5900 abzugreifen. Der M
 Hier gibt es aber 2 Proleme. 1. Zumindest auf meinem AE5900 habe ich dort unschöne HF drauf, trotz Mantelwellensperre und Filter. 2. Will man dass das Gerät bei Remotenutzung zu Hause stumm da steht, muss man dennoch einen Klinkenstecker als Terminator verwenden.
 Hierzu noch ein Nachtrag: Das Audiosignal lässt sich über EXT-AF abgreifen, ohne zusätzliche GND-Verkabelung. Dies, weil bereits eine GND auf MICG anliegt. Dennoch ist der Anschluss recht HF anfällig. Mit viel Ferrit und gut geschirmten Kabeln mag man das in den Griff bekommen.
 
+- Hier eine Version der Bastelei ohne Klinkenstecker
+
+		![AE5900_Remote_v2](/pictures/rj45audiosingle.png)
+
+Das RX Audio wird hier über EXT-AF und GND abgegriffen. Ohne 600:600 Transformator, dafür aber mit 2x 102 Keramikkondensatoren in Reihe zu den Leitungen und 1x 104 Keramikhondensator paralel zu EXT-AF und GND. Die Audiosettings ändern sich dadurch geringfügig. Das lässt sich aber nachregeln im Lautstärkeregler.
+
 Falls ihr HF auf der Leitung habt, euch also auf AM und SSB selber hört, weil eure Mantelwellensperre Schrott ist, lötet paralell zu den Ein- und Ausgängen der Audioverbindungen jeweils noch einen Keramikkondensator 104 (100nF). Das hilft. Auch das Anbringen diverser Klappferrite ist hier hilfreich.
 
 ### Wie ist das egentlich möglich
