@@ -15,9 +15,9 @@ Ich habe mein AE5900 von https://gmw-funktechnik.ch/, einem fantastischen Fachge
 
 - Ein Screenshot vom aktuellen UI, im Browser, auf dem Smartphone
 
-  1. visuelles Audiofeedback
-  2. Lautsärke des Mikrofons regelbar
-  3. Optimierte Scan-Funktion mit regelbarer Geschwindigkeit
+1. visuelles Audiofeedback
+2. Lautsärke des Mikrofons regelbar
+3. Optimierte Scan-Funktion mit regelbarer Geschwindigkeit
 
 
 	![AE5900_Remote_v2](/pictures/webui.jpg)
@@ -75,22 +75,22 @@ Mit Bildern und allem was man wissen muss.
 
   Für die Audiofilter nutzen wir hier nun:
   
-  1. 2x 600:600 Ohm Transformatoren
-  2. 1x 100 Ohm Widerstand
-  3. 1x 10 KOhm Widerstand
-  4. 1x Keramikkondensator 100nF (104) (mindestens einer um die HF zu filtern)
-  5. 1x Elco Kondensator 10µF (c.a 16 - 50v)
-  6. Klinkenstecker Buchse
+1. 2x 600:600 Ohm Transformatoren
+2. 1x 100 Ohm Widerstand
+3. 1x 10 KOhm Widerstand
+4. 1x Keramikkondensator 100nF (104) (mindestens einer um die HF zu filtern)
+5. 1x Elco Kondensator 10µF (c.a 16 - 50v)
+6. Klinkenstecker Buchse
 
 	![AE5900_Remote_v2](/pictures/filterkomponenten.jpg)
 
   Restliche Komponenten:
   
-  1. USB Breakoutboard oder einen HUB
-  2. FT232RL FT232 FTDI USB 3,3 V 5,5 V zu TTL Seriell Adapter
-  3. USB Soundkarte
-  4. Rj45 Terminal
-  5. Ein Gehäuse aus Metall
+1. USB Breakoutboard oder einen HUB
+2. FT232RL FT232 FTDI USB 3,3 V 5,5 V zu TTL Seriell Adapter
+3. USB Soundkarte
+4. Rj45 Terminal
+5. Ein Gehäuse aus Metall
 
 	![AE5900_Remote_v2](/pictures/steuerungkomponenten.jpg)
 
