@@ -132,7 +132,6 @@ Mumble & Mumble Server für die Audioübertragung
 Tailscale auf all den Geräten die für dieses Projekt genutzt werden.
 
 Dann wird in die Tasten gehauen oder der nachfolgende Krams einfach kopiert und eingefügt.
-Natürlich jede Zeile einzeln und ohne das "#" am Anfang. :)
 
 	 sudo apt update && sudo apt full-upgrade -y
 
@@ -157,8 +156,8 @@ default.clock.allowed-rates = [ 44100 48000 88200 96000 ]
 }
 
 
-    # mkdir ~/.config/pipewire/pipewire-pulse.conf.d/
-    # mcedit ~/.config/pipewire/pipewire-pulse.conf.d/99-disable-autogain.conf
+     mkdir ~/.config/pipewire/pipewire-pulse.conf.d/
+     mcedit ~/.config/pipewire/pipewire-pulse.conf.d/99-disable-autogain.conf
 ADD:
 
  pulse.rules = [
@@ -171,7 +170,7 @@ ADD:
 }
 ]
 
-    # mcedit ~/.config/pipewire/pipewire-pulse.conf.d/block-autoscale.conf
+     mcedit ~/.config/pipewire/pipewire-pulse.conf.d/block-autoscale.conf
 ADD:
 
 pulse.rules = [ { matches = [ { application.process.binary = "mumble" } ]; actions = { quirks = [ block-source-volume ] } } ]
@@ -183,13 +182,13 @@ Bestenfalls ist der Rechner neugestartet, damit "sudo usermod -a -G dialout $USE
 
 Wenn die Hardware aufgebaut und alle Einstellungen vorgenommen sind, dann:
 
-	# git clone https://github.com/ThatCrazyDcGuy/AE5900_Remote_V2
+	 git clone https://github.com/ThatCrazyDcGuy/AE5900_Remote_V2
 
-	# python3 ~/AE5900_Remote_V2/ae_5900_v2.py
+	 python3 ~/AE5900_Remote_V2/ae_5900_v2.py
 
 Updaten kann man dann jeweils mit:
 
-	# git pull
+	 git pull
 
 ### Meine Audioeinstellungen für den Host/Server
 
