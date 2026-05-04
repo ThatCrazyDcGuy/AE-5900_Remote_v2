@@ -104,8 +104,8 @@ Man kann die USB Geräte natürlich auch einfach in einen USB Hub stecken, aber 
 Die beiden Filter muss man aber dennoch löten. 
 
 Es ist auch möglich ohne Klinkenstecker das Audio des AE5900 abzugreifen. Der Mic Plug bietet die Pins EXT-AF und GND. Da liegt ein schwaches Signal, womöglich extra für Soundkarten an.
-Hier gibt es aber 2 Proleme. 1. Zumindest auf meinem AE5900 habe ich dort unschöne HF drauf, trotz Mantelwellensperre und Filter. 2. Will man dass das Gerät bei Remotenutzung zu Hause stumm da steht, muss man dennoch einen Klinkenstecker als Terminator verwenden.
-Hierzu noch ein Nachtrag: Das Audiosignal lässt sich über EXT-AF abgreifen, ohne zusätzliche GND-Verkabelung. Dies, weil bereits eine GND auf MICG anliegt. Dennoch ist der Anschluss recht HF anfällig. Mit viel Ferrit und gut geschirmten Kabeln mag man das in den Griff bekommen.
+Hier gibt es aber 2 Probleme. 1. Zumindest auf meinem AE5900 habe ich dort unschöne HF drauf, trotz Mantelwellensperre und Filter. 2. Will man dass das Gerät bei Remotenutzung zu Hause stumm da steht, muss man dennoch einen Klinkenstecker als Terminator am AE5900 verwenden.
+Hierzu noch ein Nachtrag: Das Audiosignal lässt sich über EXT-AF abgreifen, ohne zusätzliche GND-Verkabelung. Dies, weil bereits eine GND auf MICG anliegt. Hier benötigen wir also eine andere Filtermethode. Dennoch ist der Anschluss recht HF anfällig. Mit viel Ferrit und gut geschirmten Kabeln mag man das in den Griff bekommen. Der Versuchsaufbau folgt direkt unten.
 
 - Hier eine Version der Bastelei ohne Klinkenstecker
 
@@ -134,20 +134,20 @@ Tailscale auf all den Geräten die für dieses Projekt genutzt werden.
 Dann wird in die Tasten gehauen oder der nachfolgende Krams einfach kopiert und eingefügt.
 Natürlich jede Zeile einzeln und ohne das "#" am Anfang. :)
 
-	# sudo apt update && sudo apt full-upgrade -y
+	 sudo apt update && sudo apt full-upgrade -y
 
-	# curl -fsSL https://tailscale.com/install.sh | sh
+	 curl -fsSL https://tailscale.com/install.sh | sh
 
-	# sudo apt install git curl openssh-server python3-pyaudio python3-numpy python3-serial python3-flask pipewire pipewire-audio pipewire-alsa pipewire-pulse pipewire pipewire-audio-client-libraries pavucontrol wireplumber libpipewire-0.3-modules ladspa-sdk swh-plugins dbus-user-session mc htop
-	# sudo apt remove pipewire-media-session
+	 sudo apt install git curl openssh-server python3-pyaudio python3-numpy python3-serial python3-flask pipewire pipewire-audio pipewire-alsa pipewire-pulse pipewire pipewire-audio-client-libraries pavucontrol wireplumber libpipewire-0.3-modules ladspa-sdk swh-plugins dbus-user-session mc htop
+	 sudo apt remove pipewire-media-session
 
-    # sudo usermod -a -G audio $USER
-    # sudo usermod -a -G dialout $USER
+     sudo usermod -a -G audio $USER
+     sudo usermod -a -G dialout $USER
 
-    # mkdir ~/.config/pipewire/
-    # mkdir ~/.config/pipewire/pipewire.conf.d/
+     mkdir ~/.config/pipewire/
+     mkdir ~/.config/pipewire/pipewire.conf.d/
 
-    # mcedit ~/.config/pipewire/pipewire.conf.d/custom.conf
+     mcedit ~/.config/pipewire/pipewire.conf.d/custom.conf
 
 ADD:
 
