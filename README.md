@@ -225,6 +225,16 @@ Ein guter WebSDR lässt sich einfach mit OpenWebRX, einem Raspberry Pi, einem RT
 
 Schau dir einfach OpenwebrxPlus an: https://luarvique.github.io/ppa/ RTL-SDR Blog v4: https://www.rtl-sdr.com/v4/
 
+## Extras und Testläufe
+
+1.
+JS8Call funktioniert damit recht gut. Man muss natürlich etwas an den Settings rumspielen und VOX aktivieren.
+Es sollte allerdings eine Kleinigkeit sein, hier noch eine PTT Funktion für entsprechende Software zu bauen.
+
+2.
+User Feedback vom 30. April 2026: Linux Mint um die Version 21.3 und drunter, versteht die Python- Vol- und Vol+ nicht.
+Nur falls jemand au so einem System testet. Ein mintupgrade hilft das Problem zu lösen.
+
 ## Was du sonst noch erwarten kannst:
 
 Nichts weiter als meine Erfahrung.
