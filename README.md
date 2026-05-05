@@ -127,7 +127,7 @@ Da das AE-5900 selbst erst nach einem Handshake mit dem AMM-500 seine Codes frei
 ### Benötigte Software
 
 
-Mumble & Mumble Server für die Audioübertragung
+Mumble & Mumble Server für die Audioübertragung (Audio Chat)
 	
 Tailscale auf all den Geräten die für dieses Projekt genutzt werden.
 Bei Betrieb im lokalen Netzwerk kann auf Tailscale verzichtet werden.
