@@ -130,6 +130,8 @@ Da das AE-5900 selbst erst nach einem Handshake mit dem AMM-500 seine Codes frei
 Mumble & Mumble Server für die Audioübertragung
 	
 Tailscale auf all den Geräten die für dieses Projekt genutzt werden.
+Bei Betrieb im lokalen Netzwerk kann auf Tailscale verzichtet werden.
+Tailscale ist für Privatanwender kostenlos, benötigt aber dennoch einen Account.
 
 Dann wird in die Tasten gehauen oder der nachfolgende Krams einfach kopiert und eingefügt.
 
