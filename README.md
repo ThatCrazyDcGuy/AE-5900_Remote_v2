@@ -229,20 +229,21 @@ Schau dir einfach OpenwebrxPlus an: https://luarvique.github.io/ppa/ RTL-SDR Blo
 
 ## Was noch fehlt // Was noch nicht funktioniert
 
-EMG und DW, Funktionen die man auf die P1 - P4 Tasten legen könnte, geben noch keine Rückmeldung an das WebUI.
+1. EMG und DW, Funktionen die man auf die P1 - P4 Tasten legen könnte, geben noch keine Rückmeldung an das WebUI.
 
-Das Geräteeigene "Scan", welches man auch auf  P1 - P4 Tasten legen könnte, hat ein Timingproblem.
+2. Das Geräteeigene "Scan", welches man auch auf  P1 - P4 Tasten legen könnte, hat ein Timingproblem.
 Daher wurde eine eigene S-Scan Funktion implementiert.
 
 ## Extras und Testläufe
 
-1.
-JS8Call funktioniert damit recht gut. Man muss natürlich etwas an den Settings rumspielen und VOX aktivieren.
+1. JS8Call funktioniert damit recht gut. Man muss natürlich etwas an den Settings rumspielen und VOX aktivieren.
 Es sollte allerdings eine Kleinigkeit sein, hier noch eine PTT Funktion für entsprechende Software zu bauen.
 
-2.
-User Feedback vom 30. April 2026: Linux Mint um die Version 21.3 und drunter, versteht die Python- Vol- und Vol+ nicht.
+2. User Feedback vom 30. April 2026: Linux Mint um die Version 21.3 und drunter, versteht die Python- Vol- und Vol+ nicht.
 Nur falls jemand au so einem System testet. Ein mintupgrade hilft das Problem zu lösen.
+
+3. Das Script ae_5900_maninthemiddle.py wurde hinzugefügt. Damit lassen sich HEX Codes zwischen Mikrofon und Funkgerät auslesen.
+
 
 ## Was du sonst noch erwarten kannst:
 
