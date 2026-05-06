@@ -227,6 +227,13 @@ Ein guter WebSDR lässt sich einfach mit OpenWebRX, einem Raspberry Pi, einem RT
 
 Schau dir einfach OpenwebrxPlus an: https://luarvique.github.io/ppa/ RTL-SDR Blog v4: https://www.rtl-sdr.com/v4/
 
+## Was noch fehlt // Was noch nicht funktioniert
+
+EMG und DW, Funktionen die man auf die P1 - P4 Tasten legen könnte, geben noch keine Rückmeldung an das WebUI.
+
+Das Geräteeigene "Scan", welches man auch auf  P1 - P4 Tasten legen könnte, hat ein Timingproblem.
+Daher wurde eine eigene S-Scan Funktion implementiert.
+
 ## Extras und Testläufe
 
 1.
