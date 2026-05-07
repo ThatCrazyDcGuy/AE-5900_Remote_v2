@@ -22,9 +22,8 @@
 </head>
 <body>
     <div class="display" style="position: relative; overflow: hidden;">
-        <!-- Das Canvas für das Spectrum/Wasserfall -->
         <canvas id="audioVisualizer" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.3; pointer-events: none;"></canvas>
-    
+        <div id="voxIndicator" style="position: absolute; top: 10px; right: 15px; font-weight: bold; font-size: 0.9em; transition: 0.3s; z-index: 3;">VOX</div>
         <div id="pttStat" style="font-weight:bold; color:#444; position: relative; z-index: 2;">○ RX IDLE</div>
         <div class="freq" id="chDisp" style="position: relative; z-index: 2;">01</div>
         <div class="mhz" id="mhzDisp" style="position: relative; z-index: 2;">26.965 MHz</div>
@@ -42,7 +41,6 @@
 	<button onclick="send('M')">MODE</button>
 	<button onclick="send('SSCAN')" id="scanBtn">S-SCAN</button>
 
-<!--        <button onclick="send('M')" style="grid-column: span 2;">MODE</button> -->
         <button onclick="send('P1')" id="lbl-p1">P1 ({{config.p1_label}})</button>
         <button onclick="send('P2')" id="lbl-p2">P2 ({{config.p2_label}})</button>
         <button onclick="send('P3')" id="lbl-p3">P3 ({{config.p3_label}})</button>
@@ -60,7 +58,10 @@
             <p>P2 Label: <input type="text" value="{{config.p2_label}}" onchange="setCfg('P2', this.value)" style="width:100px;"></p>
             <p>P3 Label: <input type="text" value="{{config.p3_label}}" onchange="setCfg('P3', this.value)" style="width:100px;"></p>
             <p>P4 Label: <input type="text" value="{{config.p4_label}}" onchange="setCfg('P4', this.value)" style="width:100px;"></p>
-<!--            <p>Scan Speed (ms): <input type="number" id="scanSpeedInput" value="{{ config.scan_speed }}" style="width: 60px;" onchange="fetch('/api/cmd/SETSPEED_' + this.value)"> </p> -->
+	    <p>FFT Gain RX: <input type="number" value="{{config.fft_rx_gain}}" onchange="send('SETGAIN_RX_' + this.value)" style="width:80px;"></p>
+	    <p>FFT Gain TX: <input type="number" value="{{config.fft_tx_gain}}" onchange="send('SETGAIN_TX_' + this.value)" style="width:80px;"></p>
+	    <p>VOX Schaltung: <span id="voxState" style="font-weight:bold;">--</span></p>
+</div>
 <p>Scan Speed (ms): 
     <input type="number" id="scanSpeedInput" 
            value="{{ config.scan_speed * 1000 | int }}" 
@@ -103,6 +104,7 @@ canvas.width = canvas.offsetWidth;
 canvas.height = canvas.offsetHeight;
 
 let lastData = new Array(32).fill(0);
+let currentBarColor = 'green'; 
 
 function drawSpectrum() {
     fetch('/api/audio')
@@ -116,14 +118,22 @@ function drawSpectrum() {
             data.forEach((val, i) => {
                 let displayVal = Math.max(val, lastData[i] - 1.5);
                 lastData[i] = displayVal;
-
                 let height = (displayVal / 40) * canvas.height; 
                 
                 if(height > canvas.height) height = canvas.height;
 
                 let grad = ctx.createLinearGradient(0, canvas.height, 0, canvas.height - height);
-                grad.addColorStop(0, '#004400');
-                grad.addColorStop(1, '#00ff00');
+                
+                if (currentBarColor === 'red') {
+                    grad.addColorStop(0, '#440000');
+                    grad.addColorStop(1, '#ff0000');
+                } else if (currentBarColor === 'orange') {
+                    grad.addColorStop(0, '#442200');
+                    grad.addColorStop(1, '#ff8800');
+                } else {
+                    grad.addColorStop(0, '#004400');
+                    grad.addColorStop(1, '#00ff00');
+                }
                 
                 ctx.fillStyle = grad;
                 ctx.fillRect(i * barWidth, canvas.height - height, barWidth - 1, height);
@@ -145,71 +155,88 @@ window.onresize = () => {
 drawSpectrum();
 
 
-        function updateUI(data) {
-            if(!data) return;
-            
-            // 1. Kanal und Modus
-            const ch = data.CH;
-            document.getElementById('chDisp').innerText = ch;
-            document.getElementById('mhzDisp').innerText = (freqs[ch] || "---.---") + " MHz";
-            document.getElementById('modeName').innerText = data.MODE;
-            
-            const btn = document.getElementById('pttBtn');
-            const stat = document.getElementById('pttStat');
-            const sBtn = document.getElementById('scanBtn');
-            
-            // 2. Sende-Zustand (PTT / VOX) und Status-Text
-            if (data.PTT === "ON") {
-                // Manuelle PTT aktiv (Rot)
-                btn.classList.add('active');
-                btn.style.background = "#ff0000";
-                btn.innerText = "TX ACTIVE (" + data.REMAINING + "s)";
-                stat.innerText = "● TRANSMIT"; 
-                stat.style.color = "red";
-            } else if (data.VOX_TX) {
-                // VOX sendet (Gelb/Orange)
-                btn.classList.remove('active');
-                btn.style.background = "#ff8800"; 
-                btn.innerText = "VOX TRANSMITTING";
-                stat.innerText = "● VOX ACTIVE"; 
-                stat.style.color = "#ff8800";
-            } else if (data.BUSY) {
-                // Signal wird empfangen (Grün)
-                btn.classList.remove('active');
-                btn.style.background = "#4a0000"; 
-                btn.innerText = "PTT TOGGLE";
-                stat.innerText = "⚡ SIGNAL DETECTED"; 
-                stat.style.color = "#00ff00";
-            } else {
-                // Leerlauf (Grau)
-                btn.classList.remove('active');
-                btn.style.background = "#4a0000"; 
-                btn.innerText = "PTT TOGGLE";
-                stat.innerText = "○ RX IDLE"; 
-                stat.style.color = "#444";
-            }
 
-            if(data.SW_SCAN) {
-                sBtn.style.background = "#004444";
-                sBtn.style.boxShadow = "0 0 10px #00ffff";
-                sBtn.innerText = "SCANNING...";
-            } else {
-                sBtn.style.background = "#333";
-                sBtn.style.boxShadow = "none";
-                sBtn.innerText = "S-SCAN";
-            }
-        } 
 
-// Neue Funktion für die Lautstärke
-function changeVol(action) {
-    fetch('/api/volume/' + action)
-        .then(r => r.json())
-        .then(data => {
-            if(data.volume !== undefined) {
-                document.getElementById('volDisp').innerText = data.volume;
-            }
-        });
+function updateUI(data) {
+    if(!data) return;
+    
+    const ch = data.CH;
+    document.getElementById('chDisp').innerText = ch;
+    document.getElementById('mhzDisp').innerText = (freqs[ch] || "---.---") + " MHz";
+    document.getElementById('modeName').innerText = data.MODE;
+    
+    const btn = document.getElementById('pttBtn');
+    const stat = document.getElementById('pttStat');
+    const sBtn = document.getElementById('scanBtn');
+    const voxDisplay = document.getElementById('voxState'); 
+
+    if (data.PTT === "ON") {
+        currentBarColor = 'red';
+        btn.style.background = "#ff0000";
+        btn.innerText = "TX ACTIVE (" + data.REMAINING + "s)";
+        stat.innerText = "● TRANSMIT"; 
+        stat.style.color = "red";
+    } else if (data.VOX_TX) {
+        currentBarColor = 'orange';
+        btn.style.background = "#ff8800"; 
+        btn.innerText = "VOX TRANSMITTING";
+        stat.innerText = "● VOX ACTIVE"; 
+        stat.style.color = "#ff8800";
+    } else if (data.BUSY) {
+        currentBarColor = 'green';
+        btn.style.background = "#4a0000"; 
+        btn.innerText = "PTT TOGGLE";
+        stat.innerText = "⚡ SIGNAL DETECTED"; 
+        stat.style.color = "#00ff00";
+    } else {
+        currentBarColor = 'green';
+        btn.style.background = "#4a0000"; 
+        btn.innerText = "PTT TOGGLE";
+        stat.innerText = "○ RX IDLE"; 
+        stat.style.color = "#444";
+    }
+    
+    btn.classList.toggle('active', data.PTT === "ON");
+
+    if(data.SW_SCAN) {
+        sBtn.style.background = "#004444";
+        sBtn.style.boxShadow = "0 0 10px #00ffff";
+        sBtn.innerText = "SCANNING...";
+    } else {
+        sBtn.style.background = "#333";
+        sBtn.style.boxShadow = "none";
+        sBtn.innerText = "S-SCAN";
+    }
+
+    if(voxDisplay) {
+        if(data.VOX_ENABLED) {
+            voxDisplay.innerText = "SCHARF"; 
+            voxDisplay.style.color = "#ff8800";
+        } else {
+            voxDisplay.innerText = "AUS"; 
+            voxDisplay.style.color = "#444";
+        }
+    }
+    const voxInd = document.getElementById('voxIndicator');
+    if (voxInd) {
+        if (data.VOX_ENABLED) {
+            voxInd.style.color = "#ff8800";   
+            voxInd.style.opacity = "1";
+            voxInd.style.textShadow = "0 0 10px #ff8800";
+        } else {
+            voxInd.style.color = "#333";      
+            voxInd.style.opacity = "0.5";
+            voxInd.style.textShadow = "none";
+        }
+    }
+
+    if(data.VOL !== undefined) {
+        const vDisp = document.getElementById('volDisp');
+        if(vDisp) vDisp.innerText = data.VOL;
+    }
 }
+
+
 
 
         function pollStatus() {
@@ -225,7 +252,20 @@ function changeVol(action) {
                 });
         }
 
+function changeVol(direction) {
+    const cmd = direction === 'up' ? 'VOLUP' : 'VOLDOWN';
+    fetch('/api/cmd/' + cmd)
+        .then(r => r.json())
+        .then(data => {
+            updateUI(data); 
+        })
+        .catch(e => console.error("Volume Fehler:", e));
+}
+
+
         function send(cmd) { fetch('/api/cmd/' + cmd).then(r => r.json()).then(updateUI); }
+
+
         function setCfg(p, val) { fetch('/api/cmd/SET_' + p + '_LABEL?val=' + encodeURIComponent(val)); document.getElementById('lbl-' + p.toLowerCase()).innerText = p + " (" + val + ")"; }
         function updateTimeout() { fetch('/api/cmd/T' + document.getElementById('pttInput').value); }
 
@@ -240,3 +280,4 @@ function changeVol(action) {
     </script>
 </body>
 </html>
+
