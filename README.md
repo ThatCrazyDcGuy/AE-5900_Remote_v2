@@ -30,7 +30,7 @@ Ich habe mein AE5900 von https://gmw-funktechnik.ch/, einem fantastischen Fachge
 
 	[![AE5900 Webinterface V2 TX ](https://img.youtube.com/vi/znx0lKvbVLs/0.jpg)](https://www.youtube.com/shorts/znx0lKvbVLs)
 
-- Diverse Funktionen werden hier vorgestellt. Über mehrere Endgeräte gleichzeitig bedienbar. Der aktuelle, hier gesehene Code wird noch bereinigt und dann veröffentlicht.
+- Diverse Funktionen werden hier vorgestellt. Über mehrere Endgeräte gleichzeitig bedienbar. Der aktuelle, hier gesehene Code wird noch bereinigt und dann veröffentlicht. Leider alles sehr leise aufgenommen. Das nächste Mal wird es nicht besser. Versprochen!
 
 	[![AE5900 Webinterface V2 TX ](https://img.youtube.com/vi/BA9iDk-M_aI/0.jpg)](https://www.youtube.com/watch?v=BA9iDk-M_aI)
 
