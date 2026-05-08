@@ -53,7 +53,7 @@
         <div style="background: #222; padding: 20px; border-radius: 10px;">
             <button id="syncBtn" class="hold-button"><span style="position:relative; z-index:2;">SUPER SYNC (CH 01 - Hold 3s)</span><div class="progress-bar" id="syncProgress"></div></button>
             <p>PTT Timeout: <input type="number" id="pttInput" value="{{ config.ptt_timeout }}" style="width: 60px;" onchange="updateTimeout()"> s</p>
-            <p>Skip PA: <input type="checkbox" onchange="fetch('/api/cmd/SET_SKIP_PA?val=' + this.checked)" {% if config.skip_pa %}checked{% endif %}></p>
+            <p>Skip PA (ab FW v1.2 möglich): <input type="checkbox" onchange="fetch('/api/cmd/SET_SKIP_PA?val=' + this.checked)" {% if config.skip_pa %}checked{% endif %}></p>
             <p>P1 Label: <input type="text" value="{{config.p1_label}}" onchange="setCfg('P1', this.value)" style="width:100px;"></p>
             <p>P2 Label: <input type="text" value="{{config.p2_label}}" onchange="setCfg('P2', this.value)" style="width:100px;"></p>
             <p>P3 Label: <input type="text" value="{{config.p3_label}}" onchange="setCfg('P3', this.value)" style="width:100px;"></p>
