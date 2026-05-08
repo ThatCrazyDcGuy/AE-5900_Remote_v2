@@ -141,9 +141,7 @@ Dann wird in die Tasten gehauen oder der nachfolgende Krams einfach kopiert und 
 
 	 sudo apt update && sudo apt full-upgrade -y
 
-	 curl -fsSL https://tailscale.com/install.sh | sh
-
-	 sudo apt install git curl openssh-server python3-pyaudio python3-numpy python3-serial python3-flask pipewire pipewire-audio pipewire-alsa pipewire-pulse pipewire pipewire-audio-client-libraries pavucontrol wireplumber libpipewire-0.3-modules ladspa-sdk swh-plugins dbus-user-session mc htop
+	 sudo apt install git curl openssh-server python3-pyaudio python3-numpy python3-serial python3-flask pipewire pipewire-audio pipewire-alsa pipewire-pulse pipewire pipewire-audio-client-libraries pavucontrol wireplumber libpipewire-0.3-modules ladspa-sdk swh-plugins dbus-user-session mc htop mumble mumble-server
 	 sudo apt remove pipewire-media-session
 
      sudo usermod -a -G audio $USER
@@ -181,6 +179,9 @@ ADD:
 
 pulse.rules = [ { matches = [ { application.process.binary = "mumble" } ]; actions = { quirks = [ block-source-volume ] } } ]
 
+Für die Steuerung aus der Ferne:
+
+	curl -fsSL https://tailscale.com/install.sh | sh
 
 ## Los geht's!
 
