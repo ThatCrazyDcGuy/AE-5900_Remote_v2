@@ -58,16 +58,12 @@
             <p>P2 Label: <input type="text" value="{{config.p2_label}}" onchange="setCfg('P2', this.value)" style="width:100px;"></p>
             <p>P3 Label: <input type="text" value="{{config.p3_label}}" onchange="setCfg('P3', this.value)" style="width:100px;"></p>
             <p>P4 Label: <input type="text" value="{{config.p4_label}}" onchange="setCfg('P4', this.value)" style="width:100px;"></p>
+			<p>Scan Speed (ms): <input type="number" id="scanSpeedInput" value="{{ config.scan_speed * 1000 | int }}" style="width: 70px;" onchange="send('SETSPEED_' + this.value)"> </p>
 	    <p>FFT Gain RX: <input type="number" value="{{config.fft_rx_gain}}" onchange="send('SETGAIN_RX_' + this.value)" style="width:80px;"></p>
 	    <p>FFT Gain TX: <input type="number" value="{{config.fft_tx_gain}}" onchange="send('SETGAIN_TX_' + this.value)" style="width:80px;"></p>
 	    <p>VOX Schaltung: <span id="voxState" style="font-weight:bold;">--</span></p>
 </div>
-<p>Scan Speed (ms): 
-    <input type="number" id="scanSpeedInput" 
-           value="{{ config.scan_speed * 1000 | int }}" 
-           style="width: 70px;" 
-           onchange="send('SETSPEED_' + this.value)"> 
-</p>
+
 <div style="border-top: 1px solid #333; padding-top: 10px; margin-top: 10px;">
     <p>MIC Volume: <span id="volDisp">--</span>%</p>
     <div style="display: flex; gap: 10px;">
