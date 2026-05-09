@@ -12,16 +12,16 @@ Eine komplexere LAN/Web-Fernsteuerung für das Albrecht AE-5900 Funkgerät, die 
 ### Das Vorwort: Der Blickwinkel und das Hörensagen
 
 In Userforen und Gruppen diverser Messenger wird die Legalität des Projekts heiss diskutiert.
-Dazu sei folgendes Vermerkt:
+Dazu sei folgendes vermerkt:
 
 Dieses Projekt bietet lediglich eine Möglichkeit, das Gerät aus der Ferne zu steuern. Zeigt also nur auf, was unter gegebenen Umständen ohne Modifikation an der Funkgerätehardware technisch möglich ist.
 Es handelt sich hierbei auch nicht um eine Modifikation, sondern um einen Adapter, der ein nicht modifiziertes AE5900 (evtl. auch ein AT-5000) aus der Ferne bedienbar macht.
 Was jener, der dies hier nachbaut und testet, aus dieser Möglichkeit macht ist seine Angelegenheit.
 
-Der Witz an dieser Diskussion ist jedoch, dass in selbigen Kreisen Powermodifikationen und Frequenzerweiterungen durch direkten Einfriff in die Hardware des Funkgerätes beinahe schon gerühmt werden.
+Der Witz an dieser Diskussion ist jedoch, dass in selbigen Kreisen Powermodifikationen und Frequenzerweiterungen durch direkten Eingriff in die Hardware des Funkgerätes beinahe schon gerühmt werden.
 
 Es sei auch erwähnt, dass das Funkgerät amateurfunktauglich ist und für jene, lizensierte Amateurfunker, der Remotebetrieb legal ist.
-Vermerk: Frequenz und Power-Modifikationen werden derzeit sogar durch offizielle Shops für kleines Geld angeboten.
+Vermerk: Frequenz und Power-Modifikationen werden derzeit auch durch offizielle Shops für kleines Geld angeboten.
 
 Daher:
 
@@ -43,7 +43,7 @@ Ich habe mein AE5900 von https://gmw-funktechnik.ch/, einem fantastischen Fachge
 - Ein Screenshot vom aktuellen UI, im Browser, auf dem Smartphone
 
 1. visuelles Audiofeedback
-2. Lautsärke des Mikrofons regelbar
+2. Lautstärke des Mikrofons regelbar
 3. Optimierte Scan-Funktion mit regelbarer Geschwindigkeit
 
 ![AE5900_Remote_v2](/pictures/webui.jpg)
@@ -91,7 +91,7 @@ Genau deshalb.
 9. Öffne ganz unten im WebUI das Setup und führe den Sync aus.
 10. Setze die entsprechenden Labels für die P1 bis P4 Tasten so, wie du sie am AE5900 gesetzt hast.
 11. Auf dem Hostrechner solltest du im Lautstärkeregler (pavucontrol) gegebenenfalls Anpassungen machen. Typische Anpassungen wären hier: Menupunkt "Konfiguration" Standard Soundkarte deine im Netzwerk angebundene Soundkarte.
-12. Auf dem Hostrechner in Mumble kann nun im In & Output PulseAudio und Standard/Default verwendet werden. Audioeingabe: Die Übertragung sollte auf kontinuierlich gesetzt sein, die Qualität auf höchste Stufe.
+12. Auf dem Hostrechner in Mumble kann nun im In & Output PulseAudio und Standard/Default verwendet werden. Audioeingabe: Die Übertragung sollte auf kontinuierlich gesetzt sein, die Qualität auf etwa 44kb/s.
 
 Das Script ist derzeitig nur für die Region (EU) ausgelegt. Die anderen Regionen folgen noch, so wie auch der VFO Mode.
 
@@ -388,7 +388,7 @@ That's exactly why.
 9. Open Setup at the bottom of the WebUI and run Sync.
 10. Set the appropriate labels for the P1 to P4 buttons as you have set them on the AE5900.
 11. On the host computer, you may need to make adjustments in the volume control (pavucontrol). Typical adjustments would be: Menu item "Configuration" default sound card your network-connected sound card.
-12. On the host computer in Mumble, PulseAudio and Standard/Default can now be used for input and output. Audio input: Transmission should be set to continuous, quality to highest level.
+12. On the host computer in Mumble, PulseAudio and Standard/Default can now be used for input and output. Audio input: Transmission should be set to continuous, quality to about 44kb/s.
 
 The script is currently only designed for the EU region. Other regions will follow, as will VFO mode.
 
