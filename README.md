@@ -13,12 +13,12 @@ Was jener, der dies hier nachbaut und testet, aus dieser Möglichkeit macht ist 
 Der Witz an dieser Diskussion ist jedoch, dass in selbigen Kreisen Powermodifikationen und Frequenzerweiterungen durch direkten Einfriff in die Hardware des Funkgerätes beinahe schon gerühmt werden.
 
 Es sei auch erwähnt, dass das Funkgerät amateurfunktauglich ist und für jene, lizensierte Amateurfunker, der Remotebetrieb legal ist.
-Vermerk: Modifikationen werden derzeit sogar durch offizielle Shops für kleines Geld angeboten.
+Vermerk: Frequenz und Power-Modifikationen werden derzeit sogar durch offizielle Shops für kleines Geld angeboten.
 
 Daher:
 
-WARNUNG!!! Es besteht die Gefahr, dass die Nutung je nach Landesbestimmung strafbar ist.
-Dummschwätzen und Klugscheissen bleibt aber bis auf weiteres erlaubt.
+WARNUNG!!! Es besteht die Gefahr, dass die Nutzung je nach Landesbestimmung strafbar ist.
+Dummschwätzen und Klugscheissen bleibt aber bis auf weiteres straffrei.
 
 ## Hauptziel des Projekts:
 
