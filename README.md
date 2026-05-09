@@ -1,6 +1,25 @@
 Eine komplexere LAN/Web-Fernsteuerung für das Albrecht AE-5900 Funkgerät, die das AMM-500 Mikrofon simuliert. Per Webbrowser bedienbar.
 =======================================================
 
+## Das Vorwort: Der Blickwinkel und das Hörensagen
+
+In Userforen und Gruppen diverser Messenger wird die Legalität des Projekts heiss diskutiert.
+Dazu sei folgendes Vermerkt:
+
+Dieses Projekt bietet lediglich eine Möglichkeit, das Gerät aus der Ferne zu steuern. Zeigt also nur auf, was unter gegebenen Umständen ohne Modifikation an der Funkgerätehardware technisch möglich ist.
+Es handelt sich hierbei auch nicht um eine Modifikation, sondern um einen Adapter, der ein nicht modifiziertes AE5900 (evtl. auch ein AT-5000) aus der Ferne bedienbar macht.
+Was jener, der dies hier nachbaut und testet, aus dieser Möglichkeit macht ist seine Angelegenheit.
+
+Der Witz an dieser Diskussion ist jedoch, dass in selbigen Kreisen Powermodifikationen und Frequenzerweiterungen durch direkten Einfriff in die Hardware des Funkgerätes beinahe schon gerühmt werden.
+
+Es sei auch erwähnt, dass das Funkgerät amateurfunktauglich ist und für jene, lizensierte Amateurfunker, der Remotebetrieb legal ist.
+Vermerk: Modifikationen werden derzeit sogar durch offizielle Shops für kleines Geld angeboten.
+
+Daher:
+
+WARNUNG!!! Es besteht die Gefahr, dass die Nutung je nach Landesbestimmung strafbar ist.
+Dummschwätzen und Klugscheissen bleibt aber bis auf weiteres erlaubt.
+
 ## Hauptziel des Projekts:
 
 Entwicklung einer komplexeren LAN/Web-Fernsteuerung für das Albrecht AE-5900.
@@ -248,7 +267,6 @@ Es sollte allerdings eine Kleinigkeit sein, hier noch eine PTT Funktion für ent
 Nur falls jemand au so einem System testet. Ein mintupgrade hilft das Problem zu lösen.
 
 3. Das Script ae_5900_maninthemiddle.py wurde hinzugefügt. Damit lassen sich HEX Codes zwischen Mikrofon und Funkgerät auslesen.
-
 
 ## Was du sonst noch erwarten kannst:
 
