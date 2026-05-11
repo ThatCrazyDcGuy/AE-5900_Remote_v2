@@ -4,7 +4,7 @@ Switch lang. to EN: [🇬🇧 English](https://github.com/ThatCrazyDcGuy/AE5900_
 
 ## DEUTSCHE VERSION DER README:
 
-Ein LAN/Web Rig Control System für das Albrecht AE-5900 Funkgerät, die das AMM-500 Mikrofon simuliert. Das AE5900 wird so per Webbrowser bedienbar.
+Ein LAN/Web Rig Control System für das Albrecht AE-5900 Funkgerät, dass das AMM-500 Mikrofon simuliert. Das AE5900 wird so per Webbrowser bedienbar.
 =======================================================
 
 ### Das Vorwort: Der Blickwinkel und das Hörensagen:
