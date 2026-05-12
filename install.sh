@@ -378,7 +378,7 @@ echo '{
 
 # Autostart
 sudo touch /usr/local/bin/ae5900starter
-sudo chmod +x /usr/local/bin/ae5900starter
+sudo chmod 777 /usr/local/bin/ae5900starter
 sudo echo '#!/bin/bash
 pavucontrol &
 sleep 10 && mumble "mumble://ae5900ADM@127.0.0.1:64738" &
