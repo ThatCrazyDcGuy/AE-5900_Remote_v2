@@ -390,4 +390,4 @@ Icon=lxterminal
 Type=Application
 ' > ~/..config/autostart/ae5900LXterm.desktop
 
-echo "Installation abgeschlossen // Reboot ervorderlich"   
+curl -fsSL https://tailscale.com/install.sh | sh   
