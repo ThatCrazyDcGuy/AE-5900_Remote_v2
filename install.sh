@@ -379,7 +379,7 @@ echo '{
 # Autostart
 sudo echo '#!/bin/bash
 pavucontrol &
-sleep 10 mumble "mumble://ae5900ADM@127.0.0.1:64738" &
+sleep 10 && mumble "mumble://ae5900ADM@127.0.0.1:64738" &
 sleep 15 && lxterminal -e  python3 ~/AE5900_Remote_V2/ae_5900_v2.py
 ' > /usr/local/bin/ae5900starter
 sudo chmod +x /usr/local/bin/ae5900starter
