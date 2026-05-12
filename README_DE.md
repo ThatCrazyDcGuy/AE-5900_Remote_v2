@@ -241,6 +241,18 @@ Updaten kann man dann jeweils mit:
 git pull
 ```
 
+Für die ganz faulen, mit frisch installiertem Raspberry Trixie Image:
+
+```bash
+git clone https://github.com/ThatCrazyDcGuy/AE5900_Remote_V2
+cd ~/AE5900_Remote_V2/
+sudo chmod +x install.sh
+./install.sh
+#Wer tailscale nutzen möchte:
+#Kopiere den erstellten TailscaleLink in deinen Browser und folge der Anleitung
+sudo tailscale up
+reboot
+```
 #### Meine Audioeinstellungen für den Host/Server
 
 Alle nachfolgenden Einstellungen betreffen den Host / Server.
