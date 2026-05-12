@@ -242,6 +242,7 @@ git pull
 ```
 
 Für die ganz faulen, mit frisch installiertem Raspberry Trixie Image:
+Kopiert einfach den gesamten Block in die Konsole.
 
 ```bash
 git clone https://github.com/ThatCrazyDcGuy/AE5900_Remote_V2
