@@ -247,14 +247,14 @@ For the really lazy, with a freshly installed Raspberry Trixie image:
 Simply copy the entire block into the console.
 
 ```bash
-`git clone https://github.com/ThatCrazyDcGuy/AE5900_Remote_V2`
-`cd ~/AE5900_Remote_V2/`
-`sudo chmod +x install.sh`
-`./install.sh`
-`#If you want to use tailscale:`
-`#Copy the created TailscaleLink into your browser and follow the instructions
-`sudo tailscale up`
-`reboot`
+git clone https://github.com/ThatCrazyDcGuy/AE5900_Remote_V2
+cd ~/AE5900_Remote_V2/
+sudo chmod +x install.sh
+./install.sh
+#If you want to use tailscale:
+#Copy the created TailscaleLink into your browser and follow the instructions
+sudo tailscale up
+reboot
 ````
 
 #### My Audio Settings for the Host/Server
