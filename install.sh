@@ -396,3 +396,4 @@ Type=Application
 ' > ~/.config/autostart/ae5900LXterm.desktop
 
 curl -fsSL https://tailscale.com/install.sh | sh   
+mv ~/AE5900_Remote_V2/install.sh ~/AE5900_Remote_V2/installation_done.sh
