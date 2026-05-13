@@ -48,8 +48,10 @@ echo 'pulse.rules = [
 echo '{
     "audio": {
         "cue_volume": 0.0009765625,
+        "echo_cancel_mode": "Disabled",
         "external_applications_volume": 1.0,
         "input_system": "PulseAudio",
+        "loudness": 20000,
         "noise_cancel_mode": "Off",
         "notification_volume": 0.0009765625,
         "output_delay": 1,
@@ -394,6 +396,16 @@ Exec=ae5900starter
 Icon=lxterminal
 Type=Application
 ' > ~/.config/autostart/ae5900LXterm.desktop
+
+echo '[window]
+width=800
+height=400
+sinkInputType=1
+sourceOutputType=1
+sinkType=0
+sourceType=1
+showVolumeMeters=1
+' > ~/.config/pavucontrol.ini
 
 curl -fsSL https://tailscale.com/install.sh | sh   
 mv ~/AE5900_Remote_V2/install.sh ~/AE5900_Remote_V2/installation_done.sh
