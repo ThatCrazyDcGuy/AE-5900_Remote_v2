@@ -399,7 +399,7 @@ Type=Application
 
 sudo sed -i 's/^dtparam=audio=on/#dtparam=audio=on/' /boot/firmware/config.txt && \
 echo 'dtparam=audio=off' | sudo tee -a /boot/firmware/config.txt
-
+echo 'dtparam=audio=off' | sudo tee -a /boot/firmware/config.txt   
 echo 'dtoverlay=vc4-kms-v3d,noaudio' | sudo tee -a /boot/firmware/config.txt   
 
 echo '[window]
