@@ -165,7 +165,14 @@ Tailscale on all devices used for this project.
 When operating on a local network, Tailscale can be omitted.
 Tailscale is free for private users but requires an account.
 
-For the really lazy, with a freshly installed Raspberry Trixie image:
+For those who prefer a more relaxed approach, using a fresh Raspberry Pi Trixie image:
+
+This block will first install the script and system updates on the Raspberry Pi.
+Then, everything necessary, such as Python, Mumble, audio, and Tailscale, will be installed.
+Finally, the settings in Mumble and the audio will be adjusted, and a simple autostart will be added.
+After restarting, Mumble will ask for the certificate and the database location.
+Now restart again, and everything is set up for the first test run.
+
 Simply copy the entire block into the console.
 
 ```bash
