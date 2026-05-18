@@ -412,5 +412,19 @@ sourceType=1
 showVolumeMeters=1
 ' > ~/.config/pavucontrol.ini
 
+echo "
+#######################################################################################################
+
+Mumble wird nun zum ersten mal gestartet und fragt nur nach dem Speicherort der SQL_Database und nach dem Zertifikat. Bitte bestätigen und danach Mumble beenden.
+
+#######################################################################################################
+
+Mumble is now starting for the first time and will only ask for the location of the SQL_Database and the certificate. Please confirm and then close Mumble.
+
+#######################################################################################################
+"
+sleep 3
+mumble "mumble://ae5900ADM@127.0.0.1:64738"
+
 curl -fsSL https://tailscale.com/install.sh | sh   
 mv ~/AE5900_Remote_V2/install.sh ~/AE5900_Remote_V2/installation_done.sh
