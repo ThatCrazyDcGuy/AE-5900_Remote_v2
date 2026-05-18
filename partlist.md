@@ -71,4 +71,5 @@ https://www.amazon.de/dp/B0CPDFB7WX
 50x 5.19.- // 1x c.a 0.10.-
 
 ###################################
-Grob 25.- 
+
+Also grob 25.- um ein Gerät zu bauen.
