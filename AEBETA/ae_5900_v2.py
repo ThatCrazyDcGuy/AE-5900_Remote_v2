@@ -18,30 +18,38 @@ threading.Thread(target=auto_patch_streams, daemon=True).start()
 def run_listen_loop():
     raw_buffer = b""
     while radio.ser:
-        if radio.ser.in_waiting > 0:
-            try:
+        try:
+            if radio.ser.in_waiting > 0:
                 raw_buffer += radio.ser.read(radio.ser.in_waiting)
                 while b'\x53' in raw_buffer:
                     idx = raw_buffer.find(b'\x53')
-                    if len(raw_buffer[idx:]) < 16: break 
+                    if len(raw_buffer[idx:]) < 16: 
+                        break 
                     packet = raw_buffer[idx:idx+16]
                     
+                    # SIGNAL-ERKENNUNG (S-Meter)
                     radio.is_rx = (packet[1] > 0 or packet[2] > 0)
-                    vox_detected = (packet[6] == 0x01)
                     
+                    # VOX-ERKENNUNG
+                    vox_detected = (packet[6] == 0x01)
                     if vox_detected and not radio.config.get("vox_enabled", False) and not radio.is_tx:
-                        with radio.lock: radio.ser.write(bytes.fromhex("4100000000000006"))
+                        with radio.lock: 
+                            radio.ser.write(bytes.fromhex("4100000000000006"))
                         vox_detected = False
 
+                    # MANUELLER ABBRUCH-SCHUTZ
                     if radio.force_rx:
                         with radio.lock:
-                            for _ in range(3): radio.ser.write(bytes.fromhex("4100000000000006"))
+                            for _ in range(3): 
+                                radio.ser.write(bytes.fromhex("4100000000000006"))
                         radio.force_rx = False
 
                     radio.is_device_sending = vox_detected
                     raw_buffer = raw_buffer[idx+16:]
-            except: pass
-        time.sleep(0.02)
+            else:
+                time.sleep(0.02)
+        except: 
+            time.sleep(0.02)
 
 threading.Thread(target=run_listen_loop, daemon=True).start()
 
@@ -137,17 +145,27 @@ def api_cmd(cmd):
         parts = cmd.split('_')
         radio.config[f"fft_{parts[1].lower()}_gain"] = int(parts[3])
 
-    is_syncing = time.time() < radio.ignore_until
+    is_syncing = False
+    if hasattr(radio, 'ignore_until') and radio.ignore_until is not None:
+        is_syncing = time.time() < radio.ignore_until
 
     radio.save_config()
     rem = int(radio.config["ptt_timeout"] - (time.time() - radio.ptt_start_time)) if radio.is_tx else radio.config["ptt_timeout"]
     
     return jsonify({
-        "CH": str(radio.current_ch).zfill(2), "MODE": radio.modes[radio.mode_idx], 
-        "PTT": "ON" if radio.is_tx else "OFF", "VOX_TX": radio.is_device_sending,
-        "VOX_ENABLED": radio.config.get("vox_enabled", False), "REMAINING": max(0, rem), 
-        "BUSY": radio.is_rx, "SW_SCAN": radio.sw_scan_active, 
-        "SKIP_PA": radio.config.get("skip_pa", False), "SKIP_CW": radio.config.get("skip_cw", False), "IS_SYNCING": is_syncing
+        "CH": str(radio.current_ch).zfill(2), 
+        "MODE": radio.modes[radio.mode_idx], 
+        "PTT": "ON" if radio.is_tx else "OFF", 
+        "VOX_TX": radio.is_device_sending,
+        "VOX_ENABLED": radio.config.get("vox_enabled", False), 
+        "REMAINING": max(0, rem), 
+        "BUSY": radio.is_rx, 
+        "SW_SCAN": radio.sw_scan_active, 
+        "SKIP_PA": radio.config.get("skip_pa", False), 
+        "SKIP_CW": radio.config.get("skip_cw", False),
+        "IS_SYNCING": is_syncing,
+        "SCAN_SPEED": radio.config.get("scan_speed", 0.5), # Liefert den echten Wert an den Browser!
+        "VOL": radio.config.get("vol", 50)
     })
 
 if __name__ == '__main__':
