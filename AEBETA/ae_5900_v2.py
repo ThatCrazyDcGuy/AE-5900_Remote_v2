@@ -147,40 +147,42 @@ radio = RadioInterface()
 def run_listen_loop():
     raw_buffer = b""
     while radio.ser:
-        if radio.ser.in_waiting > 0:
-            try:
-                # Nutze das Lock der Klasse für absolut sicheren Hardware-Zugriff!
+        try:
+            # Wir prüfen erst, ob Daten da sind, OHNE das Lock zu blockieren
+            if radio.ser.in_waiting > 0:
+                # Nur das nackte Lesen wird kurz gelockt
                 with radio.lock:
-                    raw_buffer += radio.ser.read(radio.ser.in_waiting)
+                    new_data = radio.ser.read(radio.ser.in_waiting)
+                raw_buffer += new_data
+                
                 while b'\x53' in raw_buffer:
                     idx = raw_buffer.find(b'\x53')
                     if len(raw_buffer[idx:]) < 16: break 
                     packet = raw_buffer[idx:idx+16]
                     
-                    # Signal-Erkennung (S-Meter)
                     radio.is_rx = (packet[1] > 0 or packet[2] > 0)
-
-                    # VOX-Erkennung
                     vox_detected = (packet[6] == 0x01)
                     
                     if vox_detected and not radio.config.get("vox_enabled", False) and not radio.is_tx:
-                        with radio.lock:
-                            radio.ser.write(bytes.fromhex("4100000000000006"))
+                        with radio.lock: radio.ser.write(bytes.fromhex("4100000000000006"))
                         vox_detected = False
 
                     if radio.force_rx:
                         with radio.lock:
-                            stop_cmd = bytes.fromhex("4100000000000006")
-                            for _ in range(3):
-                                radio.ser.write(stop_cmd)
-                                time.sleep(0.01) 
-                        radio.force_rx = False 
+                            for _ in range(3): 
+                                radio.ser.write(bytes.fromhex("4100000000000006"))
+                        radio.force_rx = False
 
                     radio.is_device_sending = vox_detected
                     raw_buffer = raw_buffer[idx+16:]
-            except:
-                pass
-        time.sleep(0.02)
+            else:
+                # Wenn keine Daten da sind, zwingend 30ms schlafen!
+                # Das gibt Flask das Zeitfenster, um die API-Aufrufe zu verarbeiten!
+                time.sleep(0.03)
+        except:
+            time.sleep(0.03)
+        # Kurze Entlastungspause nach jedem Schleifendurchlauf
+        time.sleep(0.01)
 
 
 threading.Thread(target=run_listen_loop, daemon=True).start()

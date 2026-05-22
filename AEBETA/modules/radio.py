@@ -84,13 +84,20 @@ class RadioInterface:
                 self.current_ch = (self.current_ch % 40) + 1
                 self.send_cmd("4100010010000006", "4100000010000006")
                 self.save_config()
-            time.sleep(self.config.get("scan_speed", 0.5))
+                
+            # Wichtig: Hole den Speed-Wert, aber erzwinge mindestens 0.2 Sekunden,
+            # damit die serielle Schnittstelle nicht kollabiert!
+            speed = max(0.2, self.config.get("scan_speed", 0.5))
+            time.sleep(speed)
+            
             while self.is_rx and self.sw_scan_active:
-                time.sleep(0.2)
+                # 50ms Pause während des Wartens auf Signalende, entlastet die CPU enorm
+                time.sleep(0.05) 
                 if self.is_tx:
                     self.sw_scan_active = False
                     break
         print("Software-Scan beendet.")
+
 
     def stop_sw_scan(self):
         self.sw_scan_active = False
