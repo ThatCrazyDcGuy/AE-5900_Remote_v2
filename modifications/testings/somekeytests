@@ -1,0 +1,372 @@
+###############################################################################
+
+
+
+Lautstärke:
+
+[TX] ID 0x10 -> DRÜCKEN:   41 00 01 00 10 00 00 06
+    [RX Antwort (Gedrückt)] <- AA 53 00 00 00 00 00 00 00 00 10 00 00 01 00 00 06
+                       -> LOSLASSEN: 41 00 00 00 10 00 00 06
+    [RX Antwort (Losgelassen)] <- AA 53 00 00 00 00 00 00 00 00 10 00 00 01 00 00 06
+[TX] ID 0x11 -> DRÜCKEN:   41 00 01 00 11 00 00 06
+    [RX Antwort (Gedrückt)] <- AA 53 00 00 00 00 00 00 00 00 10 00 00 01 00 00 06
+                       -> LOSLASSEN: 41 00 00 00 11 00 00 06
+    [RX Antwort (Losgelassen)] <- 53 00 00 00 00 00 00 00 00 10 00 00 01 00 00 06 AA
+[TX] ID 0x12 -> DRÜCKEN:   41 00 01 00 12 00 00 06
+    [RX Antwort (Gedrückt)] <- AA
+                       -> LOSLASSEN: 41 00 00 00 12 00 00 06
+    [RX Antwort (Losgelassen)] <- AA
+
+
+[||] PAUSE bei Tasten-ID: 0x13 (Dezimal: 19)
+
+
+[TX] ID 0x13 -> DRÜCKEN:   41 00 01 00 13 00 00 06
+    [RX Antwort (Gedrückt)] <- AA
+                       -> LOSLASSEN: 41 00 00 00 13 00 00 06
+    [RX Antwort (Losgelassen)] <- AA
+
+
+[||] PAUSE bei Tasten-ID: 0x14 (Dezimal: 20)
+
+
+12 und 13?
+
+
+Was ist R im Display:
+
+    [RX Antwort (Losgelassen)] <- AA
+[TX] ID 0x0D -> DRÜCKEN:   41 00 01 00 0D 00 00 06
+    [RX Antwort (Gedrückt)] <- AA
+                       -> LOSLASSEN: 41 00 00 00 0D 00 00 06
+    [RX Antwort (Losgelassen)] <- AA 53 00 00 00 00 00 00 00 00 10 00 00 01 00 00 06
+[TX] ID 0x0E -> DRÜCKEN:   41 00 01 00 0E 00 00 06
+    [RX Antwort (Gedrückt)] <- 53 00 00 00 00 00 00 00 00 10 00 00 01 00 00 06 53 01 01 00 00 00 00 00 00 10 00 00 01 00 00 06 AA
+                       -> LOSLASSEN: 41 00 00 00 0E 00 00 06
+    [RX Antwort (Losgelassen)] <- AA
+
+
+
+SQ level:
+
+    [RX Antwort (Gedrückt)] <- AA
+                       -> LOSLASSEN: 41 00 00 00 24 00 00 06
+    [RX Antwort (Losgelassen)] <- AA
+[TX] ID 0x25 -> DRÜCKEN:   41 00 01 00 25 00 00 06
+    [RX Antwort (Gedrückt)] <- 53 00 00 00 00 00 00 00 00 10 00 00 01 00 00 06 53 00 00 00 00 00 00 00 00 10 00 00 01 00 00 06 53 01 01 00 00 00 00 00 00 10 00 00 01 00 00 06 AA
+                       -> LOSLASSEN: 41 00 00 00 25 00 00 06
+    [RX Antwort (Losgelassen)] <- AA
+
+FUNC Taste:
+
+[TX] ID 0x31 -> DRÜCKEN:   41 00 01 00 31 00 00 06
+    [RX Antwort (Gedrückt)] <- AA
+                       -> LOSLASSEN: 41 00 00 00 31 00 00 06
+    [RX Antwort (Losgelassen)] <- AA
+[TX] ID 0x32 -> DRÜCKEN:   41 00 01 00 32 00 00 06
+
+    [RX Antwort (Gedrückt)] <- 53 00 00 00 00 00 00 00 00 10 00 00 01 00 00 06 53 00 00 00 00 00 00 00 00 10 00 00 01 00 00 06 53 01 01 00 00 00 00 00 00 10 00 00 01 00 00 06 AA
+                       -> LOSLASSEN: 41 00 00 00 32 00 00 06
+    [RX Antwort (Losgelassen)] <- AA
+
+
+
+##########################################################################
+##########################################################################
+
+FUNC Taste: (beispiel: gefolgt von ASQ Taste, wird RFG - Level ausgelöst - gefolgt von volume up und down RFG regelbar)
+
+[*] Verbindung zu /dev/ttyUSB0 hergestellt.
+[*] Sende Einzelbefehl für ID: 0x31 (Dezimal: 49)
+[TX] -> DRÜCKEN:   41 00 01 00 31 00 00 06
+    [RX Antwort (Gedrückt)] <- AA
+[TX] -> LOSLASSEN: 41 00 00 00 31 00 00 06
+    [RX Antwort (Losgelassen)] <- AA
+[*] Fertig. Port geschlossen.
+
+Testlauf:
+
+Sequenz eingeben > 31, 24:2, 12, 12, 12, 12, 12, 12 
+--> Starte Sequenz mit 8 Tasten...
+   [1/8] Taste 0x31 (Dezimal: 49)
+       [RX Gedrückt] <- AA
+       [RX Losgelassen] <- AA
+   [2/8] Taste 0x1A (Dezimal: 26)
+       [RX Gedrückt] <- AA
+       [RX Losgelassen] <- AA
+   [3/8] Taste 0x12 (Dezimal: 18)
+       [RX Gedrückt] <- AA
+       [RX Losgelassen] <- AA
+   [4/8] Taste 0x12 (Dezimal: 18)
+       [RX Gedrückt] <- AA
+       [RX Losgelassen] <- AA
+   [5/8] Taste 0x12 (Dezimal: 18)
+       [RX Gedrückt] <- AA
+       [RX Losgelassen] <- AA
+   [6/8] Taste 0x12 (Dezimal: 18)
+       [RX Gedrückt] <- AA
+       [RX Losgelassen] <- AA
+   [7/8] Taste 0x12 (Dezimal: 18)
+       [RX Gedrückt] <- AA
+       [RX Losgelassen] <- AA
+   [8/8] Taste 0x12 (Dezimal: 18)
+       [RX Gedrückt] <- AA
+       [RX Losgelassen] <- AA
+[*] Sequenz abgeschlossen.
+
+Egebniss: 1A ist Taste P1. Es muss ID 24 (Lang / 2 Sekunden) press sein.
+
+
+##########################################################################
+
+SquelchLevel Taste: (gefolgt von volume up und down squelch regelbar) (auch 10 für UP oder 11 für down kann verwendet werden)
+
+[*] Verbindung zu /dev/ttyUSB0 hergestellt.
+[*] Sende Einzelbefehl für ID: 0x24 (Dezimal: 36)
+[TX] -> DRÜCKEN:   41 00 01 00 24 00 00 06
+    [RX Antwort (Gedrückt)] <- AA
+[TX] -> LOSLASSEN: 41 00 00 00 24 00 00 06
+    [RX Antwort (Losgelassen)] <- AA
+[*] Fertig. Port geschlossen.
+
+Squelch Test 1:
+
+Sequenz eingeben > 24, 12, 12, 12, 12, 12
+--> Starte Sequenz mit 6 Tasten...
+   [1/6] Taste 0x24 (Dezimal: 36)
+       [RX Gedrückt] <- AA
+       [RX Losgelassen] <- AA
+   [2/6] Taste 0x12 (Dezimal: 18)
+       [RX Gedrückt] <- AA
+       [RX Losgelassen] <- AA
+   [3/6] Taste 0x12 (Dezimal: 18)
+       [RX Gedrückt] <- AA
+       [RX Losgelassen] <- AA
+   [4/6] Taste 0x12 (Dezimal: 18)
+       [RX Gedrückt] <- AA
+       [RX Losgelassen] <- AA
+   [5/6] Taste 0x12 (Dezimal: 18)
+       [RX Gedrückt] <- AA
+       [RX Losgelassen] <- AA
+   [6/6] Taste 0x12 (Dezimal: 18)
+       [RX Gedrückt] <- AA
+       [RX Losgelassen] <- AA
+[*] Sequenz abgeschlossen.
+
+Ergebnis: Squelch um 5 Punkte erhöht. (Nur wenn ASQ off ist. Ansonsten wird ASQ Level geregelt)
+
+Squelch Test2: 
+
+Sequenz eingeben > 24, 13, 13, 13, 13, 13, 13, 13
+--> Starte Sequenz mit 8 Tasten...
+   [1/8] Taste 0x24 (Dezimal: 36)
+       [RX Gedrückt] <- AA
+       [RX Losgelassen] <- AA
+   [2/8] Taste 0x13 (Dezimal: 19)
+       [RX Gedrückt] <- AA
+       [RX Losgelassen] <- AA
+   [3/8] Taste 0x13 (Dezimal: 19)
+       [RX Gedrückt] <- AA
+       [RX Losgelassen] <- AA
+   [4/8] Taste 0x13 (Dezimal: 19)
+       [RX Gedrückt] <- AA
+       [RX Losgelassen] <- AA
+   [5/8] Taste 0x13 (Dezimal: 19)
+       [RX Gedrückt] <- AA
+       [RX Losgelassen] <- AA
+   [6/8] Taste 0x13 (Dezimal: 19)
+       [RX Gedrückt] <- AA
+       [RX Losgelassen] <- AA
+   [7/8] Taste 0x13 (Dezimal: 19)
+       [RX Gedrückt] <- AA
+       [RX Losgelassen] <- AA
+   [8/8] Taste 0x13 (Dezimal: 19)
+       [RX Gedrückt] <- AA
+       [RX Losgelassen] <- AA
+[*] Sequenz abgeschlossen.
+
+
+Ergebnis: Squelch um 7 Punkte herabgesetzt. (Nur wenn ASQ off ist. Ansonsten wird ASQ Level geregelt)
+
+
+ASQ on/off Unterschied:
+
+Ist ASQ in FM/AM off und wird nachfolgend mit 1A gestartet, gefolgt von SQ Level:
+
+Sequenz eingeben > 1A, 24
+--> Starte Sequenz mit 2 Tasten...
+   [1/2] Taste 0x1A (Dezimal: 26)
+       [RX Gedrückt] <- AA
+       [RX Losgelassen] <- AA 53 00 01 00 00 00 00 00 00 10 00 00 01 00 00 06
+   [2/2] Taste 0x24 (Dezimal: 36)
+       [RX Gedrückt] <- 53 00 00 00 00 00 00 00 00 10 00 00 01 00 00 06 AA
+       [RX Losgelassen] <- AA
+[*] Sequenz abgeschlossen.
+
+Ist ASQ in FM/AM an und wird nachfolgend mit 1A abgeschaltet, gefolgt von SQ Level:
+
+Sequenz eingeben > 1A, 24
+--> Starte Sequenz mit 2 Tasten...
+   [1/2] Taste 0x1A (Dezimal: 26)
+       [RX Gedrückt] <- AA
+       [RX Losgelassen] <- AA
+   [2/2] Taste 0x24 (Dezimal: 36)
+       [RX Gedrückt] <- 53 00 01 00 00 00 00 00 00 10 00 00 01 00 00 06 53 01 01 00 00 00 00 00 00 10 00 00 01 00 00 06 AA
+       [RX Losgelassen] <- AA
+[*] Sequenz abgeschlossen.
+
+Ist ASQ in SSB off und wird nachfolgend mit 1A gestartet, gefolgt von SQ Level:
+
+Sequenz eingeben > 1A, 24
+--> Starte Sequenz mit 2 Tasten...
+   [1/2] Taste 0x1A (Dezimal: 26)
+       [RX Gedrückt] <- 53 01 01 00 00 00 00 00 00 10 00 00 01 00 00 06 53 01 01 00 00 00 00 00 00 10 00 00 01 00 00 06 53 01 01 00 00 00 00 00 00 10 00 00 01 00 00 06 53 01 01 00 00 00 00 00 00 10 00 00 01 00 00 06 AA
+       [RX Losgelassen] <- AA
+   [2/2] Taste 0x24 (Dezimal: 36)
+       [RX Gedrückt] <- AA
+       [RX Losgelassen] <- AA
+[*] Sequenz abgeschlossen. (ASQ wurde einmalig gelesen und dann ignoriert. Da kein ASQ in SSB. Nur "echtes" SQ")
+
+Ist ASQ in SSB ignoriert und wird nachfolgend mit 1A geschalten, gefolgt von SQ Level:
+
+Sequenz eingeben > 1A, 24
+--> Starte Sequenz mit 2 Tasten...
+   [1/2] Taste 0x1A (Dezimal: 26)
+       [RX Gedrückt] <- AA
+       [RX Losgelassen] <- AA
+   [2/2] Taste 0x24 (Dezimal: 36)
+       [RX Gedrückt] <- AA
+       [RX Losgelassen] <- AA
+[*] Sequenz abgeschlossen.
+
+Sequenz eingeben > 1A, 24
+--> Starte Sequenz mit 2 Tasten...
+   [1/2] Taste 0x1A (Dezimal: 26)
+       [RX Gedrückt] <- AA
+       [RX Losgelassen] <- AA
+   [2/2] Taste 0x24 (Dezimal: 36)
+       [RX Gedrückt] <- AA
+       [RX Losgelassen] <- AA
+[*] Sequenz abgeschlossen.
+
+
+
+##########################################################################
+
+Gerätelautstärke +:
+
+[*] Verbindung zu /dev/ttyUSB0 hergestellt.
+[*] Sende Einzelbefehl für ID: 0x12 (Dezimal: 18)
+[TX] -> DRÜCKEN:   41 00 01 00 12 00 00 06
+    [RX Antwort (Gedrückt)] <- AA
+[TX] -> LOSLASSEN: 41 00 00 00 12 00 00 06
+^[[A    [RX Antwort (Losgelassen)] <- AA
+[*] Fertig. Port geschlossen.
+
+Gerätelautstärke -:
+
+[*] Verbindung zu /dev/ttyUSB0 hergestellt.
+[*] Sende Einzelbefehl für ID: 0x13 (Dezimal: 19)
+[TX] -> DRÜCKEN:   41 00 01 00 13 00 00 06
+    [RX Antwort (Gedrückt)] <- AA
+[TX] -> LOSLASSEN: 41 00 00 00 13 00 00 06
+    [RX Antwort (Losgelassen)] <- AA
+[*] Fertig. Port geschlossen.
+
+##########################################################################
+
+LOCK:
+
+Sequenz eingeben > 1E:2
+--> Starte Sequenz mit 1 Tasten...
+   [1/1] Taste 0x1E -> Modus: LONG (2.0s)
+       [RX Während Druck] <- AA
+       [RX Nach Loslassen] <- AA
+[*] Sequenz abgeschlossen.
+
+##########################################################################
+
+MEMORY: (Brauchen wir erstmal nicht)
+
+Sequenz eingeben > 25:2
+--> Starte Sequenz mit 1 Tasten...
+   [1/1] Taste 0x25 -> Modus: LONG (2.0s)
+       [RX Während Druck] <- AA
+       [RX Nach Loslassen] <- AA
+[*] Sequenz abgeschlossen.
+
+##########################################################################
+
+VOX 28 (short) und VOXmenu (long) 28:2
+
+Sequenz eingeben > 28:2
+--> Starte Sequenz mit 1 Tasten...
+   [1/1] Taste 0x28 -> Modus: LONG (2.0s)
+       [RX Während Druck] <- AA
+       [RX Nach Loslassen] <- AA
+[*] Sequenz abgeschlossen.
+
+##########################################################################
+
+FUNC Menu
+
+Sequenz eingeben > 31:2
+--> Starte Sequenz mit 1 Tasten...
+   [1/1] Taste 0x31 -> Modus: LONG (2.0s)
+       [RX Während Druck] <- AA
+       [RX Nach Loslassen] <- AA
+[*] Sequenz abgeschlossen.
+
+##########################################################################
+
+DREHREGLER Drücken: 1E
+
+In SSB/CW für Clarifier nutzbar.
+1E = Clarifier menu öffnet 1Hz regelbar mit 10 up 11 down
+1E,  1E = Clarifier menu öffnet 10Hz regelbar mit 10 up 11 down
+1E, 1E, 1E = Clarifier menu öffnet 100Hz regelbar mit 10 up 11 down
+1E, 1E, 1E, 1E = Clarifier menu schliesst
+
+Testlauf (400Hz hoch und wieder 400Hz runter):
+
+Sequenz eingeben > 1E, 1E, 1E, 11, 11, 11, 11, 10, 10, 10, 10
+--> Starte Sequenz mit 11 Tasten...
+   [1/11] Taste 0x1E -> Modus: SHORT
+       [RX Während Druck] <- AA
+       [RX Nach Loslassen] <- AA
+   [2/11] Taste 0x1E -> Modus: SHORT
+       [RX Während Druck] <- AA
+       [RX Nach Loslassen] <- AA
+   [3/11] Taste 0x1E -> Modus: SHORT
+       [RX Während Druck] <- AA
+       [RX Nach Loslassen] <- AA
+   [4/11] Taste 0x11 -> Modus: SHORT
+       [RX Während Druck] <- AA
+       [RX Nach Loslassen] <- AA
+   [5/11] Taste 0x11 -> Modus: SHORT
+       [RX Während Druck] <- AA
+       [RX Nach Loslassen] <- AA
+   [6/11] Taste 0x11 -> Modus: SHORT
+       [RX Während Druck] <- AA
+       [RX Nach Loslassen] <- AA
+   [7/11] Taste 0x11 -> Modus: SHORT
+       [RX Während Druck] <- AA
+       [RX Nach Loslassen] <- AA
+   [8/11] Taste 0x10 -> Modus: SHORT
+       [RX Während Druck] <- AA
+       [RX Nach Loslassen] <- AA
+   [9/11] Taste 0x10 -> Modus: SHORT
+       [RX Während Druck] <- AA
+       [RX Nach Loslassen] <- AA
+   [10/11] Taste 0x10 -> Modus: SHORT
+       [RX Während Druck] <- AA
+       [RX Nach Loslassen] <- AA
+   [11/11] Taste 0x10 -> Modus: SHORT
+       [RX Während Druck] <- AA
+       [RX Nach Loslassen] <- AA
+[*] Sequenz abgeschlossen.
+
+ERFOLG!
+
+
+
