@@ -10,6 +10,7 @@ import select
 
 app = Flask(__name__)
 radio = RadioInterface()
+radio.ignore_until = 0 
 stream_rx, stream_tx = setup_audio_streams()
 
 threading.Thread(target=auto_patch_streams, daemon=True).start()
