@@ -308,9 +308,13 @@ def api_cmd(cmd):
     is_syncing = time.time() < radio.ignore_until if hasattr(radio, 'ignore_until') else False
     rem = int(radio.config["ptt_timeout"] - (time.time() - radio.ptt_start_time)) if radio.is_tx else radio.config["ptt_timeout"]
     
+    radio.save_config()
+    is_syncing = time.time() < radio.ignore_until if hasattr(radio, 'ignore_until') else False
+    rem = int(radio.config["ptt_timeout"] - (time.time() - radio.ptt_start_time)) if radio.is_tx else radio.config["ptt_timeout"]
+    
     return jsonify({
         "CH": str(radio.current_ch).zfill(2), 
-        "MODE": radio.modes[radio.mode_idx],  # <--- GEÄNDERT: Nutzt jetzt radio.modes aus der Klasse!
+        "MODE": MODES[radio.mode_idx],  # <--- HIER GEÄNDERT: Wieder das sichere globale MODES von oben!
         "PTT": "ON" if radio.is_tx else "OFF", 
         "VOX_TX": radio.is_device_sending,
         "VOX_ENABLED": radio.config.get("vox_enabled", False), 
@@ -322,6 +326,7 @@ def api_cmd(cmd):
         "IS_SYNCING": is_syncing, 
         "SCAN_SPEED": radio.config.get("scan_speed", 0.5)
     })
+
 
 
 if __name__ == '__main__':
