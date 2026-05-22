@@ -2,299 +2,304 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AE-5900 Remote Pro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AE 5900 Remote Cockpit</title>
     <style>
-        body { background: #1a1a1a; color: #0f0; font-family: 'Courier New', monospace; text-align: center; padding: 15px; touch-action: manipulation; }
-        .display { border: 2px solid #333; background: #000; margin: 10px auto; width: 95%; max-width: 400px; padding: 20px; border-radius: 10px; box-shadow: 0 0 15px #00ff0033; }
-        .freq { font-size: 3.5em; font-weight: bold; margin: 5px 0; }
-        .mhz { font-size: 1.1em; color: #008800; margin-bottom: 10px; }
-        .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 95%; max-width: 400px; margin: 20px auto; }
-        button { background: #333; color: white; border: none; padding: 15px; font-size: 1.1em; border-radius: 5px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-        .btn-ptt { grid-column: span 2; background: #4a0000; font-weight: bold; min-height: 80px; transition: 0.2s; }
-        .btn-ptt.active { background: #ff0000; box-shadow: 0 0 20px red; }
-        .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; width: 200px; margin: 15px auto; }
-        .num-btn { background: #222; color: #0f0; padding: 12px; border: 1px solid #444; }
-        .setup-area { margin-top: 30px; border-top: 1px solid #333; padding-top: 20px; color: #888; text-align: left; max-width: 400px; margin: 0 auto; }
-        .hold-button { position: relative; width: 100%; height: 50px; background: #444; color: white; border: none; overflow: hidden; margin: 10px 0; border-radius: 5px; }
-        .progress-bar { position: absolute; bottom: 0; left: 0; height: 5px; background: #00ff00; width: 0%; transition: width 0.1s linear; }
+        body {
+            background: #0a0a0a;
+            color: #dcdcdc;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 10px;
+        }
+        #container {
+            max-width: 480px;
+            margin: 0 auto;
+            background: #121212;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            border: 1px solid #222;
+        }
+        #display {
+            background: #000;
+            border: 2px solid #ff8800;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-shadow: inset 0 0 10px rgba(255,136,0,0.3);
+        }
+        #chDisp {
+            font-size: 5rem;
+            font-weight: bold;
+            color: #ff8800;
+            font-family: monospace;
+            line-height: 1;
+        }
+        #mhzDisp {
+            font-size: 1.2rem;
+            color: #a0a0a0;
+            margin: 5px 0;
+        }
+        #statusLine {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            border-top: 1px solid #222;
+            padding-top: 8px;
+            margin-top: 5px;
+        }
+        #modeName { color: #00ff00; font-weight: bold; }
+        #pttStat { color: #888; }
+        
+        /* Audio Spektrum */
+        #audioBars {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            height: 40px;
+            background: #050505;
+            border: 1px solid #1a1a1a;
+            border-radius: 4px;
+            padding: 2px 5px;
+            margin-bottom: 15px;
+        }
+        .bar {
+            width: 2.5%;
+            background: #00ff00;
+            transition: height 0.05s ease;
+            height: 5%;
+        }
+
+        /* Tasten-Layout */
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+        
+        button {
+            background: #222;
+            color: #fff;
+            border: 1px solid #333;
+            padding: 12px 5px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.1s ease;
+            user-select: none;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        button:active {
+            background: #ff8800 !important;
+            color: #000 !important;
+        }
+        
+        /* Spezial-Buttons */
+        #pttBtn {
+            background: #4a0000;
+            border: 1px solid #a00;
+            color: #ff9999;
+            padding: 16px;
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+        }
+        .btn-mumble { background: #1a252f; border-color: #34495e; color: #3498db; }
+        .btn-hw { background: #2c3e50; border-color: #415b76; color: #ecf0f1; }
+        
+        /* Einstellungen */
+        #settings {
+            background: #181818;
+            border: 1px solid #282828;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            text-align: left;
+        }
+        #settings h3 { margin: 0 0 10px 0; font-size: 1rem; color: #ff8800; border-bottom: 1px solid #333; padding-bottom: 3px; }
+        #settings p { margin: 6px 0; font-size: 0.9rem; display: flex; justify-content: space-between; align-items: center; }
+        input[type="text"], input[type="number"] {
+            background: #000; color: #fff; border: 1px solid #444; padding: 4px; border-radius: 4px;
+        }
     </style>
 </head>
 <body>
-    <div class="display" style="position: relative; overflow: hidden;">
-        <canvas id="audioVisualizer" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.3; pointer-events: none;"></canvas>
-        <div id="voxIndicator" style="position: absolute; top: 10px; right: 15px; font-weight: bold; font-size: 0.9em; transition: 0.3s; z-index: 3;">VOX</div>
-        <div id="pttStat" style="font-weight:bold; color:#444; position: relative; z-index: 2;">○ RX IDLE</div>
-        <div class="freq" id="chDisp" style="position: relative; z-index: 2;">01</div>
-        <div class="mhz" id="mhzDisp" style="position: relative; z-index: 2;">26.965 MHz</div>
-        <div id="modeName" style="font-size: 1.2em; color: #888; position: relative; z-index: 2;">FM</div>
-    </div>
 
-    <div class="keypad">
-        {% for i in range(1, 10) %}<button class="num-btn" onclick="send('K{{i}}')">{{i}}</button>{% endfor %}
-        <button class="num-btn" style="grid-column: span 3" onclick="send('K0')">0</button>
-    </div>
-
-    <div class="controls">
-        <button onclick="send('U')">▲ CH UP</button>
-        <button onclick="send('D')">▼ CH DOWN</button>
-	<button onclick="send('M')">MODE</button>
-	<button onclick="send('SSCAN')" id="scanBtn">S-SCAN</button>
-
-        <button onclick="send('P1')" id="lbl-p1">P1 ({{config.p1_label}})</button>
-        <button onclick="send('P2')" id="lbl-p2">P2 ({{config.p2_label}})</button>
-        <button onclick="send('P3')" id="lbl-p3">P3 ({{config.p3_label}})</button>
-        <button onclick="send('P4')" id="lbl-p4">P4 ({{config.p4_label}})</button>
-        <button onclick="send('P')" id="pttBtn" class="btn-ptt">PTT TOGGLE</button>
-    </div>
-
-    <details class="setup-area">
-        <summary>⚙️ SETUP & SYNC</summary>
-        <div style="background: #222; padding: 20px; border-radius: 10px;">
-            <button id="syncBtn" class="hold-button"><span style="position:relative; z-index:2;">SUPER SYNC (CH 01 - Hold 3s)</span><div class="progress-bar" id="syncProgress"></div></button>
-            <p>PTT Timeout: <input type="number" id="pttInput" value="{{ config.ptt_timeout }}" style="width: 60px;" onchange="updateTimeout()"> s</p>
-            <p>Skip PA (ab FW v1.2 möglich): <input type="checkbox" onchange="fetch('/api/cmd/SET_SKIP_PA?val=' + this.checked)" {% if config.skip_pa %}checked{% endif %}></p>
-            <p>P1 Label: <input type="text" value="{{config.p1_label}}" onchange="setCfg('P1', this.value)" style="width:100px;"></p>
-            <p>P2 Label: <input type="text" value="{{config.p2_label}}" onchange="setCfg('P2', this.value)" style="width:100px;"></p>
-            <p>P3 Label: <input type="text" value="{{config.p3_label}}" onchange="setCfg('P3', this.value)" style="width:100px;"></p>
-            <p>P4 Label: <input type="text" value="{{config.p4_label}}" onchange="setCfg('P4', this.value)" style="width:100px;"></p>
-			<p>Scan Speed (ms): <input type="number" id="scanSpeedInput" value="{{ config.scan_speed * 1000 | int }}" style="width: 70px;" onchange="send('SETSPEED_' + this.value)"> </p>
-	    <p>FFT Gain RX: <input type="number" value="{{config.fft_rx_gain}}" onchange="send('SETGAIN_RX_' + this.value)" style="width:80px;"></p>
-	    <p>FFT Gain TX: <input type="number" value="{{config.fft_tx_gain}}" onchange="send('SETGAIN_TX_' + this.value)" style="width:80px;"></p>
-	    <p>VOX Schaltung: <span id="voxState" style="font-weight:bold;">--</span></p>
-</div>
-
-<div style="border-top: 1px solid #333; padding-top: 10px; margin-top: 10px;">
-    <p>MIC Volume: <span id="volDisp">--</span>%</p>
-    <div style="display: flex; gap: 10px;">
-        <button onclick="changeVol('down')" style="flex: 1;">Vol -</button>
-        <button onclick="changeVol('up')" style="flex: 1;">Vol +</button>  
-</div>
-<div style="border-top: 1px solid #333; padding-top: 10px; margin-top: 10px;">
-    <p>DEV Volume: <span id="volDisp">--</span>%</p>
-        <button onclick="sendCmd('HWVOLDOWN')" style="flex: 1;">Vol -</button>
-        <button onclick="sendCmd('HWVOLUP')" style="flex: 1;">Vol +</button>
-</div>
-    <div>
-<div style="border-top: 1px solid #333; padding-top: 10px; margin-top: 10px;">
-    <p>Squelch: <span id="volDisp">--</span>%</p>
-        <button onclick="sendCmd('SQDOWN')" style="flex: 1;">SQ -</button>
-        <button onclick="sendCmd('SQUP')" style="flex: 1;">SQ +</button>
-    </div>
-<div style="margin-top: 10px; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;">
-    <button onclick="sendCmd('HWVOX')" style="background: #2c3e50;">VOX (HW)</button>
-    <button onclick="sendCmd('HWLOCK')" style="background: #2c3e50;">LOCK</button>
-    <button onclick="sendCmd('HWFUNC')" style="background: #2c3e50;">FUNC</button>
-</div>
-
-<div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #444; color: #aaa; font-size: 0.9em; line-height: 1.4;">
-    <strong style="color: #0f0;">ℹ️ Kurzanleitung für Tester:</strong>
-    <ul style="padding-left: 20px; margin-top: 5px;">
-        <li><strong style="color: #ff8800;">Orange Taste:</strong> VOX hat angesprochen (Gerät sendet automatisch). Es kann vorkommen, dass die PTT Nach dem loslassen kurz orange aufleuchtet, ohne dass VOX Aktiv ist. Herrgottnochmal, ich arbeite daran.</li>
-        <li><strong style="color: #00ff00;">S-SCAN:</strong> Suchlauf stoppt bei Signal. Jede Taste beendet den Scan. Die Scan-Geschwindigkeit lässt sich unten in ms regeln.</li>
-        <li><strong style="color: #0088ff;">Super Sync:</strong> 3 Sek. halten, um Kanal 01 zu erzwingen (falls Anzeige asynchron). Es kann vorkommen, dass die Modulationstaste asyncron läuft. Remote ist das natürlich unschön. Lösung: Öffne ASQ und drücke die Mode-Taste im Webinterface, bis du das typische FM Rauschen hörst, egal was das Webinterface anzeigt. Benutze danach die SYNC Taste.</li>
-        <li>Kanalwahl via Keypad: Immer 2 Ziffern eingeben (z.B. 07).</li>
-		<li>Die Funktion "Skip PA" betrifft jene, die bereits die neue Firmware installiert und PA im Mode-Switch im Menu deaktiviert haben.</li>
-		<li>S-Scan ist softwaregesteuert und unabhängig der integrierten Scanfunktion des AE5900. Der Speed lässt sich in millisekunden angeben. </li>
-		<li>Die P1 - P4 Buttons lassen sich hier optisch mit einem Label versehen. Entsprechend dem, was auf dem AE5900 im Menupunkt Mic Type 2 eingestellt ist.</li>
-		<li>Vol - und Vol + steuern das MicGain der verbauten Soundkarte.</li>
-		<li>Das PTT Timeout dient der zusätzlichen Sicherheit. Damit das AE5900 bei Verbindungsverlust nicht über längere Zeit weiter sendet.</li>
-    </ul>
-    <p style="font-style: italic;">Viel Spass beim Testen! Feedback bitte direkt an mich.</p>
-</div>
-
+<div id="container">
+    <!-- Funkgeräte Display -->
+    <div id="display">
+        <div id="chDisp">01</div>
+        <div id="mhzDisp">26.965 MHz</div>
+        <div id="statusLine">
+            <span id="modeName">FM</span>
+            <span id="pttStat">○ RX IDLE</span>
         </div>
-    </details>
+    </div>
 
-    <script>
-        const freqs = {"01":"26.965","02":"26.975","03":"26.985","04":"27.005","05":"27.015","06":"27.025","07":"27.035","08":"27.055","09":"27.065","10":"27.075","11":"27.085","12":"27.105","13":"27.115","14":"27.125","15":"27.135","16":"27.155","17":"27.165","18":"27.175","19":"27.185","20":"27.205","21":"27.215","22":"27.225","23":"27.255","24":"27.235","25":"27.245","26":"27.265","27":"27.275","28":"27.285","29":"27.295","30":"27.305","31":"27.315","32":"27.325","33":"27.335","34":"27.345","35":"27.355","36":"27.365","37":"27.375","38":"27.385","39":"27.395","40":"27.405"};
+    <!-- Audio Spektrum Balken -->
+    <div id="audioBars"></div>
+
+    <!-- PTT Sende-Taste -->
+    <button id="pttBtn" onclick="sendCmd('P')">PTT TOGGLE</button>
+
+    <!-- REIHE 1: Die Mumble Lebensadern -->
+    <div class="grid-3">
+        <button class="btn-mumble" onclick="sendCmd('VOLDOWN')">M-VOL -</button>
+        <button class="btn-mumble" onclick="sendCmd('VOLUP')">M-VOL +</button>
+        <button class="btn-mumble" onclick="sendCmd('S')">SYNC</button>
+    </div>
+
+    <!-- REIHE 2: Die 3er-Hauptreihe (Deine Wunsch-Anordnung!) -->
+    <div class="grid-3">
+        <button onclick="sendCmd('M')">MODE</button>
+        <button onclick="sendCmd('HWVOX')">VOX (HW)</button>
+        <button onclick="sendCmd('SSCAN')" id="scanBtn">S-SCAN</button>
+    </div>
+
+    <!-- REIHE 3: Die Erweiterungsreihe (FUNC LOCK ACTION) -->
+    <div class="grid-3">
+        <button class="btn-hw" onclick="sendCmd('HWFUNC')">FUNC</button>
+        <button class="btn-hw" onclick="sendCmd('HWLOCK')">LOCK</button>
+        <button class="btn-hw" onclick="sendCmd('HWACTION')">ACTION</button>
+    </div>
+
+    <!-- REIHE 4: Die nativen Funk-Regler (Squelch & Lautstärke) -->
+    <div class="grid-4">
+        <button class="btn-hw" onclick="sendCmd('SQDOWN')">SQ -</button>
+        <button class="btn-hw" onclick="sendCmd('SQUP')">SQ +</button>
+        <button class="btn-hw" onclick="sendCmd('HWVOLDOWN')">RAD -</button>
+        <button class="btn-hw" onclick="sendCmd('HWVOLUP')">RAD +</button>
+    </div>
+
+    <!-- REIHE 5: Das neue, kompakte 3x4 Zahlenfeld (Kein langes Scrollen mehr!) -->
+    <div class="grid-3" style="background: #151515; padding: 8px; border-radius: 8px; border: 1px solid #222;">
+        <button onclick="sendCmd('K1')">1</button>
+        <button onclick="sendCmd('K2')">2</button>
+        <button onclick="sendCmd('K3')">3</button>
+        <button onclick="sendCmd('K4')">4</button>
+        <button onclick="sendCmd('K5')">5</button>
+        <button onclick="sendCmd('K6')">6</button>
+        <button onclick="sendCmd('K7')">7</button>
+        <button onclick="sendCmd('K8')">8</button>
+        <button onclick="sendCmd('K9')">9</button>
+        <button onclick="sendCmd('KD')">DOWN</button>
+        <button onclick="sendCmd('K0')">0</button>
+        <button onclick="sendCmd('KU')">UP</button>
+    </div>
+
+    <!-- REIHE 6: Die programmierbaren P-Tasten -->
+    <div class="grid-4" style="margin-top: 10px;">
+        <button id="p1Btn" onclick="sendCmd('P1')">P1</button>
+        <button id="p2Btn" onclick="sendCmd('P2')">P2</button>
+        <button id="p3Btn" onclick="sendCmd('P3')">P3</button>
+        <button id="p4Btn" onclick="sendCmd('P4')">P4</button>
+    </div>
+
+    <!-- Einstellungs-Menü -->
+    <div id="settings">
+        <h3>Remote Setup & Sync</h3>
+        <p><span>Scan Geschwindigkeit (ms):</span> <input type="number" id="scanSpeedInput" onchange="sendCmd('SETSPEED_' + this.value)" style="width:70px;"></p>
+        <p><label><input type="checkbox" id="skipPaCheck" onchange="sendCmd('SET_SKIP_PA?val=' + this.checked)"> PA Betriebsart überspringen</label></p>
+        <p><label><input type="checkbox" id="skipCwCheck" onchange="sendCmd('SET_SKIP_CW?val=' + this.checked)"> CW Betriebsart überspringen</label></p>
+        <p><span>FFT Gain Empfang (RX):</span> <input type="number" id="gainRxInput" onchange="sendCmd('SETGAIN_RX_0_' + this.value)" style="width:70px;"></p>
+        <p><span>FFT Gain Senden (TX):</span> <input type="number" id="gainTxInput" onchange="sendCmd('SETGAIN_TX_0_' + this.value)" style="width:70px;"></p>
+        <p><span>P1 Label:</span> <input type="text" id="p1Input" onchange="sendCmd('SET_P1_LABEL?val=' + this.value)" style="width:100px;"></p>
+        <p><span>P2 Label:</span> <input type="text" id="p2Input" onchange="sendCmd('SET_P2_LABEL?val=' + this.value)" style="width:100px;"></p>
+        <p><span>P3 Label:</span> <input type="text" id="p3Input" onchange="sendCmd('SET_P3_LABEL?val=' + this.value)" style="width:100px;"></p>
+        <p><span>P4 Label:</span> <input type="text" id="p4Input" onchange="sendCmd('SET_P4_LABEL?val=' + this.value)" style="width:100px;"></p>
+    </div>
+</div>
+
+<script>
+    const freqs = {
+        "01":"26.965","02":"26.975","03":"26.985","04":"27.005","05":"27.015",
+        "06":"27.025","07":"27.035","08":"27.055","09":"27.065","10":"27.075",
+        "11":"27.085","12":"27.105","13":"27.115","14":"27.125","15":"27.135",
+        "16":"27.155","17":"27.165","18":"27.175","19":"27.185","20":"27.205",
+        "21":"27.215","22":"27.225","23":"27.255","24":"27.235","25":"27.245",
+        "26":"27.265","27":"27.275","28":"27.285","29":"27.295","30":"27.305",
+        "31":"27.315","32":"27.325","33":"27.335","34":"27.345","35":"27.355",
+        "36":"27.365","37":"27.375","38":"27.385","39":"27.395","40":"27.405"
+    };
+
+    // Erzeuge 32 Audio-Balken
+    const barsContainer = document.getElementById('audioBars');
+    for(let i=0; i<32; i++) {
+        let bar = document.createElement('div');
+        bar.className = 'bar';
+        barsContainer.appendChild(bar);
+    }
+
+    let currentBarColor = 'green';
+
+    function sendCmd(cmd) {
+        fetch('/api/cmd/' + cmd)
+            .then(res => res.json())
+            .then(data => updateUI(data))
+            .catch(err => console.error(err));
+    }
+
+    function updateUI(data) {
+        if(!data) return;
         
-const canvas = document.getElementById('audioVisualizer');
-const ctx = canvas.getContext('2d');
-
-canvas.width = canvas.offsetWidth;
-canvas.height = canvas.offsetHeight;
-
-let lastData = new Array(32).fill(0);
-let currentBarColor = 'green'; 
-
-function drawSpectrum() {
-    fetch('/api/audio')
-        .then(r => r.json())
-        .then(data => {
-            if (!Array.isArray(data)) return;
-            
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            const barWidth = canvas.width / data.length;
-            
-            data.forEach((val, i) => {
-                let displayVal = Math.max(val, lastData[i] - 1.5);
-                lastData[i] = displayVal;
-                let height = (displayVal / 40) * canvas.height; 
-                
-                if(height > canvas.height) height = canvas.height;
-
-                let grad = ctx.createLinearGradient(0, canvas.height, 0, canvas.height - height);
-                
-                if (currentBarColor === 'red') {
-                    grad.addColorStop(0, '#440000');
-                    grad.addColorStop(1, '#ff0000');
-                } else if (currentBarColor === 'orange') {
-                    grad.addColorStop(0, '#442200');
-                    grad.addColorStop(1, '#ff8800');
-                } else {
-                    grad.addColorStop(0, '#004400');
-                    grad.addColorStop(1, '#00ff00');
-                }
-                
-                ctx.fillStyle = grad;
-                ctx.fillRect(i * barWidth, canvas.height - height, barWidth - 1, height);
-            });
-            
-            setTimeout(drawSpectrum, 50);
-        })
-        .catch(e => {
-            console.error("Audio API Fehler:", e);
-            setTimeout(drawSpectrum, 1000);
-        });
+        document.getElementById('chDisp').innerText = data.CH;
+        document.getElementById('mhzDisp').innerText = (freqs[data.CH] || "---.---") + " MHz";
+document.getElementById('modeName').innerText = data.MODE;
+const btn = document.getElementById('pttBtn');
+const stat = document.getElementById('pttStat');
+if (data.PTT === "ON") {
+currentBarColor = 'red';
+btn.style.background = "#ff0000";
+btn.innerText = "TX ACTIVE (" + data.REMAINING + "s)";
+stat.innerText = "● TRANSMIT"; stat.style.color = "red";
+} else if (data.VOX_TX) {
+currentBarColor = 'orange';
+btn.style.background = "#ff8800";
+btn.innerText = "VOX TRANSMITTING";
+stat.innerText = "● VOX ACTIVE"; stat.style.color = "#ff8800";
+} else {
+currentBarColor = 'green';
+btn.style.background = "#4a0000";
+btn.innerText = "PTT TOGGLE";
+stat.innerText = data.BUSY ? "⚡ SIGNAL DETECTED" : "○ RX IDLE";
+stat.style.color = data.BUSY ? "#00ff00" : "#444";
 }
-
-window.onresize = () => {
-    canvas.width = canvas.offsetWidth;
-    canvas.height = canvas.offsetHeight;
-};
-
-drawSpectrum();
-
-
-
-
-function updateUI(data) {
-    if(!data) return;
-    
-    const ch = data.CH;
-    document.getElementById('chDisp').innerText = ch;
-    document.getElementById('mhzDisp').innerText = (freqs[ch] || "---.---") + " MHz";
-    document.getElementById('modeName').innerText = data.MODE;
-    document.getElementById('skipPaCheck').checked = data.SKIP_PA;
-    document.getElementById('skipCwCheck').checked = data.SKIP_CW;
-    document.getElementById('gainRxInput').value = data.GAIN_RX || 25000;
-    document.getElementById('gainTxInput').value = data.GAIN_TX || 55000;
-    
-    const btn = document.getElementById('pttBtn');
-    const stat = document.getElementById('pttStat');
-    const sBtn = document.getElementById('scanBtn');
-    const voxDisplay = document.getElementById('voxState'); 
-
-
-    if (data.PTT === "ON") {
-        currentBarColor = 'red';
-        btn.style.background = "#ff0000";
-        btn.innerText = "TX ACTIVE (" + data.REMAINING + "s)";
-        stat.innerText = "● TRANSMIT"; 
-        stat.style.color = "red";
-    } else if (data.VOX_TX) {
-        currentBarColor = 'orange';
-        btn.style.background = "#ff8800"; 
-        btn.innerText = "VOX TRANSMITTING";
-        stat.innerText = "● VOX ACTIVE"; 
-        stat.style.color = "#ff8800";
-    } else if (data.BUSY) {
-        currentBarColor = 'green';
-        btn.style.background = "#4a0000"; 
-        btn.innerText = "PTT TOGGLE";
-        stat.innerText = "⚡ SIGNAL DETECTED"; 
-        stat.style.color = "#00ff00";
-    } else {
-        currentBarColor = 'green';
-        btn.style.background = "#4a0000"; 
-        btn.innerText = "PTT TOGGLE";
-        stat.innerText = "○ RX IDLE"; 
-        stat.style.color = "#444";
-    }
-    
-    btn.classList.toggle('active', data.PTT === "ON");
-
-    if(data.SW_SCAN) {
-        sBtn.style.background = "#004444";
-        sBtn.style.boxShadow = "0 0 10px #00ffff";
-        sBtn.innerText = "SCANNING...";
-    } else {
-        sBtn.style.background = "#333";
-        sBtn.style.boxShadow = "none";
-        sBtn.innerText = "S-SCAN";
-    }
-
-    if(voxDisplay) {
-        if(data.VOX_ENABLED) {
-            voxDisplay.innerText = "SCHARF"; 
-            voxDisplay.style.color = "#ff8800";
-        } else {
-            voxDisplay.innerText = "AUS"; 
-            voxDisplay.style.color = "#444";
-        }
-    }
-    const voxInd = document.getElementById('voxIndicator');
-    if (voxInd) {
-        if (data.VOX_ENABLED) {
-            voxInd.style.color = "#ff8800";   
-            voxInd.style.opacity = "1";
-            voxInd.style.textShadow = "0 0 10px #ff8800";
-        } else {
-            voxInd.style.color = "#333";      
-            voxInd.style.opacity = "0.5";
-            voxInd.style.textShadow = "none";
-        }
-    }
-
-    if(data.VOL !== undefined) {
-        const vDisp = document.getElementById('volDisp');
-        if(vDisp) vDisp.innerText = data.VOL;
-    }
+// Setup-Felder synchronisieren
+if(data.SKIP_PA !== undefined) document.getElementById('skipPaCheck').checked = data.SKIP_PA;
+if(data.SKIP_CW !== undefined) document.getElementById('skipCwCheck').checked = data.SKIP_CW;
+// P-Tasten Beschriftungen aktualisieren
+document.getElementById('p1Btn').innerText = data.P1_LABEL || "P1";
+document.getElementById('p2Btn').innerText = data.P2_LABEL || "P2";
+document.getElementById('p3Btn').innerText = data.P3_LABEL || "P3";
+document.getElementById('p4Btn').innerText = data.P4_LABEL || "P4";
+// Scan-Button färben falls aktiv
+const scanBtn = document.getElementById('scanBtn');
+scanBtn.style.background = data.SW_SCAN ? "#00ff00" : "";
+scanBtn.style.color = data.SW_SCAN ? "#000" : "";
 }
-
-
-
-
-        function pollStatus() {
-            fetch('/api/cmd/STATUS')
-                .then(r => r.json())
-                .then(data => {
-                    updateUI(data);
-                    setTimeout(pollStatus, 1000); 
-                })
-                .catch(e => {
-                    console.error("Poll Fehler:", e);
-                    setTimeout(pollStatus, 2000);
-                });
-        }
-
-function changeVol(direction) {
-    const cmd = direction === 'up' ? 'VOLUP' : 'VOLDOWN';
-    fetch('/api/cmd/' + cmd)
-        .then(r => r.json())
-        .then(data => {
-            updateUI(data); 
-        })
-        .catch(e => console.error("Volume Fehler:", e));
+// Audio-Spektrum abfragen
+setInterval(() => {
+fetch('/api/audio')
+.then(res => res.json())
+.then(data => {
+const bars = document.getElementsByClassName('bar');
+for(let i=0; i<Math.min(data.length, bars.length); i++) {
+let val = Math.max(5, Math.min(100, data[i] * 100));
+bars[i].style.height = val + '%';
+bars[i].style.background = currentBarColor;
 }
-
-
-        function send(cmd) { fetch('/api/cmd/' + cmd).then(r => r.json()).then(updateUI); }
-
-
-        function setCfg(p, val) { fetch('/api/cmd/SET_' + p + '_LABEL?val=' + encodeURIComponent(val)); document.getElementById('lbl-' + p.toLowerCase()).innerText = p + " (" + val + ")"; }
-        function updateTimeout() { fetch('/api/cmd/T' + document.getElementById('pttInput').value); }
-
-        let hT, prg = 0;
-        const sB = document.getElementById('syncBtn');
-        function startS() { prg = 0; hT = setInterval(() => { prg += 4; document.getElementById('syncProgress').style.width = prg + "%"; if(prg >= 100) { clearInterval(hT); send('S'); document.getElementById('syncProgress').style.width = "0%"; } }, 100); }
-        function stopS() { clearInterval(hT); document.getElementById('syncProgress').style.width = "0%"; }
-        sB.onmousedown = sB.ontouchstart = (e) => { if(e.type==='touchstart') e.preventDefault(); startS(); };
-        sB.onmouseup = sB.onmouseleave = sB.ontouchend = stopS;
-
-        pollStatus();
-    </script>
-</body>
-</html>
+}).catch(() => {});
+}, 100);
+// Initialen Status beim Laden holen
+sendCmd('STATUS');
 
