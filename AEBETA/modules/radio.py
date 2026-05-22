@@ -3,9 +3,11 @@ import threading
 import time
 import json
 import os
+import sys
+import select
 
 class RadioInterface:
-    def __init__(self, port='/dev/ttyUSB0', config_file='config.json'):
+    def __init__(self, port='/dev/ttyUSB1', config_file='config.json'):
         self.config_file = config_file
         self.port = port
         self.modes = ["PA", "CW", "FM", "AM", "USB", "LSB"]
@@ -24,12 +26,13 @@ class RadioInterface:
         
         self.current_ch = self.config.get("last_ch", 1)
         self.mode_idx = self.config.get("last_mode", 2)
-        self.scan_dir = 1 
-        self.ignore_until = 0 
+        
+        # Clarifier-Klick-Zähler (0 = Aus, 1 = 1Hz, 2 = 10Hz, 3 = 100Hz)
+        self.clarifier_step = 0 
         
         try:
             self.ser = serial.Serial(self.port, 115200, timeout=0.01)
-            print(f"--- AE5900 Master-Emulator Hardware-Anbindung AKTIV ---")
+            print(f"--- AE5900 Hardware-Anbindung AKTIV ---")
             threading.Thread(target=self.heartbeat_task, daemon=True).start()
         except Exception as e:
             self.ser = None
@@ -37,13 +40,11 @@ class RadioInterface:
 
     def load_config(self):
         default = {
-            "ptt_timeout": 300, "last_ch": 1, "last_mode": 2, "skip_pa": False,
-            "skip_cw": False,  # <--- NEU!
+            "ptt_timeout": 300, "last_ch": 1, "last_mode": 2, "skip_pa": False, "skip_cw": False,
             "p1_label": "Not set", "p2_label": "Not set", "p3_label": "Not set", "p4_label": "Not set",
             "scan_speed": 0.5, "vol": 85, "fft_rx_gain": 25000, "fft_tx_gain": 55000,
             "vox_enabled": False
         }
-
         if os.path.exists(self.config_file):
             try:
                 with open(self.config_file, 'r') as f: self.config = {**default, **json.load(f)}
@@ -95,7 +96,6 @@ class RadioInterface:
         self.sw_scan_active = False
 
     def super_sync(self):
-        self.ignore_until = time.time() + 1.2
         self.send_cmd("4100010001000006", "4100000001000006")
         time.sleep(0.4)
         self.send_cmd("4100010002000006", "4100000002000006")
@@ -106,53 +106,54 @@ class RadioInterface:
             self.ser.write(bytes.fromhex("410000001A000006"))
         self.current_ch = 1; self.mode_idx = 2; self.save_config()
 
-    # --- HIER DEINE NEUEN ENTSCHLÜSSELTEN HARDWARE-GEWINNE ---
+    # --- DEINE ENTSCHLÜSSELTEN HARDWARE-BEFEHLE ---
     def change_hardware_volume(self, direction):
-        """Regelt die native Gerätelautstärke über 0x12 (Up) und 0x13 (Down)"""
         code = "12" if direction == "up" else "13"
         self.send_cmd(f"41000100{code}000006", f"41000000{code}000006")
 
     def toggle_hardware_lock(self):
-        """Schaltet die Tastensperre via Long-Press 0x1E am Gerät um"""
-        self.send_cmd("410001001E000006", "410000001E000006") # Simuliert langen Druck intern
+        self.send_cmd("410001001E000006", "410000001E000006")
 
-    def toggle_hardware_vox(self, long_press=False):
-        """Schaltet native VOX (Short 0x28) oder VOX-Menü (Long 0x28)"""
-        # Wir nutzen deine Entdeckung für die echte Geräte-VOX!
+    def toggle_hardware_vox(self):
         self.send_cmd("4100010028000006", "4100000028000006")
 
     def trigger_func_menu(self):
-        """Öffnet das FUNC-Erweiterungsmenü über Long-Press 0x31"""
         self.send_cmd("4100010031000006", "4100000031000006")
 
-    def adjust_squelch(self, direction, points=1):
-        """Öffnet das SQ-Menü (0x24) und regelt das Level über die nativen Vol-Codes"""
+    def adjust_squelch(self, direction):
+        """
+        Sicherer Squelch-Schritt (Dreier-Kombination):
+        1. Menü öffnen (0x24)
+        2. Schritt ausführen (0x12 oder 0x13)
+        3. Menü per ACTION-Taste schliessen (0x1E)
+        """
         step_code = "12" if direction == "up" else "13"
         with self.lock:
-            # 1. Squelch-Menü am Funkgerät triggern
+            # Schritt 1: Squelch-Menü am Funkgerät öffnen (0x24)
             self.ser.write(bytes.fromhex("4100010024000006"))
             time.sleep(0.06)
             self.ser.write(bytes.fromhex("4100000024000006"))
             time.sleep(0.06)
-            # 2. Die Regel-Schritte hinterhersenden
-            for _ in range(points):
-                self.ser.write(bytes.fromhex(f"41000100{step_code}000006"))
-                time.sleep(0.06)
-                self.ser.write(bytes.fromhex(f"41000000{step_code}000006"))
-                time.sleep(0.06)
-
-
-    def step_clarifier(self, mode_clicks, direction_up=True):
-        """Regelt den Clarifier in Stufen (1Hz, 10Hz, 100Hz) via 0x1E und 0x10/0x11"""
-        step_code = "10" if direction_up else "11"
-        with self.lock:
-            # Klicke 0x1E so oft wie für die Stufe benötigt
-            for _ in range(mode_clicks):
-                self.ser.write(bytes.fromhex("410001001E000006"))
-                time.sleep(0.05)
-                self.ser.write(bytes.fromhex("410000001E000006"))
-                time.sleep(0.05)
-            # Frequenzschritt ausführen
+            
+            # Schritt 2: Den Regel-Schritt senden (0x12 / 0x13)
             self.ser.write(bytes.fromhex(f"41000100{step_code}000006"))
-            time.sleep(0.05)
+            time.sleep(0.06)
             self.ser.write(bytes.fromhex(f"41000000{step_code}000006"))
+            time.sleep(0.06)
+            
+            # Schritt 3: Menü per ACTION-Taste (0x1E) zwingend bestätigen/schliessen
+            self.ser.write(bytes.fromhex("410001001E000006"))
+            time.sleep(0.06)
+            self.ser.write(bytes.fromhex("410000001E000006"))
+            
+        print(f"--- Squelch {direction.upper()} Dreier-Kombination ausgeführt ---")
+
+
+    def trigger_clarifier_action(self):
+        """Der neue ACTION Knopf schaltet die Clarifier-Stufen 1Hz -> 10Hz -> 100Hz -> Aus"""
+        self.clarifier_step = (self.clarifier_step + 1) % 4
+        # Physischen Klick an die Hardware senden (0x1E)
+        self.send_cmd("410001001E000006", "410000001E000006")
+        stages = ["AUS", "1 Hz (FEIN)", "10 Hz", "100 Hz (GROB)"]
+        print(f"--- Clarifier-Modus: {stages[self.clarifier_step]} ---")
+

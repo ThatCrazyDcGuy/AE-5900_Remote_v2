@@ -156,7 +156,7 @@
     <div class="grid-3">
         <button class="btn-mumble" onclick="sendCmd('VOLDOWN')">M-VOL -</button>
         <button class="btn-mumble" onclick="sendCmd('VOLUP')">M-VOL +</button>
-        <button class="btn-mumble" onclick="sendCmd('S')">SYNC</button>
+        <button class="btn-mumble" id="syncBtn" onclick="sendCmd('S')">SYNC</button>
     </div>
 
     <!-- REIHE 2: Die 3er-Hauptreihe (Deine Wunsch-Anordnung!) -->
@@ -234,10 +234,12 @@
 
     // Erzeuge 32 Audio-Balken
     const barsContainer = document.getElementById('audioBars');
-    for(let i=0; i<32; i++) {
-        let bar = document.createElement('div');
-        bar.className = 'bar';
-        barsContainer.appendChild(bar);
+    if (barsContainer) {
+        for(let i=0; i<32; i++) {
+            let bar = document.createElement('div');
+            bar.className = 'bar';
+            barsContainer.appendChild(bar);
+        }
     }
 
     let currentBarColor = 'green';
@@ -246,60 +248,123 @@
         fetch('/api/cmd/' + cmd)
             .then(res => res.json())
             .then(data => updateUI(data))
-            .catch(err => console.error(err));
+            .catch(err => console.error("API Fehler:", err));
     }
 
     function updateUI(data) {
         if(!data) return;
         
-        document.getElementById('chDisp').innerText = data.CH;
-        document.getElementById('mhzDisp').innerText = (freqs[data.CH] || "---.---") + " MHz";
-document.getElementById('modeName').innerText = data.MODE;
-const btn = document.getElementById('pttBtn');
-const stat = document.getElementById('pttStat');
-if (data.PTT === "ON") {
-currentBarColor = 'red';
-btn.style.background = "#ff0000";
-btn.innerText = "TX ACTIVE (" + data.REMAINING + "s)";
-stat.innerText = "● TRANSMIT"; stat.style.color = "red";
-} else if (data.VOX_TX) {
-currentBarColor = 'orange';
-btn.style.background = "#ff8800";
-btn.innerText = "VOX TRANSMITTING";
-stat.innerText = "● VOX ACTIVE"; stat.style.color = "#ff8800";
-} else {
-currentBarColor = 'green';
-btn.style.background = "#4a0000";
-btn.innerText = "PTT TOGGLE";
-stat.innerText = data.BUSY ? "⚡ SIGNAL DETECTED" : "○ RX IDLE";
-stat.style.color = data.BUSY ? "#00ff00" : "#444";
-}
-// Setup-Felder synchronisieren
-if(data.SKIP_PA !== undefined) document.getElementById('skipPaCheck').checked = data.SKIP_PA;
-if(data.SKIP_CW !== undefined) document.getElementById('skipCwCheck').checked = data.SKIP_CW;
-// P-Tasten Beschriftungen aktualisieren
-document.getElementById('p1Btn').innerText = data.P1_LABEL || "P1";
-document.getElementById('p2Btn').innerText = data.P2_LABEL || "P2";
-document.getElementById('p3Btn').innerText = data.P3_LABEL || "P3";
-document.getElementById('p4Btn').innerText = data.P4_LABEL || "P4";
-// Scan-Button färben falls aktiv
-const scanBtn = document.getElementById('scanBtn');
-scanBtn.style.background = data.SW_SCAN ? "#00ff00" : "";
-scanBtn.style.color = data.SW_SCAN ? "#000" : "";
-}
-// Audio-Spektrum abfragen
-setInterval(() => {
-fetch('/api/audio')
-.then(res => res.json())
-.then(data => {
-const bars = document.getElementsByClassName('bar');
-for(let i=0; i<Math.min(data.length, bars.length); i++) {
-let val = Math.max(5, Math.min(100, data[i] * 100));
-bars[i].style.height = val + '%';
-bars[i].style.background = currentBarColor;
-}
-}).catch(() => {});
-}, 100);
-// Initialen Status beim Laden holen
-sendCmd('STATUS');
+        if(document.getElementById('chDisp')) document.getElementById('chDisp').innerText = data.CH;
+        if(document.getElementById('mhzDisp')) document.getElementById('mhzDisp').innerText = (freqs[data.CH] || "---.---") + " MHz";
+        if(document.getElementById('modeName')) document.getElementById('modeName').innerText = data.MODE;
+        
+        const btn = document.getElementById('pttBtn');
+        const stat = document.getElementById('pttStat');
+
+        if (btn && stat) {
+            if (data.PTT === "ON") {
+                currentBarColor = 'red';
+                btn.style.background = "#ff0000";
+                btn.innerText = "TX ACTIVE (" + data.REMAINING + "s)";
+                stat.innerText = "● TRANSMIT"; stat.style.color = "red";
+            } else if (data.VOX_TX) {
+                currentBarColor = 'orange';
+                btn.style.background = "#ff8800";
+                btn.innerText = "VOX TRANSMITTING";
+                stat.innerText = "● VOX ACTIVE"; stat.style.color = "#ff8800";
+            } else {
+                currentBarColor = 'green';
+                btn.style.background = "#4a0000";
+                btn.innerText = "PTT TOGGLE";
+                stat.innerText = data.BUSY ? "⚡ SIGNAL DETECTED" : "○ RX IDLE";
+                stat.style.color = data.BUSY ? "#00ff00" : "#444";
+            }
+        }
+
+        // Sicherheits-Checks für die Setup-Felder (Verhindert den Absturz!)
+        const paCheck = document.getElementById('skipPaCheck');
+        const cwCheck = document.getElementById('skipCwCheck');
+        const rxGain = document.getElementById('gainRxInput');
+        const txGain = document.getElementById('gainTxInput');
+        const speedIn = document.getElementById('scanSpeedInput');
+
+        if(paCheck && data.SKIP_PA !== undefined) paCheck.checked = data.SKIP_PA;
+        if(cwCheck && data.SKIP_CW !== undefined) cwCheck.checked = data.SKIP_CW;
+        if(rxGain && data.GAIN_RX !== undefined) rxGain.value = data.GAIN_RX;
+        if(txGain && data.GAIN_TX !== undefined) txGain.value = data.GAIN_TX;
+        if(speedIn && data.SCAN_SPEED !== undefined) speedIn.value = Math.round(data.SCAN_SPEED * 1000);
+        
+        // P-Tasten Beschriftungen
+        for(let i=1; i<=4; i++) {
+            const pBtn = document.getElementById('p' + i + 'Btn');
+            if(pBtn) pBtn.innerText = data['P' + i + '_LABEL'] || ('P' + i);
+        }
+        
+        // Scan-Button
+        const scanBtn = document.getElementById('scanBtn');
+        if(scanBtn) {
+            scanBtn.style.background = data.SW_SCAN ? "#00ff00" : "";
+            scanBtn.style.color = data.SW_SCAN ? "#000" : "";
+        }
+    }
+
+        // --- LIVE VISUALISIERUNG FÜR SUPER-SYNC SPERRE ---
+        const syncBtn = document.getElementById('syncBtn');
+        if (syncBtn) {
+            if (data.IS_SYNCING) {
+                syncBtn.disabled = true;
+                syncBtn.style.background = "#d35400"; // Warn-Orange/Rot
+                syncBtn.style.color = "#fff";
+                syncBtn.innerText = "⏳ SYNCING...";
+                
+                // Während des Syncs alle anderen Hardware-Knöpfe optisch ausgrauen
+                document.getElementById('container').style.opacity = "0.7";
+            } else {
+                syncBtn.disabled = false;
+                syncBtn.style.background = ""; // Zurück zum Mumble-Blau aus dem CSS
+                syncBtn.style.color = "";
+                syncBtn.innerText = "SYNC";
+                document.getElementById('container').style.opacity = "1.0";
+            }
+        }
+
+
+    // Audio-Spektrum abfragen
+    setInterval(() => {
+        fetch('/api/audio')
+            .then(res => res.json())
+            .then(data => {
+                const bars = document.getElementsByClassName('bar');
+                if(!bars || bars.length === 0) return;
+                for(let i=0; i<Math.min(data.length, bars.length); i++) {
+                    let val = Math.max(5, Math.min(100, data[i] * 100));
+                    bars[i].style.height = val + '%';
+                    bars[i].style.background = currentBarColor;
+                }
+            }).catch(() => {});
+    }, 100);
+
+    // Initialen Status beim Laden holen
+    sendCmd('STATUS');
+    // Automatischer Status-Abruf (Polling) für den Live-Kanalwechsel
+    setInterval(() => {
+        // Wir fragen den Status ab. Wenn der Scan läuft, machen wir das 
+        // sehr schnell, damit man die Kanäle live fliegen sieht!
+        fetch('/api/cmd/STATUS')
+            .then(res => res.json())
+            .then(data => {
+                // Wir aktualisieren nur Kanal und Modus, das reicht völlig
+                if(document.getElementById('chDisp')) document.getElementById('chDisp').innerText = data.CH;
+                if(document.getElementById('mhzDisp')) document.getElementById('mhzDisp').innerText = (freqs[data.CH] || "---.---") + " MHz";
+                
+                // Scan-Button Farbe aktuell halten
+                const scanBtn = document.getElementById('scanBtn');
+                if(scanBtn) {
+                    scanBtn.style.background = data.SW_SCAN ? "#00ff00" : "";
+                    scanBtn.style.color = data.SW_SCAN ? "#000" : "";
+                }
+            }).catch(() => {});
+    }, 400); // Alle 400ms nachsehen – das ist flüssig und schont den Pi!
+
+</script>
 

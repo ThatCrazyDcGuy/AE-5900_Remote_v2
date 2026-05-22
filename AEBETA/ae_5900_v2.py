@@ -4,15 +4,16 @@ import numpy as np
 from flask import Flask, render_template, jsonify, request
 from modules.radio import RadioInterface
 from modules.audio import setup_audio_streams, auto_patch_streams, CHUNK
+import serial
+import sys
+import select
 
 app = Flask(__name__)
 radio = RadioInterface()
 stream_rx, stream_tx = setup_audio_streams()
 
-# Starte Mumble-Patching im Hintergrund
 threading.Thread(target=auto_patch_streams, daemon=True).start()
 
-# --- DEIN GEWOHNTER LISTEN LOOP ALS THREAD ---
 def run_listen_loop():
     raw_buffer = b""
     while radio.ser:
@@ -33,9 +34,7 @@ def run_listen_loop():
 
                     if radio.force_rx:
                         with radio.lock:
-                            for _ in range(3):
-                                radio.ser.write(bytes.fromhex("4100000000000006"))
-                                time.sleep(0.01)
+                            for _ in range(3): radio.ser.write(bytes.fromhex("4100000000000006"))
                         radio.force_rx = False
 
                     radio.is_device_sending = vox_detected
@@ -45,7 +44,6 @@ def run_listen_loop():
 
 threading.Thread(target=run_listen_loop, daemon=True).start()
 
-# --- WEB ROUTES ---
 @app.route('/')
 def index(): return render_template('index.html', config=radio.config)
 
@@ -70,64 +68,45 @@ def api_cmd(cmd):
     key_codes = {'0':'01','1':'02','2':'03','3':'04','4':'05','5':'06','6':'07','7':'08','8':'09','9':'0A'}
     p_codes = {'P1':'1A', 'P2':'1B', 'P3':'1C', 'P4':'1D'}
     
-    # 1. Native Lautstärkeregelung & Squelch über deine neuen Hex-Befehle
-    # 1. DEIN ESSENTIELLES MUMBLE / MIC-GAIN (Unverändert zurückgeholt!)
-    if cmd in ['VOLUP', 'VOLDOWN']:
+    # --- VERTEILUNG DER NEUEN GEWINNE ---
+    if cmd == 'VOLUP':
         import os
-        control_name = "Master" 
-        step = "5%+" if cmd == 'VOLUP' else "5%-"
-        os.system(f"amixer set '{control_name}' {step}")
+        os.system("amixer set Master 5%+")
+        radio.config["vol"] = min(100, radio.config.get("vol", 85) + 5)
+    elif cmd == 'VOLDOWN':
+        import os
+        os.system("amixer set Master 5%-")
+        radio.config["vol"] = max(0, radio.config.get("vol", 85) - 5)
         
-        current_vol = radio.config.get("vol", 85)
-        if cmd == 'VOLUP': radio.config["vol"] = min(100, current_vol + 5)
-        else: radio.config["vol"] = max(0, current_vol - 5)
-        radio.save_config() 
-
-    # 2. NEU: NATIVE GERÄTELAUTSTÄRKE (Auf eigenen Befehlen!)
-    elif cmd == 'HWVOLUP':
-        radio.send_cmd("4100010012000006", "4100000012000006")
-    elif cmd == 'HWVOLDOWN':
-        radio.send_cmd("4100010013000006", "4100000013000006")
-
-    # 3. NEU: NATIVER SQUELCH
-    elif cmd == 'SQUP':
-        radio.adjust_squelch("up")
-    elif cmd == 'SQDOWN':
-        radio.adjust_squelch("down")
-
-    
-    # NEU: Der direkte Hardware-VOX Button aus der UI
+    elif cmd == 'HWVOLUP': radio.change_hardware_volume("up")
+    elif cmd == 'HWVOLUP': radio.change_hardware_volume("up")
+    elif cmd == 'HWVOLDOWN': radio.change_hardware_volume("down")
+    elif cmd == 'SQUP': radio.adjust_squelch("up")
+    elif cmd == 'SQDOWN': radio.adjust_squelch("down")
     elif cmd == 'HWVOX': radio.toggle_hardware_vox()
-    elif cmd == 'HWFUNC': radio.trigger_func_menu()
     elif cmd == 'HWLOCK': radio.toggle_hardware_lock()
+    elif cmd == 'HWFUNC': radio.trigger_func_menu()
+    elif cmd == 'HWACTION': radio.trigger_clarifier_action()
 
-    elif cmd == 'U':
+    # --- KLASSISCHE FUNKTIONEN ---
+    elif cmd == 'U' or cmd == 'KU':
         radio.current_ch = (radio.current_ch % 40) + 1
         radio.send_cmd("4100010010000006", "4100000010000006")
-    elif cmd == 'D':
+    elif cmd == 'D' or cmd == 'KD':
         radio.current_ch = 40 if radio.current_ch == 1 else radio.current_ch - 1
         radio.send_cmd("4100010011000006", "4100000011000006")
     elif cmd == 'M':
-        # Einmal weiterschalten
         radio.mode_idx = (radio.mode_idx + 1) % len(radio.modes)
-        
-        # Schleife läuft so lange, bis wir auf einem erlaubten Modus landen
         while True:
             if radio.config.get("skip_pa") and radio.modes[radio.mode_idx] == "PA":
-                radio.mode_idx = (radio.mode_idx + 1) % len(radio.modes)
-                continue
+                radio.mode_idx = (radio.mode_idx + 1) % len(radio.modes); continue
             if radio.config.get("skip_cw") and radio.modes[radio.mode_idx] == "CW":
-                radio.mode_idx = (radio.mode_idx + 1) % len(radio.modes)
-                continue
-            break # Erlaubter Modus gefunden, Schleife beenden
-            
-        # Den finalen Befehl an das Funkgerät senden
+                radio.mode_idx = (radio.mode_idx + 1) % len(radio.modes); continue
+            break
         radio.send_cmd("410001000D000006", "410000000D000006")
     elif cmd == 'P':
         radio.is_tx = not radio.is_tx
-        radio.force_rx = False
-        code = "4101000000000006" if radio.is_tx else "4100000000000006"
-        with radio.lock: radio.ser.write(bytes.fromhex(code))
+        radio.ser.write(bytes.fromhex("4101000000000006" if radio.is_tx else "4100000000000006"))
         radio.ptt_start_time = time.time()
     elif cmd == 'SSCAN':
         radio.sw_scan_active = not radio.sw_scan_active
@@ -151,25 +130,25 @@ def api_cmd(cmd):
     elif cmd.startswith('SET_'):
         parts = cmd.split('_'); val = request.args.get('val')
         if "SKIP_PA" in cmd: radio.config["skip_pa"] = (val.lower() == 'true')
-        elif "SKIP_CW" in cmd: radio.config["skip_cw"] = (val.lower() == 'true') # <--- NEU!
+        elif "SKIP_CW" in cmd: radio.config["skip_cw"] = (val.lower() == 'true')
         else: radio.config[f"{parts[1].lower()}_label"] = val
-    # Timeout Schutz
-    rem = radio.config["ptt_timeout"]
-    if radio.is_tx:
-        elapsed = time.time() - radio.ptt_start_time
-        if elapsed >= radio.config["ptt_timeout"]:
-            radio.is_tx = False
-            radio.send_cmd("4100000000000006", "4100000000000006")
-        rem = int(radio.config["ptt_timeout"] - elapsed)
+    elif cmd.startswith('SETGAIN_'):
+        parts = cmd.split('_')
+        radio.config[f"fft_{parts[1].lower()}_gain"] = int(parts[3])
+
+    is_syncing = time.time() < radio.ignore_until
 
     radio.save_config()
+    rem = int(radio.config["ptt_timeout"] - (time.time() - radio.ptt_start_time)) if radio.is_tx else radio.config["ptt_timeout"]
+    
     return jsonify({
         "CH": str(radio.current_ch).zfill(2), "MODE": radio.modes[radio.mode_idx], 
         "PTT": "ON" if radio.is_tx else "OFF", "VOX_TX": radio.is_device_sending,
         "VOX_ENABLED": radio.config.get("vox_enabled", False), "REMAINING": max(0, rem), 
-        "BUSY": radio.is_rx, "SW_SCAN": radio.sw_scan_active, "SKIP_PA": radio.config.get("skip_pa", False),
-        "SKIP_CW": radio.config.get("skip_cw", False)
+        "BUSY": radio.is_rx, "SW_SCAN": radio.sw_scan_active, 
+        "SKIP_PA": radio.config.get("skip_pa", False), "SKIP_CW": radio.config.get("skip_cw", False), "IS_SYNCING": is_syncing
     })
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
+
