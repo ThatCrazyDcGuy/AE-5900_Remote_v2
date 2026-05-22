@@ -6,6 +6,8 @@ import os
 import numpy as np
 import pyaudio
 import subprocess
+import socket
+
 from flask import Flask, render_template, jsonify, request
 
 app = Flask(__name__)
@@ -83,7 +85,10 @@ class RadioInterface:
 
     def load_config(self):
         default = {
-            "ptt_timeout": 300, "last_ch": 1, "last_mode": 2, "skip_pa": False,
+            "ptt_timeout": 300,
+            "last_ch": 1,
+            "last_mode": 2,
+            "skip_pa": False,
             "p1_label": "Not set", "p2_label": "Not set", 
             "p3_label": "Not set", "p4_label": "Not set",
             "scan_speed": 0.5,
@@ -202,7 +207,6 @@ class RadioInterface:
 radio = RadioInterface()
 
 
-
 # --- FLASK ROUTES ---
 @app.route('/')
 def index(): return render_template('index.html', config=radio.config)
@@ -229,6 +233,29 @@ def get_audio():
     except Exception as e:
         # Im Fehlerfall leeres Spektrum senden
         return jsonify([0] * 32)
+
+@app.route('/api/rig/ptt/<int:state>')
+def rig_ptt_control(state):
+    """
+    HTTP-Schnittstelle für externe Digimodes (JS8Call, FLdigi etc.)
+    state = 1: Senden (TX), state = 0: Empfangen (RX)
+    """
+    try:
+        if state == 1 and not radio.is_tx:
+            print("📡 JS8Call (HTTP): Schalte TX ein")
+            radio.is_tx = True
+            radio.ptt_start_time = time.time()
+            with radio.lock:
+                radio.ser.write(bytes.fromhex("4101000000000006"))
+        elif state == 0 and radio.is_tx:
+            print("○ JS8Call (HTTP): Zurück zu RX")
+            radio.is_tx = False
+            with radio.lock:
+                radio.ser.write(bytes.fromhex("4100000000000006"))
+        return f"PTT_STATE: {radio.is_tx}\n"
+    except Exception as e:
+        return f"ERROR: {str(e)}\n", 500
+
 
 
 @app.route('/api/cmd/<cmd>')
@@ -261,6 +288,8 @@ def api_cmd(cmd):
     elif cmd == 'M':
         radio.mode_idx = (radio.mode_idx + 1) % len(MODES)
         radio.send_cmd("410001000D000006", "410000000D000006")
+        if radio.config.get("skip_pa") and MODES[radio.mode_idx] == "PA":
+            radio.mode_idx = (radio.mode_idx + 1) % len(MODES)
     elif cmd == 'P':
         radio.is_tx = not radio.is_tx
         radio.force_rx = False 
@@ -360,11 +389,16 @@ def api_cmd(cmd):
         "REMAINING": max(0, rem), 
         "BUSY": radio.is_rx, 
         "SW_SCAN": radio.sw_scan_active,
-        "VOL": radio.config.get("vol", 50)
+        "VOL": radio.config.get("vol", 50),
+        "SKIP_PA": radio.config.get("skip_pa", False)
     })
 
 
+# Stelle sicher, dass "import socket" ganz oben bei deinen anderen Imports steht!
+
 threading.Thread(target=auto_patch_streams, daemon=True).start()
+
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
 
