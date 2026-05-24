@@ -329,11 +329,16 @@ def rig_ptt_control(state):
 
 @app.route('/api/cmd/<cmd>')
 def api_cmd(cmd):
-    # Wenn IRGENDEINE Taste gedrückt wird, die nicht der MW-Befehl selbst oder STATUS ist: Stoppen!
-    if cmd not in ['STATUS', 'MW_TOGGLE'] and not cmd.startswith('SETSPEED'):
+    # Der korrigierte globale Stopper:
+    if cmd not in ['STATUS', 'MW_TOGGLE', 'SSCAN'] and not cmd.startswith('SETSPEED'):
         radio.stop_sw_scan()
         if hasattr(radio, 'mw_active') and radio.mw_active:
-            radio.mw_active = False # Stoppt den MW-Loop sofort!
+            radio.mw_active = False 
+            
+    # Wenn MW läuft und SSCAN gedrückt wird, stoppen wir MW manuell
+    if cmd == 'SSCAN' and hasattr(radio, 'mw_active') and radio.mw_active:
+        radio.mw_active = False
+
 
 
     key_codes = {'0':'01','1':'02','2':'03','3':'04','4':'05','5':'06','6':'07','7':'08','8':'09','9':'0A'}
