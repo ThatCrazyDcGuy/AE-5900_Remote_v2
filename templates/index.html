@@ -9,9 +9,12 @@
         .display { border: 2px solid #333; background: #000; margin: 10px auto; width: 95%; max-width: 400px; padding: 20px; border-radius: 10px; box-shadow: 0 0 15px #00ff0033; }
         .freq { font-size: 3.5em; font-weight: bold; margin: 5px 0; }
         .mhz { font-size: 1.1em; color: #008800; margin-bottom: 10px; }
-        .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 95%; max-width: 400px; margin: 20px auto; }
-        button { background: #333; color: white; border: none; padding: 15px; font-size: 1.1em; border-radius: 5px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-        .btn-ptt { grid-column: span 2; background: #4a0000; font-weight: bold; min-height: 80px; transition: 0.2s; }
+        /* Geändert von 2 Spalten (1fr 1fr) auf 4 Spalten (repeat(4, 1fr)) */
+        .controls { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; width: 95%; max-width: 420px; margin: 20px auto; }
+        button { background: #333; color: white; border: none; padding: 12px 5px; font-size: 0.95em; border-radius: 5px; cursor: pointer; -webkit-tap-highlight-color: transparent; font-weight: bold; }
+        button:disabled { background: #1a1a1a; color: #444; border: 1px dashed #333; cursor: not-allowed; }
+        /* PTT spannt sich jetzt über alle 4 Spalten im Grid */
+        .btn-ptt { grid-column: span 4; background: #4a0000; font-weight: bold; min-height: 70px; transition: 0.2s; font-size: 1.2em; }
         .btn-ptt.active { background: #ff0000; box-shadow: 0 0 20px red; }
         .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; width: 200px; margin: 15px auto; }
         .num-btn { background: #222; color: #0f0; padding: 12px; border: 1px solid #444; }
@@ -24,6 +27,8 @@
     <div class="display" style="position: relative; overflow: hidden;">
         <canvas id="audioVisualizer" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.3; pointer-events: none;"></canvas>
         <div id="voxIndicator" style="position: absolute; top: 10px; right: 15px; font-weight: bold; font-size: 0.9em; transition: 0.3s; z-index: 3;">VOX</div>
+        <div id="asqIndicator" style="position: absolute; top: 10px; right: 50px; font-weight: bold; font-size: 0.9em; transition: 0.3s; z-index: 3;">ASQ</div>
+        <div id="muteIndicator" style="position: absolute; top: 10px; right: 85px; font-weight: bold; font-size: 0.9em; transition: 0.3s; z-index: 3;">MUTE</div>
         <div id="pttStat" style="font-weight:bold; color:#444; position: relative; z-index: 2;">○ RX IDLE</div>
         <div class="freq" id="chDisp" style="position: relative; z-index: 2;">01</div>
         <div class="mhz" id="mhzDisp" style="position: relative; z-index: 2;">26.965 MHz</div>
@@ -36,32 +41,56 @@
     </div>
 
     <div class="controls">
-        <button onclick="send('U')">▲ CH UP</button>
-        <button onclick="send('D')">▼ CH DOWN</button>
-	<button onclick="send('M')">MODE</button>
-	<button onclick="send('SSCAN')" id="scanBtn">S-SCAN</button>
+        <!-- Reihe 1: Navigation & Modus -->
+        <button onclick="send('M')">MODE</button>
+        <button onclick="send('U')">CH ▲</button>
+        <button onclick="send('D')">CH ▼</button>
+        <button onclick="send('MUTECOMBBTN')">MUTE</button>
 
-        <button onclick="send('P1')" id="lbl-p1">P1 ({{config.p1_label}})</button>
-        <button onclick="send('P2')" id="lbl-p2">P2 ({{config.p2_label}})</button>
-        <button onclick="send('P3')" id="lbl-p3">P3 ({{config.p3_label}})</button>
-        <button onclick="send('P4')" id="lbl-p4">P4 ({{config.p4_label}})</button>
+        <!-- Reihe 2: Scan & Sonderfunktionen (Jetzt mit intelligentem Multi-Watch) -->
+        <button onclick="send('VOX_TOGGLE')">VOX</button>
+        <button onclick="send('SSCAN')" id="scanBtn">S-SCAN</button>
+        <button onclick="send('MW_TOGGLE')" id="mwBtn">MW</button>
+        <button onclick="send('EMG_TOGGLE')">EMG</button>
+
+
+        <!-- Reihe 3: Squelch-Gruppe -->
+        <button onclick="send('SQUELCHUP')">A/SQ +</button>
+        <button onclick="send('SQUELCHDOWN')">A/SQ -</button>
+        <button onclick="send('ASQ_ON_OFF')" id="asqBtn">ASQ</button>
+        <button onclick="send('SQUELCHMAXDOWN')" style="font-size:0.85em;">SET A/SQ 1/0</button>
+
+        <!-- Reihe 4: Die P-Tasten nebeneinander -->
+        <button onclick="send('P1')" id="lbl-p1" style="font-size:0.8em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">P1</button>
+        <button onclick="send('P2')" id="lbl-p2" style="font-size:0.8em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">P2</button>
+        <button onclick="send('P3')" id="lbl-p3" style="font-size:0.8em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">P3</button>
+        <button onclick="send('P4')" id="lbl-p4" style="font-size:0.8em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">P4</button>
+        
+        <!-- Haupttaste unten drunter -->
         <button onclick="send('P')" id="pttBtn" class="btn-ptt">PTT TOGGLE</button>
     </div>
 
     <details class="setup-area">
         <summary>⚙️ SETUP & SYNC</summary>
+
         <div style="background: #222; padding: 20px; border-radius: 10px;">
             <button id="syncBtn" class="hold-button"><span style="position:relative; z-index:2;">SUPER SYNC (CH 01 - Hold 3s)</span><div class="progress-bar" id="syncProgress"></div></button>
             <p>PTT Timeout: <input type="number" id="pttInput" value="{{ config.ptt_timeout }}" style="width: 60px;" onchange="updateTimeout()"> s</p>
-            <p>Skip PA (ab FW v1.2 möglich): <input type="checkbox" onchange="fetch('/api/cmd/SET_SKIP_PA?val=' + this.checked)" {% if config.skip_pa %}checked{% endif %}></p>
+<p>
+    Mode-Skip (FW v1.12): 
+    <label style="margin-right: 15px; color: #888;"><input type="checkbox" onchange="fetch('/api/cmd/SET_SKIP_PA?val=' + this.checked)" {% if config.skip_pa %}checked{% endif %}> PA</label>
+    <label style="color: #888;"><input type="checkbox" onchange="fetch('/api/cmd/SET_SKIP_CW?val=' + this.checked)" {% if config.skip_cw %}checked{% endif %}> CW</label>
+</p>
+<p>Multi-Watch-CH ( 09,19,28): <input type="text" value="{{ config.mw_label if config.mw_label else '09,19' }}" onchange="fetch('/api/cmd/SET_MW_LABEL?val=' + encodeURIComponent(this.value))" sstyle="width:100px;"></p>
+
             <p>P1 Label: <input type="text" value="{{config.p1_label}}" onchange="setCfg('P1', this.value)" style="width:100px;"></p>
             <p>P2 Label: <input type="text" value="{{config.p2_label}}" onchange="setCfg('P2', this.value)" style="width:100px;"></p>
             <p>P3 Label: <input type="text" value="{{config.p3_label}}" onchange="setCfg('P3', this.value)" style="width:100px;"></p>
             <p>P4 Label: <input type="text" value="{{config.p4_label}}" onchange="setCfg('P4', this.value)" style="width:100px;"></p>
-			<p>Scan Speed (ms): <input type="number" id="scanSpeedInput" value="{{ config.scan_speed * 1000 | int }}" style="width: 70px;" onchange="send('SETSPEED_' + this.value)"> </p>
-	    <p>FFT Gain RX: <input type="number" value="{{config.fft_rx_gain}}" onchange="send('SETGAIN_RX_' + this.value)" style="width:80px;"></p>
-	    <p>FFT Gain TX: <input type="number" value="{{config.fft_tx_gain}}" onchange="send('SETGAIN_TX_' + this.value)" style="width:80px;"></p>
-	    <p>VOX Schaltung: <span id="voxState" style="font-weight:bold;">--</span></p>
+	    <p>Scan Speed (ms): <input type="number" id="scanSpeedInput" value="{{ config.scan_speed * 1000 | int }}" style="width: 70px;" onchange="send('SETSPEED_' + this.value)"> </p>
+        <p>FFT Gain RX: <input type="number" value="{{config.fft_rx_gain}}" onchange="send('SETGAIN_RX_' + this.value)" style="width:80px;"></p>
+        <p>FFT Gain TX: <input type="number" value="{{config.fft_tx_gain}}" onchange="send('SETGAIN_TX_' + this.value)" style="width:80px;"></p>
+        <p>VOX Schaltung: <span id="voxState" style="font-weight:bold;">--</span></p>
 </div>
 
 <div style="border-top: 1px solid #333; padding-top: 10px; margin-top: 10px;">
@@ -78,11 +107,11 @@
         <li><strong style="color: #00ff00;">S-SCAN:</strong> Suchlauf stoppt bei Signal. Jede Taste beendet den Scan. Die Scan-Geschwindigkeit lässt sich unten in ms regeln.</li>
         <li><strong style="color: #0088ff;">Super Sync:</strong> 3 Sek. halten, um Kanal 01 zu erzwingen (falls Anzeige asynchron). Es kann vorkommen, dass die Modulationstaste asyncron läuft. Remote ist das natürlich unschön. Lösung: Öffne ASQ und drücke die Mode-Taste im Webinterface, bis du das typische FM Rauschen hörst, egal was das Webinterface anzeigt. Benutze danach die SYNC Taste.</li>
         <li>Kanalwahl via Keypad: Immer 2 Ziffern eingeben (z.B. 07).</li>
-		<li>Die Funktion "Skip PA" betrifft jene, die bereits die neue Firmware installiert und PA im Mode-Switch im Menu deaktiviert haben.</li>
-		<li>S-Scan ist softwaregesteuert und unabhängig der integrierten Scanfunktion des AE5900. Der Speed lässt sich in millisekunden angeben. </li>
-		<li>Die P1 - P4 Buttons lassen sich hier optisch mit einem Label versehen. Entsprechend dem, was auf dem AE5900 im Menupunkt Mic Type 2 eingestellt ist.</li>
-		<li>Vol - und Vol + steuern das MicGain der verbauten Soundkarte.</li>
-		<li>Das PTT Timeout dient der zusätzlichen Sicherheit. Damit das AE5900 bei Verbindungsverlust nicht über längere Zeit weiter sendet.</li>
+	<li>Die Funktion "Skip PA" betrifft jene, die bereits die neue Firmware installiert und PA im Mode-Switch im Menu deaktiviert haben.</li>
+	<li>S-Scan ist softwaregesteuert und unabhängig der integrierten Scanfunktion des AE5900. Der Speed lässt sich in millisekunden angeben. </li>
+	<li>Die P1 - P4 Buttons lassen sich hier optisch mit einem Label versehen. Entsprechend dem, was auf dem AE5900 im Menupunkt Mic Type 2 eingestellt ist.</li>
+	<li>Vol - und Vol + steuern das MicGain der verbauten Soundkarte.</li>
+	<li>Das PTT Timeout dient der zusätzlichen Sicherheit. Damit das AE5900 bei Verbindungsverlust nicht über längere Zeit weiter sendet.</li>
     </ul>
     <p style="font-style: italic;">Viel Spass beim Testen! Feedback bitte direkt an mich.</p>
 </div>
@@ -93,147 +122,237 @@
     <script>
         const freqs = {"01":"26.965","02":"26.975","03":"26.985","04":"27.005","05":"27.015","06":"27.025","07":"27.035","08":"27.055","09":"27.065","10":"27.075","11":"27.085","12":"27.105","13":"27.115","14":"27.125","15":"27.135","16":"27.155","17":"27.165","18":"27.175","19":"27.185","20":"27.205","21":"27.215","22":"27.225","23":"27.255","24":"27.235","25":"27.245","26":"27.265","27":"27.275","28":"27.285","29":"27.295","30":"27.305","31":"27.315","32":"27.325","33":"27.335","34":"27.345","35":"27.355","36":"27.365","37":"27.375","38":"27.385","39":"27.395","40":"27.405"};
         
-const canvas = document.getElementById('audioVisualizer');
-const ctx = canvas.getContext('2d');
+        const canvas = document.getElementById('audioVisualizer');
+        const ctx = canvas.getContext('2d');
 
-canvas.width = canvas.offsetWidth;
-canvas.height = canvas.offsetHeight;
+        if (canvas) {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+        }
 
-let lastData = new Array(32).fill(0);
-let currentBarColor = 'green'; 
+        let lastData = new Array(32).fill(0);
+        let currentBarColor = 'green'; 
 
-function drawSpectrum() {
-    fetch('/api/audio')
-        .then(r => r.json())
-        .then(data => {
-            if (!Array.isArray(data)) return;
+        function drawSpectrum() {
+            if (!canvas) return;
+            fetch('/api/audio')
+                .then(r => r.json())
+                .then(data => {
+                    if (!Array.isArray(data)) return;
+                    
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    const barWidth = canvas.width / data.length;
+                    
+                    data.forEach((val, i) => {
+                        let displayVal = Math.max(val, lastData[i] - 1.5);
+                        lastData[i] = displayVal;
+                        let height = (displayVal / 40) * canvas.height; 
+                        
+                        if(height > canvas.height) height = canvas.height;
+
+                        let grad = ctx.createLinearGradient(0, canvas.height, 0, canvas.height - height);
+                        
+                        if (currentBarColor === 'red') {
+                            grad.addColorStop(0, '#440000');
+                            grad.addColorStop(1, '#ff0000');
+                        } else if (currentBarColor === 'orange') {
+                            grad.addColorStop(0, '#442200');
+                            grad.addColorStop(1, '#ff8800');
+                        } else {
+                            grad.addColorStop(0, '#004400');
+                            grad.addColorStop(1, '#00ff00');
+                        }
+                        
+                        ctx.fillStyle = grad;
+                        ctx.fillRect(i * barWidth, canvas.height - height, barWidth - 1, height);
+                    });
+                    
+                    setTimeout(drawSpectrum, 50);
+                })
+                .catch(e => {
+                    console.error("Audio API Fehler:", e);
+                    setTimeout(drawSpectrum, 1000);
+                });
+        }
+
+        window.onresize = () => {
+            if (canvas) {
+                canvas.width = canvas.offsetWidth;
+                canvas.height = canvas.offsetHeight;
+            }
+        };
+
+        drawSpectrum();
+
+        function updateUI(data) {
+            if(!data) return;
             
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            const barWidth = canvas.width / data.length;
+            const ch = data.CH;
+            if (document.getElementById('chDisp')) document.getElementById('chDisp').innerText = ch;
+            if (document.getElementById('mhzDisp')) document.getElementById('mhzDisp').innerText = (freqs[ch] || "---.---") + " MHz";
+            if (document.getElementById('modeName')) document.getElementById('modeName').innerText = data.MODE;
             
-            data.forEach((val, i) => {
-                let displayVal = Math.max(val, lastData[i] - 1.5);
-                lastData[i] = displayVal;
-                let height = (displayVal / 40) * canvas.height; 
-                
-                if(height > canvas.height) height = canvas.height;
+            const btn = document.getElementById('pttBtn');
+            const stat = document.getElementById('pttStat');
+            const sBtn = document.getElementById('scanBtn');
+            const voxDisplay = document.getElementById('voxState'); 
+            const asqDisplay = document.getElementById('asqState'); 
+            const muteDisplay = document.getElementById('muteState'); 
 
-                let grad = ctx.createLinearGradient(0, canvas.height, 0, canvas.height - height);
-                
-                if (currentBarColor === 'red') {
-                    grad.addColorStop(0, '#440000');
-                    grad.addColorStop(1, '#ff0000');
-                } else if (currentBarColor === 'orange') {
-                    grad.addColorStop(0, '#442200');
-                    grad.addColorStop(1, '#ff8800');
+            if (btn && stat) {
+                if (data.PTT === "ON") {
+                    currentBarColor = 'red';
+                    btn.style.background = "#ff0000";
+                    btn.innerText = "TX ACTIVE (" + data.REMAINING + "s)";
+                    stat.innerText = "● TRANSMIT"; 
+                    stat.style.color = "red";
+                } else if (data.VOX_TX) {
+                    currentBarColor = 'orange';
+                    btn.style.background = "#ff8800"; 
+                    btn.innerText = "VOX TRANSMITTING";
+                    stat.innerText = "● VOX ACTIVE"; 
+                    stat.style.color = "#ff8800";
+                } else if (data.BUSY) {
+                    currentBarColor = 'green';
+                    btn.style.background = "#4a0000"; 
+                    btn.innerText = "PTT TOGGLE";
+                    stat.innerText = "⚡ SIGNAL DETECTED"; 
+                    stat.style.color = "#00ff00";
                 } else {
-                    grad.addColorStop(0, '#004400');
-                    grad.addColorStop(1, '#00ff00');
+                    currentBarColor = 'green';
+                    btn.style.background = "#4a0000"; 
+                    btn.innerText = "PTT TOGGLE";
+                    stat.innerText = "○ RX IDLE"; 
+                    stat.style.color = "#444";
                 }
-                
-                ctx.fillStyle = grad;
-                ctx.fillRect(i * barWidth, canvas.height - height, barWidth - 1, height);
-            });
+                btn.classList.toggle('active', data.PTT === "ON");
+            }
             
-            setTimeout(drawSpectrum, 50);
-        })
-        .catch(e => {
-            console.error("Audio API Fehler:", e);
-            setTimeout(drawSpectrum, 1000);
-        });
-}
+            if (sBtn) {
+                if(data.SW_SCAN) {
+                    sBtn.style.background = "#004444";
+                    sBtn.style.boxShadow = "0 0 10px #00ffff";
+                    sBtn.innerText = "SCANNING...";
+                } else {
+                    sBtn.style.background = "#333";
+                    sBtn.style.boxShadow = "none";
+                    sBtn.innerText = "S-SCAN";
+                }
+            }
+               // --- NEU: MULTI-WATCH STATUS & LEUCHT-EFFEKT ---
+            const mwBtn = document.getElementById('mwBtn');
+            if (mwBtn) {
+               if(data.MW_SCAN) {
+                   mwBtn.style.background = "#004444";
+                   mwBtn.style.boxShadow = "0 0 10px #00ffff";
+                   mwBtn.innerText = "MW...";
+               } else {
+                   mwBtn.style.background = "#333";
+                   mwBtn.style.boxShadow = "none";
+                   mwBtn.innerText = "MW";
+               }
+           }
 
-window.onresize = () => {
-    canvas.width = canvas.offsetWidth;
-    canvas.height = canvas.offsetHeight;
-};
 
-drawSpectrum();
+            if(voxDisplay) {
+                if(data.VOX_ENABLED) {
+                    voxDisplay.innerText = "SCHARF"; 
+                    voxDisplay.style.color = "#ff8800";
+                } else {
+                    voxDisplay.innerText = "AUS"; 
+                    voxDisplay.style.color = "#444";
+                }
+            }
+
+            const voxInd = document.getElementById('voxIndicator');
+            if (voxInd) {
+                if (data.VOX_ENABLED) {
+                    voxInd.style.color = "#ff8800";   
+                    voxInd.style.opacity = "1";
+                    voxInd.style.textShadow = "0 0 10px #ff8800";
+                } else {
+                    voxInd.style.color = "#333";      
+                    voxInd.style.opacity = "0.5";
+                    voxInd.style.textShadow = "none";
+                }
+            }
+
+            if(asqDisplay) {
+                if(data.ASQ_ENABLED) {
+                    asqDisplay.innerText = "SCHARF"; 
+                    asqDisplay.style.color = "#ff8800";
+                } else {
+                    asqDisplay.innerText = "AUS"; 
+                    asqDisplay.style.color = "#444";
+                }
+            }
+
+            const asqInd = document.getElementById('asqIndicator');
+            if (asqInd) {
+                if (data.ASQ_ENABLED) {
+                    asqInd.style.color = "#ff8800";   
+                    asqInd.style.opacity = "1";
+                    asqInd.style.textShadow = "0 0 10px #ff8800";
+                } else {
+                    asqInd.style.color = "#333";      
+                    asqInd.style.opacity = "0.5";
+                    asqInd.style.textShadow = "none";
+                }
+            }
+
+            // Ausgrau-Logik für den ASQ Button basierend auf dem Modus
+            const asqBtn = document.getElementById('asqBtn');
+            if (asqBtn && data.MODE) {
+                const currentMode = data.MODE.toUpperCase();
+                if (currentMode === "AM" || currentMode === "FM") {
+                    asqBtn.disabled = false;
+                } else {
+                    asqBtn.disabled = true;
+                }
+            }
 
 
 
+            if(muteDisplay) {
+                if(data.MUTE_ENABLED) {
+                    muteDisplay.innerText = "SCHARF"; 
+                    muteDisplay.style.color = "#ff8800";
+                } else {
+                    muteDisplay.innerText = "AUS"; 
+                    muteDisplay.style.color = "#444";
+                }
+            }
 
-function updateUI(data) {
-    if(!data) return;
-    
-    const ch = data.CH;
-    document.getElementById('chDisp').innerText = ch;
-    document.getElementById('mhzDisp').innerText = (freqs[ch] || "---.---") + " MHz";
-    document.getElementById('modeName').innerText = data.MODE;
-    
-    const btn = document.getElementById('pttBtn');
-    const stat = document.getElementById('pttStat');
-    const sBtn = document.getElementById('scanBtn');
-    const voxDisplay = document.getElementById('voxState'); 
+            const muteInd = document.getElementById('muteIndicator');
+            if (muteInd) {
+                if (data.MUTE_ENABLED) {
+                    muteInd.style.color = "#ff8800";   
+                    muteInd.style.opacity = "1";
+                    muteInd.style.textShadow = "0 0 10px #ff8800";
+                } else {
+                    muteInd.style.color = "#333";      
+                    muteInd.style.opacity = "0.5";
+                    muteInd.style.textShadow = "none";
+                }
+            }
 
-    if (data.PTT === "ON") {
-        currentBarColor = 'red';
-        btn.style.background = "#ff0000";
-        btn.innerText = "TX ACTIVE (" + data.REMAINING + "s)";
-        stat.innerText = "● TRANSMIT"; 
-        stat.style.color = "red";
-    } else if (data.VOX_TX) {
-        currentBarColor = 'orange';
-        btn.style.background = "#ff8800"; 
-        btn.innerText = "VOX TRANSMITTING";
-        stat.innerText = "● VOX ACTIVE"; 
-        stat.style.color = "#ff8800";
-    } else if (data.BUSY) {
-        currentBarColor = 'green';
-        btn.style.background = "#4a0000"; 
-        btn.innerText = "PTT TOGGLE";
-        stat.innerText = "⚡ SIGNAL DETECTED"; 
-        stat.style.color = "#00ff00";
-    } else {
-        currentBarColor = 'green';
-        btn.style.background = "#4a0000"; 
-        btn.innerText = "PTT TOGGLE";
-        stat.innerText = "○ RX IDLE"; 
-        stat.style.color = "#444";
-    }
-    
-    btn.classList.toggle('active', data.PTT === "ON");
+            if(data.VOL !== undefined) {
+                const vDisp = document.getElementById('volDisp');
+                if(vDisp) vDisp.innerText = data.VOL;
+            }
 
-    if(data.SW_SCAN) {
-        sBtn.style.background = "#004444";
-        sBtn.style.boxShadow = "0 0 10px #00ffff";
-        sBtn.innerText = "SCANNING...";
-    } else {
-        sBtn.style.background = "#333";
-        sBtn.style.boxShadow = "none";
-        sBtn.innerText = "S-SCAN";
-    }
+            // Ausgrau-Logik für den MUTE Button basierend auf dem Modus
+            const muteBtn = document.getElementById('muteBtn');
+            if (muteBtn && data.MODE) {
+                const currentMode = data.MODE.toUpperCase();
+                if (currentMode === "AM" || currentMode === "FM" || currentMode === "USB" || currentMode === "LSB" || currentMode === "CW") {
+                    muteBtn.disabled = false;
+                } else {
+                    muteBtn.disabled = true;
+                }
+            }
 
-    if(voxDisplay) {
-        if(data.VOX_ENABLED) {
-            voxDisplay.innerText = "SCHARF"; 
-            voxDisplay.style.color = "#ff8800";
-        } else {
-            voxDisplay.innerText = "AUS"; 
-            voxDisplay.style.color = "#444";
         }
-    }
-    const voxInd = document.getElementById('voxIndicator');
-    if (voxInd) {
-        if (data.VOX_ENABLED) {
-            voxInd.style.color = "#ff8800";   
-            voxInd.style.opacity = "1";
-            voxInd.style.textShadow = "0 0 10px #ff8800";
-        } else {
-            voxInd.style.color = "#333";      
-            voxInd.style.opacity = "0.5";
-            voxInd.style.textShadow = "none";
-        }
-    }
-
-    if(data.VOL !== undefined) {
-        const vDisp = document.getElementById('volDisp');
-        if(vDisp) vDisp.innerText = data.VOL;
-    }
-}
-
-
-
 
         function pollStatus() {
             fetch('/api/cmd/STATUS')
@@ -248,31 +367,63 @@ function updateUI(data) {
                 });
         }
 
-function changeVol(direction) {
-    const cmd = direction === 'up' ? 'VOLUP' : 'VOLDOWN';
-    fetch('/api/cmd/' + cmd)
-        .then(r => r.json())
-        .then(data => {
-            updateUI(data); 
-        })
-        .catch(e => console.error("Volume Fehler:", e));
-}
+        function changeVol(direction) {
+            const cmd = direction === 'up' ? 'VOLUP' : 'VOLDOWN';
+            fetch('/api/cmd/' + cmd)
+                .then(r => r.json())
+                .then(data => {
+                    updateUI(data); 
+                })
+                .catch(e => console.error("Volume Fehler:", e));
+        }
 
+        function send(cmd) { 
+            fetch('/api/cmd/' + cmd)
+                .then(r => r.json())
+                .then(updateUI); 
+        }
 
-        function send(cmd) { fetch('/api/cmd/' + cmd).then(r => r.json()).then(updateUI); }
+        function setCfg(p, val) { 
+            fetch('/api/cmd/SET_' + p + '_LABEL?val=' + encodeURIComponent(val)); 
+            const pBtn = document.getElementById('lbl-' + p.toLowerCase());
+            if (pBtn) pBtn.innerText = p + " (" + val + ")"; 
+        }
 
-
-        function setCfg(p, val) { fetch('/api/cmd/SET_' + p + '_LABEL?val=' + encodeURIComponent(val)); document.getElementById('lbl-' + p.toLowerCase()).innerText = p + " (" + val + ")"; }
-        function updateTimeout() { fetch('/api/cmd/T' + document.getElementById('pttInput').value); }
+        function updateTimeout() { 
+            const pInput = document.getElementById('pttInput');
+            if (pInput) fetch('/api/cmd/T' + pInput.value); 
+        }
 
         let hT, prg = 0;
         const sB = document.getElementById('syncBtn');
-        function startS() { prg = 0; hT = setInterval(() => { prg += 4; document.getElementById('syncProgress').style.width = prg + "%"; if(prg >= 100) { clearInterval(hT); send('S'); document.getElementById('syncProgress').style.width = "0%"; } }, 100); }
-        function stopS() { clearInterval(hT); document.getElementById('syncProgress').style.width = "0%"; }
-        sB.onmousedown = sB.ontouchstart = (e) => { if(e.type==='touchstart') e.preventDefault(); startS(); };
-        sB.onmouseup = sB.onmouseleave = sB.ontouchend = stopS;
+        
+        function startS() { 
+            prg = 0; 
+            hT = setInterval(() => { 
+                prg += 4; 
+                const sProgress = document.getElementById('syncProgress');
+                if (sProgress) sProgress.style.width = prg + "%"; 
+                if(prg >= 100) { 
+                    clearInterval(hT); 
+                    send('S'); 
+                    if (sProgress) sProgress.style.width = "0%"; 
+                } 
+            }, 100); 
+        }
 
-        pollStatus();
+        function stopS() { 
+            clearInterval(hT); 
+            const sProgress = document.getElementById('syncProgress');
+if (sProgress) sProgress.style.width = "0%";
+}
+if (sB) {
+sB.onmousedown = sB.ontouchstart = (e) => {
+if(e.type==='touchstart') e.preventDefault();
+startS();
+};
+sB.onmouseup = sB.onmouseleave = sB.ontouchend = stopS;
+}
+pollStatus();
     </script>
 </body>
 </html>
