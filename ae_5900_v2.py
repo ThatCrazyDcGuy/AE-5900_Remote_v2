@@ -22,6 +22,7 @@ CHUNK = 512
 stream_rx = None
 stream_tx = None
 
+
 def setup_audio():
     global stream_rx, stream_tx
     try:
@@ -89,11 +90,14 @@ class RadioInterface:
             "last_ch": 1,
             "last_mode": 2,
             "skip_pa": False,
+            "skip_cw": False,
             "p1_label": "Not set", "p2_label": "Not set", 
             "p3_label": "Not set", "p4_label": "Not set",
             "scan_speed": 0.5,
             "fft_rx_gain": 25000, "fft_tx_gain": 55000,
-            "vox_enabled": False
+            "vox_enabled": False,
+            "mute_enabled": False,
+            "asq_enabled": False
         }
         if os.path.exists(CONFIG_FILE):
             try:
@@ -203,6 +207,71 @@ class RadioInterface:
             self.ser.write(bytes.fromhex("410000001A000006"))
         self.current_ch = 1; self.mode_idx = 2; self.save_config()
 
+def mw_scan_loop(radio):
+    """
+    Der Multi-Watch Loop: Wechselt die Kanäle aus der Config im Sekundentakt.
+    Stoppt bei Signal (Busy) und pausiert dort.
+    """
+    print("🚀 Multi-Watch (MW) gestartet.")
+    
+    while radio.mw_active:
+        # Kanäle live aus der Config auslesen und säubern
+        ch_string = radio.config.get("mw_label", "09, 19")
+        try:
+            channels = [c.strip().zfill(2) for c in ch_string.split(",") if c.strip()]
+        except Exception:
+            print("⚠️ Fehler beim Parsen der MW-Kanäle. Abbruch.")
+            radio.mw_active = False
+            break
+            
+        if not channels:
+            print("⚠️ Keine Kanäle für Multi-Watch definiert.")
+            radio.mw_active = False
+            break
+
+        for ch in channels:
+            # Falls MW zwischendurch gestoppt wurde, sofort abbrechen
+            if not radio.mw_active:
+                break
+                
+            # --- SIGNAL-PRÜFUNG ---
+            # Wenn das Funkgerät ein Signal empfängt (Busy), warten wir auf diesem Kanal
+            while radio.is_rx and radio.mw_active:
+                time.sleep(0.2) # Schnelle Prüfung, ob Signal noch da ist
+                
+            # Falls während des Wartens MW deaktiviert wurde
+            if not radio.mw_active:
+                break
+
+            # --- KANAL UMSCHALTEN ---
+            print(f"🔄 MW schaltet auf Kanal: {ch}")
+            
+            # Kanal im Radio-Objekt setzen
+            radio.current_ch = int(ch)
+            
+            ziffer1 = ch[0]  # Erste Ziffer (z.B. bei "28" -> "2")
+            ziffer2 = ch[1]  # Zweite Ziffer (z.B. bei "28" -> "8")
+            
+            key_codes = {'0':'01','1':'02','2':'03','3':'04','4':'05','5':'06','6':'07','7':'08','8':'09','9':'0A'}
+            
+            # Erste Ziffer aus dem Keypad emulieren und senden
+            if ziffer1 in key_codes:
+                radio.send_cmd(f"41000100{key_codes[ziffer1]}000006", f"41000000{key_codes[ziffer1]}000006")
+            time.sleep(0.120) # Etwas mehr Zeit lassen, damit die serielle Schnittstelle mitkommt
+            
+            # Zweite Ziffer aus dem Keypad emulieren und senden
+            if ziffer2 in key_codes:
+                radio.send_cmd(f"41000100{key_codes[ziffer2]}000006", f"41000000{key_codes[ziffer2]}000006")
+            
+            # 1 Sekunde auf diesem Kanal lauschen (Taktzeit)
+            for _ in range(10):
+                if not radio.mw_active or radio.is_rx:
+                    break
+                time.sleep(0.1)
+
+    print("🛑 Multi-Watch (MW) beendet.")
+
+
 # --- INSTANZ & STARTUP ---
 radio = RadioInterface()
 
@@ -260,12 +329,42 @@ def rig_ptt_control(state):
 
 @app.route('/api/cmd/<cmd>')
 def api_cmd(cmd):
-    if cmd not in ['STATUS', 'SSCAN'] and not cmd.startswith('SETSPEED'):
+    # Wenn IRGENDEINE Taste gedrückt wird, die nicht der MW-Befehl selbst oder STATUS ist: Stoppen!
+    if cmd not in ['STATUS', 'MW_TOGGLE'] and not cmd.startswith('SETSPEED'):
         radio.stop_sw_scan()
+        if hasattr(radio, 'mw_active') and radio.mw_active:
+            radio.mw_active = False # Stoppt den MW-Loop sofort!
+
 
     key_codes = {'0':'01','1':'02','2':'03','3':'04','4':'05','5':'06','6':'07','7':'08','8':'09','9':'0A'}
     p_codes = {'P1':'1A', 'P2':'1B', 'P3':'1C', 'P4':'1D'}
-    
+    superkey_codes = {
+        'FUNC_KEY':'0x31',  
+        'ACTION':'0x1E', #unter SSB/CW wird hierüber der Clarifier gestertet und die HZ ausgewählt. 0x1E = menupunkt 1Hz 0x1E, 0x1E 10Hz
+        'LOCKDEV':'0x1E:2', 
+        'VOX_TOGGLE':'28', #on / off
+        'VOX_SETTING':'0x28:2',
+        'EMG_TOGGLE':'0x25',
+        'DEVBUTTONUP':'0x10', #fine
+        'DEVBUTTONDOWN':'0x11', #fine
+        'DEVROTATEUP':'0x12', #schnell
+        'DEVROTATEDOWN':'0x13', #schnell
+        'DEVXUP':'0x26', #alternativ
+        'DEVXDOWN':'0x27', #alternativ
+        'SQUELCHUP':'0x24, 0x26, 0x24',  # fine step (80 Level)
+        'SQUELCHMAXUP':'0x24, 0x26:17, 0x24',
+        'SQUELCHDOWN':'0x24, 0x27, 0x24',  # fine step (80 Level)
+        'SQUELCHMAXDOWN':'0x24, 0x27:17, 0x24', 
+        'MODE':'0x0D',    
+        'MODELONG':'0x0D:2',
+        'MODEALT':'0x23',       
+        'MUTECOMBBTN':'0x31, 0x1E, 0x1E, 0x1E',
+        'MUTESINGLEBTN':'0x34',
+        'DEVDW':'0x31, 0x27', 
+        'DEVSCAN':'0x31, 0x26',        
+        'ASQ_ON_OFF':'24:2' #Geräteantworten im Kommentar dokumentiert
+    }
+ 
     if cmd in ['VOLUP', 'VOLDOWN']:
         import os
         control_name = "Master" 
@@ -286,10 +385,26 @@ def api_cmd(cmd):
         radio.current_ch = 40 if radio.current_ch == 1 else radio.current_ch - 1
         radio.send_cmd("4100010011000006", "4100000011000006")
     elif cmd == 'M':
+        # 1. Den Modus auf jeden Fall erst einmal um einen Schritt weiterwechseln
         radio.mode_idx = (radio.mode_idx + 1) % len(MODES)
+        
+        # 2. Schleife läuft so lange, wie der aktuell getroffene Modus übersprungen werden soll
+        while True:
+            current_mode = MODES[radio.mode_idx].upper()
+            
+            if radio.config.get("skip_pa", False) and current_mode == "PA":
+                radio.mode_idx = (radio.mode_idx + 1) % len(MODES)
+                continue  # Prüft den nächsten Modus in der Schleife
+                
+            if radio.config.get("skip_cw", False) and current_mode == "CW":
+                radio.mode_idx = (radio.mode_idx + 1) % len(MODES)
+                continue  # Prüft den nächsten Modus in der Schleife
+                
+            break  # Gültiger Modus gefunden, Schleife beenden
+
+        # 3. Den finalen Befehl an das Funkgerät senden
         radio.send_cmd("410001000D000006", "410000000D000006")
-        if radio.config.get("skip_pa") and MODES[radio.mode_idx] == "PA":
-            radio.mode_idx = (radio.mode_idx + 1) % len(MODES)
+
     elif cmd == 'P':
         radio.is_tx = not radio.is_tx
         radio.force_rx = False 
@@ -322,23 +437,19 @@ def api_cmd(cmd):
         
         if "VOX" in current_label:
             if radio.config.get("vox_enabled", False):
-                # SCHRITT 1: Lautstärke auf 0 setzen (Mute)
                 import os
-                # Wir merken uns den alten Wert aus der Config
                 old_vol = radio.config.get("vol", 85)
                 os.system("amixer set Master 0%") 
                 radio.audio_mute = True
                 print(f"🔇 MUTE: Master auf 0% gesetzt (vorher {old_vol}%)")
 
                 def delayed_vox_off():
-                    time.sleep(2.5) # Warten bis Hardware-VOX abfällt
-                    # SCHRITT 2: Abschalt-Code an Hardware senden
+                    time.sleep(2.5) 
                     radio.send_cmd(f"41000100{p_codes[cmd]}000006", f"41000000{p_codes[cmd]}000006")
                     radio.config["vox_enabled"] = False
                     radio.force_rx = True 
                     radio.save_config()
                     
-                    # SCHRITT 3: Lautstärke wiederherstellen
                     time.sleep(2.5)
                     os.system(f"amixer set Master {old_vol}%")
                     radio.audio_mute = False
@@ -346,36 +457,159 @@ def api_cmd(cmd):
 
                 threading.Thread(target=delayed_vox_off, daemon=True).start()
             else:
-                # Normales Einschalten
                 radio.send_cmd(f"41000100{p_codes[cmd]}000006", f"41000000{p_codes[cmd]}000006")
                 radio.config["vox_enabled"] = True
                 radio.save_config()
         else:
             radio.send_cmd(f"41000100{p_codes[cmd]}000006", f"41000000{p_codes[cmd]}000006")
 
+    elif cmd in superkey_codes:
+        label_key = f"{cmd.lower()}_label"
+        current_label = radio.config.get(label_key, "").upper()
+        macro_string = superkey_codes[cmd]
+        
+        commands = [c.strip() for c in macro_string.split(",")]
+        
+        for single_cmd in commands:
+            if not single_cmd:
+                continue
+                
+            if ":" in single_cmd:
+                hex_part, duration_part = single_cmd.split(":")
+                duration = float(duration_part)
+            else:
+                hex_part = single_cmd
+                duration = 0.150
+                
+            hex_clean = hex_part.replace("0x", "").zfill(2)
+            
+            # Speziallogik für VOX_TOGGLE via superkey_codes
+            if "VOX_TOGGLE" in current_label or cmd == "VOX_TOGGLE":
+                if radio.config.get("vox_enabled", False):
+                    import os
+                    old_vol = radio.config.get("vol", 85)
+                    os.system("amixer set Master 0%") 
+                    radio.audio_mute = True
+                    print(f"🔇 MUTE: Master auf 0% gesetzt (vorher {old_vol}%)")
 
-#            radio.save_config()
+                    def delayed_vox_superkey_off(h_clean, dur):
+                        radio.send_cmd(f"41000100{h_clean}000006", "00")
+                        time.sleep(dur)
+                        radio.send_cmd(f"41000000{h_clean}000006", "00")
+                        
+                        time.sleep(2.5)
+                        radio.config["vox_enabled"] = False
+                        radio.force_rx = True 
+                        radio.save_config()
+                        
+                        time.sleep(2.5)
+                        os.system(f"amixer set Master {old_vol}%")
+                        radio.audio_mute = False
+                        print(f"🔊 UNMUTE: Master wieder auf {old_vol}%")
 
+                    threading.Thread(target=delayed_vox_superkey_off, args=(hex_clean, duration), daemon=True).start()
+                else:
+                    radio.send_cmd(f"41000100{hex_clean}000006", "00")
+                    time.sleep(duration)
+                    radio.send_cmd(f"41000000{hex_clean}000006", "00")
+                    radio.config["vox_enabled"] = True
+                    radio.save_config()
+            
+            # Speziallogik für ASQ_ON_OFF via superkey_codes
+            elif "ASQ_ON_OFF" in current_label or cmd == "ASQ_ON_OFF":
+                # Prüfen, ob der aktuelle Modus AM oder FM ist
+                current_mode = MODES[radio.mode_idx].upper()
+                if current_mode not in ["AM", "FM"]:
+                    print(f"🚫 ASQ blockiert: Nicht verfügbar im Modus {current_mode}")
+                    continue  
 
+                if radio.config.get("asq_enabled", False):
+                    def delayed_asq_off(h_clean, dur):
+                        radio.send_cmd(f"41000100{h_clean}000006", "00")
+                        time.sleep(dur)
+                        radio.send_cmd(f"41000000{h_clean}000006", "00")
+                        
+                        time.sleep(0.5) 
+                        radio.config["asq_enabled"] = False
+                        #radio.force_rx = True 
+                        radio.save_config()
+                        
+                    threading.Thread(target=delayed_asq_off, args=(hex_clean, duration), daemon=True).start()
+                else:
+                    radio.send_cmd(f"41000100{hex_clean}000006", "00")
+                    time.sleep(duration)
+                    radio.send_cmd(f"41000000{hex_clean}000006", "00")
+                    radio.config["asq_enabled"] = True
+                    radio.save_config()
 
+            elif "MUTECOMBBTN" in current_label or cmd == "MUTECOMBBTN":
+                # Prüfen, ob der aktuelle Modus "AM", "FM", "USB", "LSB", "CW" ist
+                current_mode = MODES[radio.mode_idx].upper()
+                if current_mode not in ["AM", "FM", "USB", "LSB", "CW"]:
+                    print(f"🚫 MUTE blockiert: Nicht verfügbar im Modus {current_mode}")
+                    continue  # Springt zur nächsten Taste (ignoriert den Befehl)
+
+                if radio.config.get("mute_enabled", False):
+                    def delayed_devmute_off(h_clean, dur):
+                        radio.send_cmd(f"41000100{h_clean}000006", "00")
+                        time.sleep(dur)
+                        radio.send_cmd(f"41000000{h_clean}000006", "00")
+                        
+                        #time.sleep(0.5) 
+                        radio.config["mute_enabled"] = False
+                        #radio.force_rx = True 
+                        radio.save_config()
+                        
+                    threading.Thread(target=delayed_devmute_off, args=(hex_clean, duration), daemon=True).start()
+                else:
+                    radio.send_cmd(f"41000100{hex_clean}000006", "00")
+                    #time.sleep(duration)
+                    radio.send_cmd(f"41000000{hex_clean}000006", "00")
+                    radio.config["mute_enabled"] = True
+                    radio.save_config()
+
+            
+            # Standardlogik für alle anderen Superkeys
+            else:
+                radio.send_cmd(f"41000100{hex_clean}000006", "00")
+                time.sleep(duration)
+                radio.send_cmd(f"41000000{hex_clean}000006", "00")
+                
+            time.sleep(0.050)
 
     elif cmd.startswith('SET_'):
-        parts = cmd.split('_'); val = request.args.get('val')
-        if "SKIP" in cmd: radio.config["skip_pa"] = (val.lower() == 'true')
-        else: radio.config[f"{parts[1].lower()}_label"] = val
+        parts = cmd.split('_')
+        val = request.args.get('val')
+        # Reagiert jetzt auf SET_SKIP_PA und SET_SKIP_CW:
+        if "SKIP" in cmd: 
+            key_name = "skip_pa" if "PA" in cmd else "skip_cw"
+            radio.config[key_name] = (val.lower() == 'true')
+        else: 
+            radio.config[f"{parts[1].lower()}_label"] = val
         radio.save_config() 
-    elif cmd.startswith('T'): radio.config["ptt_timeout"] = int(cmd[1:])
+    elif cmd.startswith('T'): 
+        radio.config["ptt_timeout"] = int(cmd[1:])
     elif cmd.startswith('SETGAIN_'):
         parts = cmd.split('_')
         if len(parts) == 3:
             key = f"fft_{parts[1].lower()}_gain"
             radio.config[key] = int(parts[2])
             radio.save_config() 
+
+    elif cmd == 'MW_TOGGLE':
+        radio.mw_active = not getattr(radio, 'mw_active', False)
+        if radio.mw_active:
+            radio.stop_sw_scan() 
+            threading.Thread(target=mw_scan_loop, args=(radio,), daemon=True).start()
+
+
     # Timeout & Save
     if radio.is_tx and (time.time() - radio.ptt_start_time >= radio.config["ptt_timeout"]):
         radio.is_tx = False
         radio.save_config() 
         radio.send_cmd("4100000000000006", "4100000000000006")
+
+
 
     #radio.save_config()
     rem = int(radio.config["ptt_timeout"] - (time.time() - radio.ptt_start_time)) if radio.is_tx else radio.config["ptt_timeout"]
@@ -386,19 +620,21 @@ def api_cmd(cmd):
         "PTT": "ON" if radio.is_tx else "OFF", 
         "VOX_TX": radio.is_device_sending,
         "VOX_ENABLED": radio.config.get("vox_enabled", False),
+        "ASQ_ENABLED": radio.config.get("asq_enabled", False),
+        "MUTE_ENABLED": radio.config.get("mute_enabled", False),
         "REMAINING": max(0, rem), 
         "BUSY": radio.is_rx, 
         "SW_SCAN": radio.sw_scan_active,
         "VOL": radio.config.get("vol", 50),
-        "SKIP_PA": radio.config.get("skip_pa", False)
+        "SKIP_PA": radio.config.get("skip_pa", False),
+        "SKIP_CW": radio.config.get("skip_cw", False), 
+        "MW_SCAN": getattr(radio, 'mw_active', False)
     })
 
 
-# Stelle sicher, dass "import socket" ganz oben bei deinen anderen Imports steht!
 
 threading.Thread(target=auto_patch_streams, daemon=True).start()
 
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
-
