@@ -340,7 +340,7 @@ def api_cmd(cmd):
     p_codes = {'P1':'1A', 'P2':'1B', 'P3':'1C', 'P4':'1D'}
     superkey_codes = {
         'FUNC_KEY':'0x31',  
-        'ACTION':'0x1E', #unter SSB/CW wird hierüber der Clarifier gestertet und die HZ ausgewählt. 0x1E = menupunkt 1Hz 0x1E, 0x1E 10Hz
+        'ACTION':'0x1E', #Unter SSB/CW wird hierüber der Clarifier gestertet und die HZ ausgewählt. 0x1E = menupunkt 1Hz 0x1E, 0x1E 10Hz
         'LOCKDEV':'0x1E:2', 
         'VOX_TOGGLE':'28', #on / off
         'VOX_SETTING':'0x28:2',
