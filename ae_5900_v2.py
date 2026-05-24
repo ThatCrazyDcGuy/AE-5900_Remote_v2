@@ -542,31 +542,37 @@ def api_cmd(cmd):
                     radio.config["asq_enabled"] = True
                     radio.save_config()
 
+            # Speziallogik für MUTECOMBBTN via superkey_codes
             elif "MUTECOMBBTN" in current_label or cmd == "MUTECOMBBTN":
-                # Prüfen, ob der aktuelle Modus "AM", "FM", "USB", "LSB", "CW" ist
                 current_mode = MODES[radio.mode_idx].upper()
                 if current_mode not in ["AM", "FM", "USB", "LSB", "CW"]:
                     print(f"🚫 MUTE blockiert: Nicht verfügbar im Modus {current_mode}")
-                    continue  # Springt zur nächsten Taste (ignoriert den Befehl)
+                    continue
 
-                if radio.config.get("mute_enabled", False):
-                    def delayed_devmute_off(h_clean, dur):
-                        radio.send_cmd(f"41000100{h_clean}000006", "00")
-                        time.sleep(dur)
-                        radio.send_cmd(f"41000000{h_clean}000006", "00")
-                        
-                        #time.sleep(0.5) 
-                        radio.config["mute_enabled"] = False
-                        #radio.force_rx = True 
-                        radio.save_config()
-                        
-                    threading.Thread(target=delayed_devmute_off, args=(hex_clean, duration), daemon=True).start()
-                else:
-                    radio.send_cmd(f"41000100{hex_clean}000006", "00")
-                    #time.sleep(duration)
-                    radio.send_cmd(f"41000000{hex_clean}000006", "00")
-                    radio.config["mute_enabled"] = True
-                    radio.save_config()
+                is_currently_muted = radio.config.get("mute_enabled", False)
+                
+                radio.config["mute_enabled"] = not is_currently_muted
+                radio.save_config()
+
+                for single_cmd in commands:
+                    if not single_cmd:
+                        continue
+                    if ":" in single_cmd:
+                        hex_part, duration_part = single_cmd.split(":")
+                        duration = float(duration_part)
+                    else:
+                        hex_part = single_cmd
+                        duration = 0.150
+                    
+                    h_clean = hex_part.replace("0x", "").zfill(2)
+                    
+                    # Drücken -> Halten -> Loslassen für jeden Key im Makro
+                    radio.send_cmd(f"41000100{h_clean}000006", "00")
+                    time.sleep(duration)
+                    radio.send_cmd(f"41000000{h_clean}000006", "00")
+                    time.sleep(0.050)
+                
+                break 
 
             
             # Standardlogik für alle anderen Superkeys
