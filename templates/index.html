@@ -204,7 +204,7 @@
                         ctx.fillRect(i * barWidth, canvas.height - height, barWidth - 1, height);
                     });
                     
-                    setTimeout(drawSpectrum, 50);
+                    setTimeout(drawSpectrum, 150);
                 })
                 .catch(e => {
                     console.error("Audio API Fehler:", e);
@@ -583,13 +583,21 @@
         // ========================================================
         // EVENT-HANDLER & HILFSFUNKTIONEN
         // ========================================================
+        // iOS-sichere Event-Trennung für den Super-Sync
         if (sB) {
-            sB.onmousedown = sB.ontouchstart = (e) => {
-                if(e.type==='touchstart') e.preventDefault();
-                startS();
-            };
-            sB.onmouseup = sB.onmouseleave = sB.ontouchend = stopS;
+            // Für PC / Maus
+            sB.addEventListener('mousedown', (e) => { startS(); });
+            sB.addEventListener('mouseup', () => { stopS(); });
+            sB.addEventListener('mouseleave', () => { stopS(); });
+
+            // Für Smartphones (iOS & Android) absolut sauber getrennt
+            sB.addEventListener('touchstart', (e) => { 
+                startS(); 
+            }, { passive: true }); // Das 'passive: true' signalisiert iOS, dass wir das Scrollen nicht blockieren!
+            
+            sB.addEventListener('touchend', () => { stopS(); });
         }
+
 
         let clarTimer = null;
         let currentClarOffset = 0;
