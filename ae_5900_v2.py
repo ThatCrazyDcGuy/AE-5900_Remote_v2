@@ -603,7 +603,11 @@ def api_cmd(cmd):
                 radio.config["clar_offset"] = int(val)
             else:
                 radio.config["clar_step"] = val
-        radio.save_config()
+        else: 
+            key_name = f"{parts[1].lower()}_label"
+            radio.config[key_name] = val
+            
+        radio.save_config() 
     elif cmd.startswith('T'): 
         radio.config["ptt_timeout"] = int(cmd[1:])
     elif cmd.startswith('SETGAIN_'):
