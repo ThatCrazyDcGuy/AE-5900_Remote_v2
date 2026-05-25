@@ -17,7 +17,7 @@
         .btn-ptt { grid-column: span 4; background: #4a0000; font-weight: bold; min-height: 70px; transition: 0.2s; font-size: 1.2em; }
         .btn-ptt.active { background: #ff0000; box-shadow: 0 0 20px red; }
         .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; width: 200px; margin: 15px auto; }
-        .num-btn { background: #222; color: #0f0; padding: 12px; border: 1px solid #444; }
+        .num-btn { background: #333; color: white; padding: 12px 5px; border: none; }
         .setup-area { margin-top: 30px; border-top: 1px solid #333; padding-top: 20px; color: #888; text-align: left; max-width: 400px; margin: 0 auto; }
         .hold-button { position: relative; width: 100%; height: 50px; background: #444; color: white; border: none; overflow: hidden; margin: 10px 0; border-radius: 5px; }
         .progress-bar { position: absolute; bottom: 0; left: 0; height: 5px; background: #00ff00; width: 0%; transition: width 0.1s linear; }
@@ -29,15 +29,36 @@
         <div id="voxIndicator" style="position: absolute; top: 10px; right: 15px; font-weight: bold; font-size: 0.9em; transition: 0.3s; z-index: 3;">VOX</div>
         <div id="asqIndicator" style="position: absolute; top: 10px; right: 50px; font-weight: bold; font-size: 0.9em; transition: 0.3s; z-index: 3;">ASQ</div>
         <div id="muteIndicator" style="position: absolute; top: 10px; right: 85px; font-weight: bold; font-size: 0.9em; transition: 0.3s; z-index: 3;">MUTE</div>
+        <div id="micgainIndicator" style="position: absolute; top: 10px; left: 15px; font-weight: bold; font-size: 0.9em; transition: 0.3s; z-index: 3; color: #00ff00;">MIC: <span id="displayVolDisp">--</span>%</div>
+<div id="clarIndicator" style="position: absolute; top: 10px; left: 110px; font-weight: bold; font-size: 0.9em; transition: 0.3s; z-index: 3; color: #00ff00; display: none;">CLAR: <span id="displayClarDisp">+0</span> Hz</div>
         <div id="pttStat" style="font-weight:bold; color:#444; position: relative; z-index: 2;">○ RX IDLE</div>
         <div class="freq" id="chDisp" style="position: relative; z-index: 2;">01</div>
         <div class="mhz" id="mhzDisp" style="position: relative; z-index: 2;">26.965 MHz</div>
         <div id="modeName" style="font-size: 1.2em; color: #888; position: relative; z-index: 2;">FM</div>
     </div>
 
-    <div class="keypad">
-        {% for i in range(1, 10) %}<button class="num-btn" onclick="send('K{{i}}')">{{i}}</button>{% endfor %}
-        <button class="num-btn" style="grid-column: span 3" onclick="send('K0')">0</button>
+    <div class="keypad-wrapper" style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; width: 95%; max-width: 420px; margin: 15px auto; align-items: center;">
+        
+        <!-- Linke Spalte: 3 Buttons übereinander -->
+        <div style="display: grid; grid-template-columns: 1fr; gap: 5px;">
+            <button id="clarUpBtn" onclick="handleClarClick('CLARUP')" style="padding: 12px 5px;">CLAR +</button>
+            <button id="clarHzBtn" onclick="handleClarClick('CLARHZ')" style="padding: 12px 5px;">STEP</button>
+            <button id="clarDnBtn" onclick="handleClarClick('CLARDN')" style="padding: 12px 5px;">CLAR -</button>
+        </div>
+
+
+        <!-- Mittlere Spalte: Dein originales Numpad -->
+        <div class="keypad" style="margin: 0;">
+            {% for i in range(1, 10) %}<button class="num-btn" onclick="send('K{{i}}')">{{i}}</button>{% endfor %}
+            <button class="num-btn" style="grid-column: span 3" onclick="send('K0')">0</button>
+        </div>
+
+        <!-- Rechte Spalte: 3 Buttons übereinander -->
+        <div style="display: grid; grid-template-columns: 1fr; gap: 5px;">
+            <button onclick="changeVol('up')" style="padding: 12px 5px;">MIC +</button>
+            <button onclick="send(' ')" style="padding: 12px 5px;">5%</button>
+            <button onclick="changeVol('down')" style="padding: 12px 5px;">MIC -</button>
+        </div>
     </div>
 
     <div class="controls">
@@ -336,10 +357,15 @@
                 }
             }
 
-            if(data.VOL !== undefined) {
-                const vDisp = document.getElementById('volDisp');
-                if(vDisp) vDisp.innerText = data.VOL;
-            }
+    if(data.VOL !== undefined) {
+        const vDisp = document.getElementById('volDisp');
+        if(vDisp) vDisp.innerText = data.VOL;
+        
+        // NEU: Schreibt den Wert zusätzlich in das Display-Feld
+        const dvDisp = document.getElementById('displayVolDisp');
+        if(dvDisp) dvDisp.innerText = data.VOL;
+    }
+
 
             // Ausgrau-Logik für den MUTE Button basierend auf dem Modus
             const muteBtn = document.getElementById('muteBtn');
@@ -414,16 +440,183 @@
         function stopS() { 
             clearInterval(hT); 
             const sProgress = document.getElementById('syncProgress');
-if (sProgress) sProgress.style.width = "0%";
+            if (sProgress) sProgress.style.width = "0%";
+        }
+
+        // ========================================================
+        // DIE KORREKTE LIVE-AKTUALISIERUNG (updateUI ERWEITERUNG)
+        // ========================================================
+        // HIER gehört das eigentliche Update für Mic-Gain und den Clarifier hin!
+        // Wir klinken uns in die bestehende updateUI-Logik ein:
+        const originalUpdateUI = updateUI;
+        updateUI = function(data) {
+            if(!data) return;
+            
+            // Erst die alte, originale updateUI-Arbeit ausführen lassen
+            if (typeof originalUpdateUI === 'function') originalUpdateUI(data);
+
+            // 1. Mic-Gain Display-Indikator füttern
+            if(data.VOL !== undefined) {
+                const dvDisp = document.getElementById('displayVolDisp');
+                if(dvDisp) dvDisp.innerText = data.VOL;
+            }
+
+            // 2. Clarifier-Live-Aktualisierung (Betriebsarten & Timeout)
+            const clarUp = document.getElementById('clarUpBtn');
+            const clarHz = document.getElementById('clarHzBtn');
+            const clarDn = document.getElementById('clarDnBtn');
+            const clarInd = document.getElementById('clarIndicator');
+            const clarDisp = document.getElementById('displayClarDisp');
+
+            if (clarHz && data.MODE) {
+                const mode = data.MODE.toUpperCase();
+            if (mode === "CW" || mode === "USB" || mode === "LSB") {
+                clarHz.disabled = false;
+                if (clarInd) clarInd.style.display = "block";
+                
+
+                    if (data.CLAR_OFFSET !== undefined) {
+                        if (!clarTimer) {
+                            currentClarOffset = parseInt(data.CLAR_OFFSET);
+                            let displaySign = currentClarOffset >= 0 ? "+" : "";
+                            if (clarDisp) clarDisp.innerText = displaySign + currentClarOffset;
+                        }
+                    }
+
+
+                if (!clarTimer && (data.CLAR_STEP === "STEP" || clarHz.innerText === "STEP")) {
+                    if (clarUp) clarUp.disabled = true;
+                    if (clarDn) clarDn.disabled = true;
+                }
+
+                } else {
+                    if (clarUp) clarUp.disabled = true;
+                    if (clarHz) clarHz.disabled = true;
+                    if (clarDn) clarDn.disabled = true;
+                    if (clarHz) clarHz.innerText = "STEP";
+                    if (clarInd) clarInd.style.display = "none";
+                    if (clarTimer) { clearTimeout(clarTimer); clarTimer = null; }
+                }
+            }
+        };
+
+        // ========================================================
+        // EVENT-HANDLER & HILFSFUNKTIONEN
+        // ========================================================
+        if (sB) {
+            sB.onmousedown = sB.ontouchstart = (e) => {
+                if(e.type==='touchstart') e.preventDefault();
+                startS();
+            };
+            sB.onmouseup = sB.onmouseleave = sB.ontouchend = stopS;
+        }
+
+let clarTimer = null;
+let currentClarOffset = 0; // Speichert den aktuellen Hz-Zähler live im Browser
+
+function handleClarClick(cmd) {
+    const hzBtn = document.getElementById('clarHzBtn');
+    if (!hzBtn || hzBtn.disabled) return;
+
+    // Timer bei JEDEM Klick (auch bei + und -) um weitere 5 Sekunden verlängern!
+    if (clarTimer) clearTimeout(clarTimer);
+    
+    let currentText = hzBtn.innerText;
+
+    if (cmd === 'CLARHZ') {
+        let nextText = "STEP";
+        if (currentText === "STEP") nextText = "1 Hz";
+        else if (currentText === "1 Hz") nextText = "10 Hz";
+        else if (currentText === "10 Hz") nextText = "100 Hz";
+        else if (currentText === "100 Hz") nextText = "STEP";
+
+        hzBtn.innerText = nextText;
+        fetch('/api/cmd/SET_CLAR_STEP?val=' + encodeURIComponent(nextText));
+    } 
+    else if (cmd === 'CLARUP' || cmd === 'CLARDN') {
+        let activeStepText = hzBtn.innerText.trim();
+        let stepSize = 1;
+
+        if (activeStepText === "10 Hz") {
+            stepSize = 10;
+        } else if (activeStepText === "100 Hz") {
+            stepSize = 100;
+        }
+
+        // --- NEU: DIE SCHUSS-SICHERE HARDWARE-BREMSE (MAX +/- 500 Hz) ---
+        if (cmd === 'CLARUP') {
+            // Würde dieser Klick die 500 Hz überschreiten?
+            if (currentClarOffset + stepSize > 500) {
+                console.log("🛑 Limit erreicht: Maximal +500 Hz erlaubt!");
+                return; // BRICHT SOFORT AB: Kein Senden, kein Weiterzählen!
+            }
+            currentClarOffset += stepSize;
+        }
+        
+        if (cmd === 'CLARDN') {
+            // Würde dieser Klick die -500 Hz unterschreiten?
+            if (currentClarOffset - stepSize < -500) {
+                console.log("🛑 Limit erreicht: Maximal -500 Hz erlaubt!");
+                return; // BRICHT SOFORT AB: Kein Senden, kein Weiterzählen!
+            }
+            currentClarOffset -= stepSize;
+        }
+        // -----------------------------------------------------------------
+
+        // Vorzeichen für das Display schön formatieren
+        let displaySign = currentClarOffset >= 0 ? "+" : "";
+        const clarDisp = document.getElementById('displayClarDisp');
+        if (clarDisp) clarDisp.innerText = displaySign + currentClarOffset;
+
+        // Den neuen Hz-Wert sofort im Backend einfrieren
+        fetch('/api/cmd/SET_CLAR_OFFSET?val=' + currentClarOffset);
+    }
+
+
+    // Wenn wir nicht im "STEP"-Modus sind, halten wir das Menü für 5s offen
+    if (hzBtn.innerText !== "STEP") {
+        document.getElementById('clarUpBtn').disabled = false;
+        document.getElementById('clarDnBtn').disabled = false;
+        
+        clarTimer = setTimeout(() => {
+            hzBtn.innerText = "STEP";
+            fetch('/api/cmd/SET_CLAR_STEP?val=STEP');
+            document.getElementById('clarUpBtn').disabled = true;
+            document.getElementById('clarDnBtn').disabled = true;
+            clarTimer = null;
+        }, 5000);
+    } else {
+        document.getElementById('clarUpBtn').disabled = true;
+        document.getElementById('clarDnBtn').disabled = true;
+    }
+
+    // Befehl an das Funkgerät abfeuern
+    send(cmd);
 }
-if (sB) {
-sB.onmousedown = sB.ontouchstart = (e) => {
-if(e.type==='touchstart') e.preventDefault();
-startS();
-};
-sB.onmouseup = sB.onmouseleave = sB.ontouchend = stopS;
-}
-pollStatus();
+
+// Schutzvariable, damit dauerhaftes Halten der Taste nicht wild triggert
+let f6KeyPressed = false;
+
+window.addEventListener('keydown', (e) => {
+    if (e.key === 'F6') {
+        e.preventDefault(); // Verhindert Browser-Standardfunktionen
+        
+        if (!f6KeyPressed) {
+            f6KeyPressed = true;
+            console.log("🦶 Fußschalter (F6) gedrückt: PTT wird geschaltet!");
+            send('P'); // Aktiviert/Deaktiviert die PTT über deine bestehende Logik
+        }
+    }
+});
+
+window.addEventListener('keyup', (e) => {
+    if (e.key === 'F6') {
+        f6KeyPressed = false; // Setzt die Sperre beim Loslassen wieder zurück
+    }
+});
+
+
+        pollStatus();
     </script>
 </body>
 </html>
