@@ -38,6 +38,7 @@
         <div id="voxIndicator" style="position: absolute; top: 10px; right: 15px; font-weight: bold; font-size: 0.9em; transition: 0.3s; z-index: 3;">VOX</div>
         <div id="asqIndicator" style="position: absolute; top: 10px; right: 50px; font-weight: bold; font-size: 0.9em; transition: 0.3s; z-index: 3;">ASQ</div>
         <div id="muteIndicator" style="position: absolute; top: 10px; right: 85px; font-weight: bold; font-size: 0.9em; transition: 0.3s; z-index: 3;">MUTE</div>
+        <div id="lockIndicator" style="position: absolute; top: 10px; right: 125px; font-weight: bold; font-size: 0.9em; transition: 0.3s; z-index: 3;">LOCK</div>
         <div id="micgainIndicator" style="position: absolute; top: 10px; left: 15px; font-weight: bold; font-size: 0.9em; transition: 0.3s; z-index: 3; color: #00ff00;">MIC: <span id="displayVolDisp">--</span>%</div>
 <div id="clarIndicator" style="position: absolute; top: 10px; left: 110px; font-weight: bold; font-size: 0.9em; transition: 0.3s; z-index: 3; color: #00ff00; display: none;">CLAR: <span id="displayClarDisp">+0</span> Hz</div>
         <div id="pttStat" style="font-weight:bold; color:#444; position: relative; z-index: 2;">○ RX IDLE</div>
@@ -81,7 +82,7 @@
         <button onclick="send('VOX_TOGGLE')">VOX</button>
         <button onclick="send('SSCAN')" id="scanBtn">S-SCAN</button>
         <button onclick="send('MW_TOGGLE')" id="mwBtn">MW</button>
-        <button onclick="send('EMG_TOGGLE')">EMG</button>
+        <button onclick="send('LOCKDEV')">LOCK</button>
 
 
 
@@ -233,6 +234,7 @@
             const voxDisplay = document.getElementById('voxState'); 
             const asqDisplay = document.getElementById('asqState'); 
             const muteDisplay = document.getElementById('muteState'); 
+            const lockDisplay = document.getElementById('lockState'); 
 
             if (btn && stat) {
                 if (data.PTT === "ON") {
@@ -370,6 +372,22 @@
                     muteInd.style.textShadow = "none";
                 }
             }
+
+
+    // --- LOCK INDIKATOR LIVE ANSTEUERN ---
+    const lockInd = document.getElementById('lockIndicator');
+    if (lockInd && data.LOCK_ENABLED !== undefined) {
+        if (data.LOCK_ENABLED) {
+            lockInd.style.color = "#ff8800";   // Schickes Orange wie bei VOX/ASQ
+            lockInd.style.opacity = "1";
+            lockInd.style.textShadow = "0 0 10px #ff8800";
+        } else {
+            lockInd.style.color = "#333";      // Abgedunkelt wenn inaktiv
+            lockInd.style.opacity = "0.5";
+            lockInd.style.textShadow = "none";
+        }
+    }
+
 
     if(data.VOL !== undefined) {
         const vDisp = document.getElementById('volDisp');
