@@ -346,7 +346,10 @@ def api_cmd(cmd):
     superkey_codes = {
         'FUNC_KEY':'0x31',  
         'ACTION':'0x1E', #Unter SSB/CW wird hierüber der Clarifier gestertet und die HZ ausgewählt. 0x1E = menupunkt 1Hz 0x1E, 0x1E 10Hz
-        'LOCKDEV':'0x1E:2', 
+        'LOCKDEV':'0x1E:2',
+        'CLARUP':'0x26',
+        'CLARHZ':'0x1E', # 1/10/100
+        'CLARDN':'0x27', 
         'VOX_TOGGLE':'28', #on / off
         'VOX_SETTING':'0x28:2',
         'EMG_TOGGLE':'0x25',
@@ -591,13 +594,16 @@ def api_cmd(cmd):
     elif cmd.startswith('SET_'):
         parts = cmd.split('_')
         val = request.args.get('val')
-        # Reagiert jetzt auf SET_SKIP_PA und SET_SKIP_CW:
         if "SKIP" in cmd: 
             key_name = "skip_pa" if "PA" in cmd else "skip_cw"
             radio.config[key_name] = (val.lower() == 'true')
-        else: 
-            radio.config[f"{parts[1].lower()}_label"] = val
-        radio.save_config() 
+        elif "CLAR" in cmd:
+            # Speichert sowohl den Text-Step als auch den nummerischen Offset
+            if "OFFSET" in cmd:
+                radio.config["clar_offset"] = int(val)
+            else:
+                radio.config["clar_step"] = val
+        radio.save_config()
     elif cmd.startswith('T'): 
         radio.config["ptt_timeout"] = int(cmd[1:])
     elif cmd.startswith('SETGAIN_'):
@@ -638,7 +644,9 @@ def api_cmd(cmd):
         "SW_SCAN": radio.sw_scan_active,
         "VOL": radio.config.get("vol", 50),
         "SKIP_PA": radio.config.get("skip_pa", False),
-        "SKIP_CW": radio.config.get("skip_cw", False), 
+        "SKIP_CW": radio.config.get("skip_cw", False),
+        "CLAR_STEP": radio.config.get("clar_step", "STEP"),
+        "CLAR_OFFSET": radio.config.get("clar_offset", 0),
         "MW_SCAN": getattr(radio, 'mw_active', False)
     })
 
