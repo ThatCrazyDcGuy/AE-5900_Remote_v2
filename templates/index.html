@@ -484,24 +484,35 @@
         }
 
         // ========================================================
-        // DIE KORREKTE LIVE-AKTUALISIERUNG (updateUI ERWEITERUNG)
+        // DIE PERFEKT HARMONISIERTE LIVE-AKTUALISIERUNG (updateUI)
         // ========================================================
-        // HIER gehört das eigentliche Update für Mic-Gain und den Clarifier hin!
-        // Wir klinken uns in die bestehende updateUI-Logik ein:
         const originalUpdateUI = updateUI;
         updateUI = function(data) {
             if(!data) return;
             
-            // Erst die alte, originale updateUI-Arbeit ausführen lassen
+            // 1. Erst die originale updateUI-Arbeit ausführen lassen
             if (typeof originalUpdateUI === 'function') originalUpdateUI(data);
 
-            // 1. Mic-Gain Display-Indikator füttern
+            // 2. Mic-Gain Display-Indikator füttern
             if(data.VOL !== undefined) {
                 const dvDisp = document.getElementById('displayVolDisp');
                 if(dvDisp) dvDisp.innerText = data.VOL;
             }
 
-            // 2. Clarifier-Live-Aktualisierung (Betriebsarten & Timeout)
+            // Lock-Zustand global synchronisieren
+            if (data.LOCK_ENABLED !== undefined) {
+                isWebUILocked = data.LOCK_ENABLED;
+            }
+
+            // --- DER GROSSE RESET (NUR WENN NICHT VERRIEGELT) ---
+            const allButtons = document.querySelectorAll('.controls button, .keypad button, .keypad-wrapper button');
+            if (!isWebUILocked) {
+                // Wenn entsperrt: Erst einmal pauschal JEDE Taste aktivieren,
+                // damit die folgenden Spezialprüfungen die korrekten Modi sperren können.
+                allButtons.forEach(btn => btn.disabled = false);
+            }
+
+            // 3. Clarifier-Live-Aktualisierung (Betriebsarten & Timeout)
             const clarUp = document.getElementById('clarUpBtn');
             const clarHz = document.getElementById('clarHzBtn');
             const clarDn = document.getElementById('clarDnBtn');
@@ -510,26 +521,23 @@
 
             if (clarHz && data.MODE) {
                 const mode = data.MODE.toUpperCase();
-            if (mode === "CW" || mode === "USB" || mode === "LSB") {
-                clarHz.disabled = false;
-                if (clarInd) clarInd.style.display = "block";
-                
-
-                    if (data.CLAR_OFFSET !== undefined) {
-                        if (!clarTimer) {
-                            currentClarOffset = parseInt(data.CLAR_OFFSET);
-                            let displaySign = currentClarOffset >= 0 ? "+" : "";
-                            if (clarDisp) clarDisp.innerText = displaySign + currentClarOffset;
-                        }
+                if (mode === "CW" || mode === "USB" || mode === "LSB") {
+                    // Nur aktivieren, wenn das Gerät nicht verriegelt ist
+                    if (!isWebUILocked) clarHz.disabled = false;
+                    if (clarInd) clarInd.style.display = "block";
+                    
+                    if (data.CLAR_OFFSET !== undefined && !clarTimer) {
+                        currentClarOffset = parseInt(data.CLAR_OFFSET);
+                        let displaySign = currentClarOffset >= 0 ? "+" : "";
+                        if (clarDisp) clarDisp.innerText = displaySign + currentClarOffset;
                     }
 
-
-                if (!clarTimer && (data.CLAR_STEP === "STEP" || clarHz.innerText === "STEP")) {
-                    if (clarUp) clarUp.disabled = true;
-                    if (clarDn) clarDn.disabled = true;
-                }
-
+                    if (!clarTimer && (data.CLAR_STEP === "STEP" || clarHz.innerText === "STEP")) {
+                        if (clarUp) clarUp.disabled = true;
+                        if (clarDn) clarDn.disabled = true;
+                    }
                 } else {
+                    // In AM/FM/PA die Clarifier-Gruppe eiskalt zusperren und verbergen
                     if (clarUp) clarUp.disabled = true;
                     if (clarHz) clarHz.disabled = true;
                     if (clarDn) clarDn.disabled = true;
@@ -539,23 +547,36 @@
                 }
             }
 
-            // --- HIER REINKOPIERT: GLOBALER LOCK-ZUSTAND FÜR ALLE BUTTONS ---
-            if (data.LOCK_ENABLED !== undefined) {
-                isWebUILocked = data.LOCK_ENABLED;
+            // 4. ASQ-Sperre für andere Betriebsarten drüberrechnen
+            const asqBtn = document.getElementById('asqBtn');
+            if (asqBtn && data.MODE && !isWebUILocked) {
+                const currentMode = data.MODE.toUpperCase();
+                if (currentMode !== "AM" && currentMode !== "FM") {
+                    asqBtn.disabled = true; // Sperren in SSB/PA
+                }
+            }
 
-                const allButtons = document.querySelectorAll('.controls button, .keypad button, .keypad-wrapper button');
-                
+            // 5. GLOBALER HARDWARE-LOCK (Überschreibt am Ende ALLES falls aktiv)
+            if (isWebUILocked) {
                 allButtons.forEach(btn => {
                     const isLockBtn = btn.getAttribute('onclick') && btn.getAttribute('onclick').includes('LOCKDEV');
-                    
-                    if (isWebUILocked) {
-                        if (!isLockBtn) btn.disabled = true;
-                    } else {
-                        if (!isLockBtn) btn.disabled = false;
-                    }
+                    if (!isLockBtn) btn.disabled = true;
                 });
             }
 
+            // --- LOCK INDIKATOR LIVE ANSTEUERN ---
+            const lockInd = document.getElementById('lockIndicator');
+            if (lockInd) {
+                if (isWebUILocked) {
+                    lockInd.style.color = "#ff8800";   
+                    lockInd.style.opacity = "1";
+                    lockInd.style.textShadow = "0 0 10px #ff8800";
+                } else {
+                    lockInd.style.color = "#333";      
+                    lockInd.style.opacity = "0.5";
+                    lockInd.style.textShadow = "none";
+                }
+            }
         };
 
         // ========================================================
@@ -569,88 +590,70 @@
             sB.onmouseup = sB.onmouseleave = sB.ontouchend = stopS;
         }
 
-let clarTimer = null;
-let currentClarOffset = 0; // Speichert den aktuellen Hz-Zähler live im Browser
+        let clarTimer = null;
+        let currentClarOffset = 0;
 
-function handleClarClick(cmd) {
-    const hzBtn = document.getElementById('clarHzBtn');
-    if (!hzBtn || hzBtn.disabled) return;
+        function handleClarClick(cmd) {
+            const hzBtn = document.getElementById('clarHzBtn');
+            if (!hzBtn || hzBtn.disabled) return;
 
-    // Timer bei JEDEM Klick (auch bei + und -) um weitere 5 Sekunden verlängern!
-    if (clarTimer) clearTimeout(clarTimer);
-    
-    let currentText = hzBtn.innerText;
+            if (clarTimer) clearTimeout(clarTimer);
+            let currentText = hzBtn.innerText;
 
-    if (cmd === 'CLARHZ') {
-        let nextText = "STEP";
-        if (currentText === "STEP") nextText = "1 Hz";
-        else if (currentText === "1 Hz") nextText = "10 Hz";
-        else if (currentText === "10 Hz") nextText = "100 Hz";
-        else if (currentText === "100 Hz") nextText = "STEP";
+            if (cmd === 'CLARHZ') {
+                let nextText = "STEP";
+                if (currentText === "STEP") nextText = "1 Hz";
+                else if (currentText === "1 Hz") nextText = "10 Hz";
+                else if (currentText === "10 Hz") nextText = "100 Hz";
+                else if (currentText === "100 Hz") nextText = "STEP";
 
-        hzBtn.innerText = nextText;
-        fetch('/api/cmd/SET_CLAR_STEP?val=' + encodeURIComponent(nextText));
-    } 
-    else if (cmd === 'CLARUP' || cmd === 'CLARDN') {
-        let activeStepText = hzBtn.innerText.trim();
-        let stepSize = 1;
+                hzBtn.innerText = nextText;
+                fetch('/api/cmd/SET_CLAR_STEP?val=' + encodeURIComponent(nextText));
+            } 
+            else if (cmd === 'CLARUP' || cmd === 'CLARDN') {
+                let activeStepText = hzBtn.innerText.trim();
+                let stepSize = 1;
 
-        if (activeStepText === "10 Hz") {
-            stepSize = 10;
-        } else if (activeStepText === "100 Hz") {
-            stepSize = 100;
-        }
+                if (activeStepText === "10 Hz") {
+                    stepSize = 10;
+                } else if (activeStepText === "100 Hz") {
+                    stepSize = 100;
+                }
 
-        // --- NEU: DIE SCHUSS-SICHERE HARDWARE-BREMSE (MAX +/- 500 Hz) ---
-        if (cmd === 'CLARUP') {
-            // Würde dieser Klick die 500 Hz überschreiten?
-            if (currentClarOffset + stepSize > 500) {
-                console.log("🛑 Limit erreicht: Maximal +500 Hz erlaubt!");
-                return; // BRICHT SOFORT AB: Kein Senden, kein Weiterzählen!
+                if (cmd === 'CLARUP') {
+                    if (currentClarOffset + stepSize > 500) return;
+                    currentClarOffset += stepSize;
+                }
+                if (cmd === 'CLARDN') {
+                    if (currentClarOffset - stepSize < -500) return;
+                    currentClarOffset -= stepSize;
+                }
+
+                let displaySign = currentClarOffset >= 0 ? "+" : "";
+                const clarDisp = document.getElementById('displayClarDisp');
+                if (clarDisp) clarDisp.innerText = displaySign + currentClarOffset;
+
+                fetch('/api/cmd/SET_CLAR_OFFSET?val=' + currentClarOffset);
             }
-            currentClarOffset += stepSize;
-        }
-        
-        if (cmd === 'CLARDN') {
-            // Würde dieser Klick die -500 Hz unterschreiten?
-            if (currentClarOffset - stepSize < -500) {
-                console.log("🛑 Limit erreicht: Maximal -500 Hz erlaubt!");
-                return; // BRICHT SOFORT AB: Kein Senden, kein Weiterzählen!
+
+            if (hzBtn.innerText !== "STEP") {
+                document.getElementById('clarUpBtn').disabled = false;
+                document.getElementById('clarDnBtn').disabled = false;
+                
+                clarTimer = setTimeout(() => {
+                    hzBtn.innerText = "STEP";
+                    fetch('/api/cmd/SET_CLAR_STEP?val=STEP');
+                    document.getElementById('clarUpBtn').disabled = true;
+                    document.getElementById('clarDnBtn').disabled = true;
+                    clarTimer = null;
+                }, 5000);
+            } else {
+                document.getElementById('clarUpBtn').disabled = true;
+                document.getElementById('clarDnBtn').disabled = true;
             }
-            currentClarOffset -= stepSize;
+            send(cmd);
         }
-        // -----------------------------------------------------------------
 
-        // Vorzeichen für das Display schön formatieren
-        let displaySign = currentClarOffset >= 0 ? "+" : "";
-        const clarDisp = document.getElementById('displayClarDisp');
-        if (clarDisp) clarDisp.innerText = displaySign + currentClarOffset;
-
-        // Den neuen Hz-Wert sofort im Backend einfrieren
-        fetch('/api/cmd/SET_CLAR_OFFSET?val=' + currentClarOffset);
-    }
-
-
-    // Wenn wir nicht im "STEP"-Modus sind, halten wir das Menü für 5s offen
-    if (hzBtn.innerText !== "STEP") {
-        document.getElementById('clarUpBtn').disabled = false;
-        document.getElementById('clarDnBtn').disabled = false;
-        
-        clarTimer = setTimeout(() => {
-            hzBtn.innerText = "STEP";
-            fetch('/api/cmd/SET_CLAR_STEP?val=STEP');
-            document.getElementById('clarUpBtn').disabled = true;
-            document.getElementById('clarDnBtn').disabled = true;
-            clarTimer = null;clarTimer
-        }, 5000);
-    } else {
-        document.getElementById('clarUpBtn').disabled = true;
-        document.getElementById('clarDnBtn').disabled = true;
-    }
-
-    // Befehl an das Funkgerät abfeuern
-    send(cmd);
-}
 
 // Schutzvariable, damit dauerhaftes Halten der Taste nicht wild triggert
 let f6KeyPressed = false;
