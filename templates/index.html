@@ -435,7 +435,15 @@
                 .catch(e => console.error("Volume Fehler:", e));
         }
 
+        let isWebUILocked = false; // Speichert den aktuellen Lock-Zustand global im Browser
+
         function send(cmd) { 
+            // Wenn LOCK aktiv ist und der Befehl NICHT 'LOCKDEV' heisst: Blockieren!
+            if (isWebUILocked && cmd !== 'LOCKDEV') {
+                console.log("🔒 Klick blockiert: WebUI ist gesperrt!");
+                return; 
+            }
+            
             fetch('/api/cmd/' + cmd)
                 .then(r => r.json())
                 .then(updateUI); 
@@ -530,6 +538,24 @@
                     if (clarTimer) { clearTimeout(clarTimer); clarTimer = null; }
                 }
             }
+
+            // --- HIER REINKOPIERT: GLOBALER LOCK-ZUSTAND FÜR ALLE BUTTONS ---
+            if (data.LOCK_ENABLED !== undefined) {
+                isWebUILocked = data.LOCK_ENABLED;
+
+                const allButtons = document.querySelectorAll('.controls button, .keypad button, .keypad-wrapper button');
+                
+                allButtons.forEach(btn => {
+                    const isLockBtn = btn.getAttribute('onclick') && btn.getAttribute('onclick').includes('LOCKDEV');
+                    
+                    if (isWebUILocked) {
+                        if (!isLockBtn) btn.disabled = true;
+                    } else {
+                        if (!isLockBtn) btn.disabled = false;
+                    }
+                });
+            }
+
         };
 
         // ========================================================
@@ -615,7 +641,7 @@ function handleClarClick(cmd) {
             fetch('/api/cmd/SET_CLAR_STEP?val=STEP');
             document.getElementById('clarUpBtn').disabled = true;
             document.getElementById('clarDnBtn').disabled = true;
-            clarTimer = null;
+            clarTimer = null;clarTimer
         }, 5000);
     } else {
         document.getElementById('clarUpBtn').disabled = true;
