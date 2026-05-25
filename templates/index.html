@@ -9,7 +9,7 @@
         .display { border: 2px solid #333; background: #000; margin: 10px auto; width: 95%; max-width: 400px; padding: 20px; border-radius: 10px; box-shadow: 0 0 15px #00ff0033; }
         #pttStat { 
             position: absolute; 
-            top: 12px; /* Schiebt den Text um ca. 12 Pixel tiefer nach unten */
+            top: 12px; 
             left: 0; 
             right: 0; 
             margin: 0 auto; 
@@ -48,7 +48,7 @@
 
     <div class="keypad-wrapper" style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; width: 95%; max-width: 420px; margin: 15px auto; align-items: center;">
         
-        <!-- Linke Spalte: 3 Buttons übereinander -->
+
         <div style="display: grid; grid-template-columns: 1fr; gap: 5px;">
             <button id="clarUpBtn" onclick="handleClarClick('CLARUP')" style="padding: 12px 5px;">CLAR +</button>
             <button id="clarHzBtn" onclick="handleClarClick('CLARHZ')" style="padding: 12px 5px;">STEP</button>
@@ -56,13 +56,13 @@
         </div>
 
 
-        <!-- Mittlere Spalte: Dein originales Numpad -->
+
         <div class="keypad" style="margin: 0;">
             {% for i in range(1, 10) %}<button class="num-btn" onclick="send('K{{i}}')">{{i}}</button>{% endfor %}
             <button class="num-btn" style="grid-column: span 3" onclick="send('K0')">0</button>
         </div>
 
-        <!-- Rechte Spalte: 3 Buttons übereinander -->
+
         <div style="display: grid; grid-template-columns: 1fr; gap: 5px;">
             <button onclick="changeVol('up')" style="padding: 12px 5px;">MIC +</button>
             <button onclick="send(' ')" style="padding: 12px 5px;">5%</button>
@@ -71,32 +71,32 @@
     </div>
 
     <div class="controls">
-        <!-- Reihe 1: Navigation & Modus -->
+
         <button onclick="send('M')">MODE</button>
         <button onclick="send('U')">CH ▲</button>
         <button onclick="send('D')">CH ▼</button>
         <button onclick="send('MUTECOMBBTN')">MUTE</button>
 
-        <!-- Reihe 2: Scan & Sonderfunktionen (Jetzt mit intelligentem Multi-Watch) -->
+
         <button onclick="send('VOX_TOGGLE')">VOX</button>
         <button onclick="send('SSCAN')" id="scanBtn">S-SCAN</button>
         <button onclick="send('MW_TOGGLE')" id="mwBtn">MW</button>
         <button onclick="send('EMG_TOGGLE')">EMG</button>
 
 
-        <!-- Reihe 3: Squelch-Gruppe -->
+
         <button onclick="send('SQUELCHUP')">A/SQ +</button>
         <button onclick="send('SQUELCHDOWN')">A/SQ -</button>
         <button onclick="send('ASQ_ON_OFF')" id="asqBtn">ASQ</button>
         <button onclick="send('SQUELCHMAXDOWN')" style="font-size:0.85em;">SET A/SQ 1/0</button>
 
-        <!-- Reihe 4: Die P-Tasten nebeneinander -->
+
         <button onclick="send('P1')" id="lbl-p1" style="font-size:0.8em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">P1</button>
         <button onclick="send('P2')" id="lbl-p2" style="font-size:0.8em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">P2</button>
         <button onclick="send('P3')" id="lbl-p3" style="font-size:0.8em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">P3</button>
         <button onclick="send('P4')" id="lbl-p4" style="font-size:0.8em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">P4</button>
         
-        <!-- Haupttaste unten drunter -->
+
         <button onclick="send('P')" id="pttBtn" class="btn-ptt">PTT TOGGLE</button>
     </div>
 
