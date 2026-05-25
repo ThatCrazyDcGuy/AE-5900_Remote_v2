@@ -582,6 +582,18 @@ def api_cmd(cmd):
                 
                 break 
 
+            # Speziallogik für LOCKDEV via superkey_codes
+            elif "LOCKDEV" in current_label or cmd == "LOCKDEV":
+                # Aktuellen Zustand toggeln
+                is_locked = radio.config.get("lock_enabled", False)
+                radio.config["lock_enabled"] = not is_locked
+                radio.save_config()
+
+                # Befehl mit der ermittelten Dauer (2 Sekunden) an die Hardware senden
+                radio.send_cmd(f"41000100{hex_clean}000006", "00")
+                time.sleep(duration)
+                radio.send_cmd(f"41000000{hex_clean}000006", "00")
+
             
             # Standardlogik für alle anderen Superkeys
             else:
@@ -651,6 +663,7 @@ def api_cmd(cmd):
         "SKIP_CW": radio.config.get("skip_cw", False),
         "CLAR_STEP": radio.config.get("clar_step", "STEP"),
         "CLAR_OFFSET": radio.config.get("clar_offset", 0),
+        "LOCK_ENABLED": radio.config.get("lock_enabled", False),
         "MW_SCAN": getattr(radio, 'mw_active', False)
     })
 
