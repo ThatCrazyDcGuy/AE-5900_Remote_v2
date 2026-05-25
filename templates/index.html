@@ -645,23 +645,30 @@
                 fetch('/api/cmd/SET_CLAR_OFFSET?val=' + currentClarOffset);
             }
 
-            if (hzBtn.innerText !== "STEP") {
-                document.getElementById('clarUpBtn').disabled = false;
-                document.getElementById('clarDnBtn').disabled = false;
-                
-                clarTimer = setTimeout(() => {
-                    hzBtn.innerText = "STEP";
-                    fetch('/api/cmd/SET_CLAR_STEP?val=STEP');
-                    document.getElementById('clarUpBtn').disabled = true;
-                    document.getElementById('clarDnBtn').disabled = true;
-                    clarTimer = null;
-                }, 5000);
-            } else {
-                document.getElementById('clarUpBtn').disabled = true;
-                document.getElementById('clarDnBtn').disabled = true;
-            }
-            send(cmd);
+    // Wenn wir nicht im "STEP"-Modus sind, halten wir das Menü für 5s offen
+    if (hzBtn.innerText !== "STEP") {
+        document.getElementById('clarUpBtn').disabled = false;
+        document.getElementById('clarDnBtn').disabled = false;
+        
+        clarTimer = setTimeout(() => {
+            hzBtn.innerText = "STEP";
+            fetch('/api/cmd/SET_CLAR_STEP?val=STEP');
+            document.getElementById('clarUpBtn').disabled = true;
+            document.getElementById('clarDnBtn').disabled = true;
+            clarTimer = null;
+        }, 5000);
+    } else {
+        // --- NEU: HIER WIRD DER TIMER BEIM 4. KLICK RESTLOS GELÖSCHT ---
+        if (clarTimer) {
+            clearTimeout(clarTimer);
+            clarTimer = null;
         }
+        document.getElementById('clarUpBtn').disabled = true;
+        document.getElementById('clarDnBtn').disabled = true;
+    }
+    send(cmd);
+}
+
 
 
 // Schutzvariable, damit dauerhaftes Halten der Taste nicht wild triggert
