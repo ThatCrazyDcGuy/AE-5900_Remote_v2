@@ -152,9 +152,6 @@
     </ul>
     <p style="font-style: italic;">Viel Spass beim Testen! Feedback bitte direkt an mich.</p>
 </div>
-    <div style="margin-top: 20px; padding-bottom: 20px; font-size: 0.8em;">
-        <a href="/ios-test" style="color: #008800; text-decoration: none;">🍏 iOS Beta-Oberfläche testen</a>
-    </div>
 
         </div>
     </details>
@@ -222,7 +219,20 @@
             }
         };
 
-        drawSpectrum();
+        // --- INTELLIGENTE IPHONE-BREMSE FÜR AUDIO-POLLING ---
+        // Prüft, ob es sich um ein iPhone, iPad oder einen Mac-Safari handelt
+        const isAppleDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                              (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+        if (isAppleDevice) {
+            console.log("🍏 Apple-Gerät erkannt: Audio-Spektrum wird zur Stabilität deaktiviert.");
+            const canvasEl = document.getElementById('audioVisualizer');
+            if (canvasEl) canvasEl.style.display = 'none'; // Verbirgt den Canvas
+        } else {
+            // Nur auf PCs, Android und Chrome wird das Spektrum geladen
+            drawSpectrum();
+        }
+
 
         function updateUI(data) {
             if(!data) return;
