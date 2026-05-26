@@ -47,7 +47,7 @@ I got my AE5900 from https://gmw-funktechnik.ch/, a fantastic specialist shop fo
 2. Adjustable microphone volume
 3. Optimized scan function with adjustable speed
 
-![AE5900_Remote_v2](/pictures/webui.jpg)
+![AE5900_Remote_v2](/pictures/webui260526_1.jpeg)
 
 - Here's a short clip. I'm transmitting with a handheld to my home station and listening to myself on my smartphone. (Screenshot of the smartphone)
 
