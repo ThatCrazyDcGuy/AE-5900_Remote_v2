@@ -112,6 +112,7 @@
         <div id="lockIndicator" style="position: absolute; top: 10px; right: 125px; font-weight: bold; font-size: 0.9em; z-index: 3;">LOCK</div>
         <div id="micgainIndicator" style="position: absolute; top: 10px; left: 15px; font-weight: bold; font-size: 0.9em; z-index: 3; color: #00ff00;">MIC: <span id="displayVolDisp">--</span>%</div>
         <div id="clarIndicator" style="position: absolute; top: 10px; left: 110px; font-weight: bold; font-size: 0.9em; z-index: 3; color: #00ff00; display: none;">CLAR: <span id="displayClarDisp">+0</span> Hz</div>
+        <div id="versionIndicator" style="position: absolute; bottom: 10px; right: 15px; font-weight: bold; font-size: 0.7em; z-index: 3; color: #333;">V-260526 i1 / a1 BETA</div>
 
         <div id="pttStat" style="font-weight:bold; color:#444; position: relative; z-index: 2;">○ RX IDLE</div>
         <div class="freq" id="chDisp">01</div>
@@ -300,8 +301,7 @@
                 .catch(() => setTimeout(pollStatus, 1500));
         }
 
-        // Deine restlichen Funktionen (send, updateUI, changeVol, handleClarClick, setCfg, updateTimeout, etc.)
-        // Kopiere sie bitte aus deiner Originaldatei hier hinein.
+
         function updateUI(data) {
             if(!data) return;
             const freqs = {"01":"26.965","02":"26.975","03":"26.985","04":"27.005","05":"27.015","06":"27.025","07":"27.035","08":"27.055","09":"27.065","10":"27.075","11":"27.085","12":"27.105","13":"27.115","14":"27.125","15":"27.135","16":"27.155","17":"27.165","18":"27.175","19":"27.185","20":"27.205","21":"27.215","22":"27.225","23":"27.255","24":"27.235","25":"27.245","26":"27.265","27":"27.275","28":"27.285","29":"27.295","30":"27.305","31":"27.315","32":"27.325","33":"27.335","34":"27.345","35":"27.355","36":"27.365","37":"27.375","38":"27.385","39":"27.395","40":"27.405"};
@@ -359,7 +359,7 @@
                     sBtn.innerText = "S-SCAN";
                 }
             }
-               // --- NEU: MULTI-WATCH STATUS & LEUCHT-EFFEKT ---
+
             const mwBtn = document.getElementById('mwBtn');
             if (mwBtn) {
                if(data.MW_SCAN) {
@@ -566,9 +566,7 @@
             if (sProgress) sProgress.style.width = "0%";
         }
 
-        // ========================================================
-        // DIE PERFEKT HARMONISIERTE LIVE-AKTUALISIERUNG (updateUI)
-        // ========================================================
+
         const originalUpdateUI = updateUI;
         updateUI = function(data) {
             if(!data) return;
@@ -662,20 +660,17 @@
             }
         };
 
-        // ========================================================
-        // EVENT-HANDLER & HILFSFUNKTIONEN
-        // ========================================================
-        // iOS-sichere Event-Trennung für den Super-Sync
+
         if (sB) {
             // Für PC / Maus
             sB.addEventListener('mousedown', (e) => { startS(); });
             sB.addEventListener('mouseup', () => { stopS(); });
             sB.addEventListener('mouseleave', () => { stopS(); });
 
-            // Für Smartphones (iOS & Android) absolut sauber getrennt
+
             sB.addEventListener('touchstart', (e) => { 
                 startS(); 
-            }, { passive: true }); // Das 'passive: true' signalisiert iOS, dass wir das Scrollen nicht blockieren!
+            }, { passive: true });
             
             sB.addEventListener('touchend', () => { stopS(); });
         }
