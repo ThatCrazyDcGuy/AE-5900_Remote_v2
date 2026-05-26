@@ -46,7 +46,7 @@ Ich habe mein AE5900 von https://gmw-funktechnik.ch/, einem fantastischen Fachge
 2. Lautstärke des Mikrofons regelbar
 3. Optimierte Scan-Funktion mit regelbarer Geschwindigkeit
 
-![AE5900_Remote_v2](/pictures/webui.jpg)
+![AE5900_Remote_v2](/pictures/webui260526_1.jpeg)
 
 - Hier ein kurzer Clip. Ich sende hier mit einem Handfunkgerät an meine Heimstation und höre mich auf dem Smartphone. (Bildschirmaufnahme des Smartphones)
 
