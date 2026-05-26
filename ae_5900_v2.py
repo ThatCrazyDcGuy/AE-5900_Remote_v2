@@ -280,6 +280,12 @@ radio = RadioInterface()
 @app.route('/')
 def index(): return render_template('index.html', config=radio.config)
 
+@app.route('/ios-test')
+def ios_test_page():
+    # Lädt indexi.html aus dem templates-Ordner
+    return render_template('indexi.html', config=radio.config)
+
+
 @app.route('/api/audio')
 def get_audio():
     try:
