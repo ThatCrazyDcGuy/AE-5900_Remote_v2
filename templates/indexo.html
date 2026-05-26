@@ -5,174 +5,113 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AE-5900 Remote Pro 26.05.26</title>
     <style>
-        body { 
-            background: #1a1a1a; 
-            color: #0f0; 
-            font-family: 'Courier New', monospace; 
-            text-align: center; 
-            padding: 15px; 
-            touch-action: manipulation; 
-        }
-        .display { 
-            border: 2px solid #333; 
-            background: #000; 
-            margin: 10px auto; 
-            width: 95%; 
-            max-width: 400px; 
-            padding: 20px; 
-            border-radius: 10px; 
-            box-shadow: 0 0 15px #00ff0033; 
-            position: relative; 
-            overflow: hidden; 
-        }
-        #audioVisualizer { 
-            position: absolute; 
-            top: 0; left: 0; 
-            width: 100%; height: 100%; 
-            opacity: 0.28; 
-            pointer-events: none; 
-            image-rendering: crisp-edges;
-            will-change: transform;
-        }
+        body { background: #1a1a1a; color: #0f0; font-family: 'Courier New', monospace; text-align: center; padding: 15px; touch-action: manipulation; }
+        .display { border: 2px solid #333; background: #000; margin: 10px auto; width: 95%; max-width: 400px; padding: 20px; border-radius: 10px; box-shadow: 0 0 15px #00ff0033; }
         #pttStat { 
             position: absolute; 
             top: 12px; 
-            left: 0; right: 0; 
+            left: 0; 
+            right: 0; 
             margin: 0 auto; 
             font-size: 0.95em;
             z-index: 2;
         }
         .freq { font-size: 3.5em; font-weight: bold; margin: 5px 0; }
         .mhz { font-size: 1.1em; color: #008800; margin-bottom: 10px; }
-        .controls { 
-            display: grid; 
-            grid-template-columns: repeat(4, 1fr); 
-            gap: 8px; 
-            width: 95%; 
-            max-width: 420px; 
-            margin: 20px auto; 
-        }
-        button { 
-            background: #333; 
-            color: white; 
-            border: none; 
-            padding: 12px 5px; 
-            font-size: 0.95em; 
-            border-radius: 5px; 
-            cursor: pointer; 
-            -webkit-tap-highlight-color: transparent; 
-            font-weight: bold; 
-        }
-        button:disabled { 
-            background: #1a1a1a; 
-            color: #444; 
-            border: 1px dashed #333; 
-            cursor: not-allowed; 
-        }
-        .btn-ptt { 
-            grid-column: span 4; 
-            background: #4a0000; 
-            font-weight: bold; 
-            min-height: 70px; 
-            transition: 0.2s; 
-            font-size: 1.2em; 
-        }
+        /* Geändert von 2 Spalten (1fr 1fr) auf 4 Spalten (repeat(4, 1fr)) */
+        .controls { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; width: 95%; max-width: 420px; margin: 20px auto; }
+        button { background: #333; color: white; border: none; padding: 12px 5px; font-size: 0.95em; border-radius: 5px; cursor: pointer; -webkit-tap-highlight-color: transparent; font-weight: bold; }
+        button:disabled { background: #1a1a1a; color: #444; border: 1px dashed #333; cursor: not-allowed; }
+        /* PTT spannt sich jetzt über alle 4 Spalten im Grid */
+        .btn-ptt { grid-column: span 4; background: #4a0000; font-weight: bold; min-height: 70px; transition: 0.2s; font-size: 1.2em; }
         .btn-ptt.active { background: #ff0000; box-shadow: 0 0 20px red; }
         .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; width: 200px; margin: 15px auto; }
         .num-btn { background: #333; color: white; padding: 12px 5px; border: none; }
         .setup-area { margin-top: 30px; border-top: 1px solid #333; padding-top: 20px; color: #888; text-align: left; max-width: 400px; margin: 0 auto; }
-        .hold-button { 
-            position: relative; 
-            width: 100%; 
-            height: 50px; 
-            background: #444; 
-            color: white; 
-            border: none; 
-            overflow: hidden; 
-            margin: 10px 0; 
-            border-radius: 5px; 
-        }
-        .progress-bar { 
-            position: absolute; 
-            bottom: 0; left: 0; 
-            height: 5px; 
-            background: #00ff00; 
-            width: 0%; 
-            transition: width 0.1s linear; 
-        }
+        .hold-button { position: relative; width: 100%; height: 50px; background: #444; color: white; border: none; overflow: hidden; margin: 10px 0; border-radius: 5px; }
+        .progress-bar { position: absolute; bottom: 0; left: 0; height: 5px; background: #00ff00; width: 0%; transition: width 0.1s linear; }
     </style>
 </head>
 <body>
-    <div class="display">
-        <canvas id="audioVisualizer"></canvas>
-        
-        <div id="voxIndicator" style="position: absolute; top: 10px; right: 15px; font-weight: bold; font-size: 0.9em; z-index: 3;">VOX</div>
-        <div id="asqIndicator" style="position: absolute; top: 10px; right: 50px; font-weight: bold; font-size: 0.9em; z-index: 3;">ASQ</div>
-        <div id="muteIndicator" style="position: absolute; top: 10px; right: 85px; font-weight: bold; font-size: 0.9em; z-index: 3;">MUTE</div>
-        <div id="lockIndicator" style="position: absolute; top: 10px; right: 125px; font-weight: bold; font-size: 0.9em; z-index: 3;">LOCK</div>
-        <div id="micgainIndicator" style="position: absolute; top: 10px; left: 15px; font-weight: bold; font-size: 0.9em; z-index: 3; color: #00ff00;">MIC: <span id="displayVolDisp">--</span>%</div>
-        <div id="clarIndicator" style="position: absolute; top: 10px; left: 110px; font-weight: bold; font-size: 0.9em; z-index: 3; color: #00ff00; display: none;">CLAR: <span id="displayClarDisp">+0</span> Hz</div>
-
+    <div class="display" style="position: relative; overflow: hidden;">
+        <canvas id="audioVisualizer" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.3; pointer-events: none;"></canvas>
+        <div id="voxIndicator" style="position: absolute; top: 10px; right: 15px; font-weight: bold; font-size: 0.9em; transition: 0.3s; z-index: 3;">VOX</div>
+        <div id="asqIndicator" style="position: absolute; top: 10px; right: 50px; font-weight: bold; font-size: 0.9em; transition: 0.3s; z-index: 3;">ASQ</div>
+        <div id="muteIndicator" style="position: absolute; top: 10px; right: 85px; font-weight: bold; font-size: 0.9em; transition: 0.3s; z-index: 3;">MUTE</div>
+        <div id="lockIndicator" style="position: absolute; top: 10px; right: 125px; font-weight: bold; font-size: 0.9em; transition: 0.3s; z-index: 3;">LOCK</div>
+        <div id="micgainIndicator" style="position: absolute; top: 10px; left: 15px; font-weight: bold; font-size: 0.9em; transition: 0.3s; z-index: 3; color: #00ff00;">MIC: <span id="displayVolDisp">--</span>%</div>
+<div id="clarIndicator" style="position: absolute; top: 10px; left: 110px; font-weight: bold; font-size: 0.9em; transition: 0.3s; z-index: 3; color: #00ff00; display: none;">CLAR: <span id="displayClarDisp">+0</span> Hz</div>
         <div id="pttStat" style="font-weight:bold; color:#444; position: relative; z-index: 2;">○ RX IDLE</div>
-        <div class="freq" id="chDisp">01</div>
-        <div class="mhz" id="mhzDisp">26.965 MHz</div>
+        <div class="freq" id="chDisp" style="position: relative; z-index: 2;">01</div>
+        <div class="mhz" id="mhzDisp" style="position: relative; z-index: 2;">26.965 MHz</div>
         <div id="modeName" style="font-size: 1.2em; color: #888; position: relative; z-index: 2;">FM</div>
     </div>
 
-    <!-- Keypad + Clarifier -->
     <div class="keypad-wrapper" style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; width: 95%; max-width: 420px; margin: 15px auto; align-items: center;">
+        
+
         <div style="display: grid; grid-template-columns: 1fr; gap: 5px;">
-            <button id="clarUpBtn" onclick="handleClarClick('CLARUP')">CLAR +</button>
-            <button id="clarHzBtn" onclick="handleClarClick('CLARHZ')">STEP</button>
-            <button id="clarDnBtn" onclick="handleClarClick('CLARDN')">CLAR -</button>
+            <button id="clarUpBtn" onclick="handleClarClick('CLARUP')" style="padding: 12px 5px;">CLAR +</button>
+            <button id="clarHzBtn" onclick="handleClarClick('CLARHZ')" style="padding: 12px 5px;">STEP</button>
+            <button id="clarDnBtn" onclick="handleClarClick('CLARDN')" style="padding: 12px 5px;">CLAR -</button>
         </div>
 
-        <div class="keypad">
+
+
+        <div class="keypad" style="margin: 0;">
             {% for i in range(1, 10) %}<button class="num-btn" onclick="send('K{{i}}')">{{i}}</button>{% endfor %}
             <button class="num-btn" style="grid-column: span 3" onclick="send('K0')">0</button>
         </div>
 
+
         <div style="display: grid; grid-template-columns: 1fr; gap: 5px;">
-            <button onclick="changeVol('up')">MIC +</button>
-            <button onclick="send(' ')">5%</button>
-            <button onclick="changeVol('down')">MIC -</button>
+            <button onclick="changeVol('up')" style="padding: 12px 5px;">MIC +</button>
+            <button onclick="send(' ')" style="padding: 12px 5px;">5%</button>
+            <button onclick="changeVol('down')" style="padding: 12px 5px;">MIC -</button>
         </div>
     </div>
 
     <div class="controls">
+
         <button onclick="send('M')">MODE</button>
         <button onclick="send('U')">CH ▲</button>
         <button onclick="send('D')">CH ▼</button>
         <button onclick="send('MUTECOMBBTN')">MUTE</button>
+
 
         <button onclick="send('VOX_TOGGLE')">VOX</button>
         <button onclick="send('SSCAN')" id="scanBtn">S-SCAN</button>
         <button onclick="send('MW_TOGGLE')" id="mwBtn">MW</button>
         <button onclick="send('LOCKDEV')">LOCK</button>
 
+
+
         <button onclick="send('SQUELCHUP')">A/SQ +</button>
         <button onclick="send('SQUELCHDOWN')">A/SQ -</button>
         <button onclick="send('ASQ_ON_OFF')" id="asqBtn">ASQ</button>
         <button onclick="send('SQUELCHMAXDOWN')" style="font-size:0.85em;">SET A/SQ 1/0</button>
 
-        <button onclick="send('P1')" id="lbl-p1">P1 ({{config.p1_label}})</button>
-        <button onclick="send('P2')" id="lbl-p2">P2 ({{config.p2_label}})</button>
-        <button onclick="send('P3')" id="lbl-p3">P3 ({{config.p3_label}})</button>
-        <button onclick="send('P4')" id="lbl-p4">P4 ({{config.p4_label}})</button>
+
+        <button onclick="send('P1')" id="lbl-p1" style="font-size:0.8em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">P1 ({{config.p1_label}})</button>
+        <button onclick="send('P2')" id="lbl-p2" style="font-size:0.8em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">P2 ({{config.p2_label}})</button>
+        <button onclick="send('P3')" id="lbl-p3" style="font-size:0.8em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">P3 ({{config.p3_label}})</button>
+        <button onclick="send('P4')" id="lbl-p4" style="font-size:0.8em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">P4 ({{config.p4_label}})</button>
+        
 
         <button onclick="send('P')" id="pttBtn" class="btn-ptt">PTT TOGGLE</button>
     </div>
 
     <details class="setup-area">
         <summary>⚙️ SETUP & SYNC</summary>
+
         <div style="background: #222; padding: 20px; border-radius: 10px;">
             <button id="syncBtn" class="hold-button"><span style="position:relative; z-index:2;">SUPER SYNC (CH 01 - Hold 3s)</span><div class="progress-bar" id="syncProgress"></div></button>
             <p>PTT Timeout: <input type="number" id="pttInput" value="{{ config.ptt_timeout }}" style="width: 60px;" onchange="updateTimeout()"> s</p>
-            <!-- Restliche Setup-Elemente bleiben gleich -->
-            <p>Mode-Skip (FW v1.12): 
-                <label><input type="checkbox" onchange="fetch('/api/cmd/SET_SKIP_PA?val=' + this.checked)" {% if config.skip_pa %}checked{% endif %}> PA</label>
-                <label><input type="checkbox" onchange="fetch('/api/cmd/SET_SKIP_CW?val=' + this.checked)" {% if config.skip_cw %}checked{% endif %}> CW</label>
-            </p>
+<p>
+    Mode-Skip (FW v1.12): 
+    <label style="margin-right: 15px; color: #888;"><input type="checkbox" onchange="fetch('/api/cmd/SET_SKIP_PA?val=' + this.checked)" {% if config.skip_pa %}checked{% endif %}> PA</label>
+    <label style="color: #888;"><input type="checkbox" onchange="fetch('/api/cmd/SET_SKIP_CW?val=' + this.checked)" {% if config.skip_cw %}checked{% endif %}> CW</label>
+</p>
 <p>Multi-Watch-CH ( 09,19,28): <input type="text" value="{{ config.mw_label if config.mw_label else '09,19' }}" onchange="fetch('/api/cmd/SET_MW_LABEL?val=' + encodeURIComponent(this.value))" sstyle="width:100px;"></p>
 
             <p>P1 Label: <input type="text" value="{{config.p1_label}}" onchange="setCfg('P1', this.value)" style="width:100px;"></p>
@@ -213,98 +152,80 @@
     </ul>
     <p style="font-style: italic;">Viel Spass beim Testen! Feedback bitte direkt an mich.</p>
 </div>
+    <div style="margin-top: 20px; padding-bottom: 20px; font-size: 0.8em;">
+        <a href="/ios-test" style="color: #008800; text-decoration: none;">🍏 iOS Beta-Oberfläche testen</a>
+    </div>
+
         </div>
     </details>
 
     <script>
-        const freqs = { /* ... dein freqs-Objekt bleibt identisch ... */ };
-
+        const freqs = {"01":"26.965","02":"26.975","03":"26.985","04":"27.005","05":"27.015","06":"27.025","07":"27.035","08":"27.055","09":"27.065","10":"27.075","11":"27.085","12":"27.105","13":"27.115","14":"27.125","15":"27.135","16":"27.155","17":"27.165","18":"27.175","19":"27.185","20":"27.205","21":"27.215","22":"27.225","23":"27.255","24":"27.235","25":"27.245","26":"27.265","27":"27.275","28":"27.285","29":"27.295","30":"27.305","31":"27.315","32":"27.325","33":"27.335","34":"27.345","35":"27.355","36":"27.365","37":"27.375","38":"27.385","39":"27.395","40":"27.405"};
+        
         const canvas = document.getElementById('audioVisualizer');
-        const ctx = canvas.getContext('2d', { alpha: true, desynchronized: true });
+        const ctx = canvas.getContext('2d');
 
-        function resizeCanvas() {
-            if (canvas) {
-                const dpr = window.devicePixelRatio || 1;
-                canvas.width = canvas.offsetWidth * dpr;
-                canvas.height = canvas.offsetHeight * dpr;
-                ctx.scale(dpr, dpr);
-            }
+        if (canvas) {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
         }
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
 
         let lastData = new Array(32).fill(0);
-        let currentBarColor = 'green';
-        let isDrawing = false;
-        let lastDrawTime = 0;
+        let currentBarColor = 'green'; 
 
-        async function drawSpectrum() {
-            const now = Date.now();
-            if (isDrawing || now - lastDrawTime < 80) {
-                requestAnimationFrame(drawSpectrum);
-                return;
-            }
-
-            isDrawing = true;
-            lastDrawTime = now;
-
-            try {
-                const res = await fetch('/api/audio', { cache: 'no-store' });
-                const data = await res.json();
-
-                if (!Array.isArray(data) || data.length === 0) {
-                    isDrawing = false;
-                    requestAnimationFrame(drawSpectrum);
-                    return;
-                }
-
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                const barWidth = canvas.offsetWidth / data.length;
-
-                data.forEach((val, i) => {
-                    let displayVal = Math.max(val, lastData[i] - 2.2);
-                    lastData[i] = displayVal;
-                    let height = Math.min((displayVal / 42) * canvas.offsetHeight, canvas.offsetHeight);
-
-                    const grad = ctx.createLinearGradient(0, canvas.offsetHeight, 0, canvas.offsetHeight - height);
-                    if (currentBarColor === 'red') {
-                        grad.addColorStop(0, '#440000');
-                        grad.addColorStop(1, '#ff4444');
-                    } else if (currentBarColor === 'orange') {
-                        grad.addColorStop(0, '#442200');
-                        grad.addColorStop(1, '#ffaa44');
-                    } else {
-                        grad.addColorStop(0, '#003300');
-                        grad.addColorStop(1, '#44ff44');
-                    }
-
-                    ctx.fillStyle = grad;
-                    ctx.fillRect(i * barWidth, canvas.offsetHeight - height, barWidth - 1, height);
-                });
-            } catch (e) {
-                console.error("Audio fetch error:", e);
-            }
-
-            isDrawing = false;
-            requestAnimationFrame(drawSpectrum);
-        }
-
-        // Status Polling (optimiert)
-        function pollStatus() {
-            fetch('/api/cmd/STATUS')
+        function drawSpectrum() {
+            if (!canvas) return;
+            fetch('/api/audio')
                 .then(r => r.json())
                 .then(data => {
-                    updateUI(data);
-                    setTimeout(pollStatus, 850);
+                    if (!Array.isArray(data)) return;
+                    
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    const barWidth = canvas.width / data.length;
+                    
+                    data.forEach((val, i) => {
+                        let displayVal = Math.max(val, lastData[i] - 1.5);
+                        lastData[i] = displayVal;
+                        let height = (displayVal / 40) * canvas.height; 
+                        
+                        if(height > canvas.height) height = canvas.height;
+
+                        let grad = ctx.createLinearGradient(0, canvas.height, 0, canvas.height - height);
+                        
+                        if (currentBarColor === 'red') {
+                            grad.addColorStop(0, '#440000');
+                            grad.addColorStop(1, '#ff0000');
+                        } else if (currentBarColor === 'orange') {
+                            grad.addColorStop(0, '#442200');
+                            grad.addColorStop(1, '#ff8800');
+                        } else {
+                            grad.addColorStop(0, '#004400');
+                            grad.addColorStop(1, '#00ff00');
+                        }
+                        
+                        ctx.fillStyle = grad;
+                        ctx.fillRect(i * barWidth, canvas.height - height, barWidth - 1, height);
+                    });
+                    
+                    setTimeout(drawSpectrum, 150);
                 })
-                .catch(() => setTimeout(pollStatus, 1500));
+                .catch(e => {
+                    console.error("Audio API Fehler:", e);
+                    setTimeout(drawSpectrum, 1000);
+                });
         }
 
-        // Deine restlichen Funktionen (send, updateUI, changeVol, handleClarClick, setCfg, updateTimeout, etc.)
-        // Kopiere sie bitte aus deiner Originaldatei hier hinein.
+        window.onresize = () => {
+            if (canvas) {
+                canvas.width = canvas.offsetWidth;
+                canvas.height = canvas.offsetHeight;
+            }
+        };
+
+        drawSpectrum();
+
         function updateUI(data) {
             if(!data) return;
-            const freqs = {"01":"26.965","02":"26.975","03":"26.985","04":"27.005","05":"27.015","06":"27.025","07":"27.035","08":"27.055","09":"27.065","10":"27.075","11":"27.085","12":"27.105","13":"27.115","14":"27.125","15":"27.135","16":"27.155","17":"27.165","18":"27.175","19":"27.185","20":"27.205","21":"27.215","22":"27.225","23":"27.255","24":"27.235","25":"27.245","26":"27.265","27":"27.275","28":"27.285","29":"27.295","30":"27.305","31":"27.315","32":"27.325","33":"27.335","34":"27.345","35":"27.355","36":"27.365","37":"27.375","38":"27.385","39":"27.395","40":"27.405"};
             
             const ch = data.CH;
             if (document.getElementById('chDisp')) document.getElementById('chDisp').innerText = ch;
@@ -774,9 +695,9 @@ window.addEventListener('keyup', (e) => {
     }
 });
 
-        // Start
-        drawSpectrum();
+
         pollStatus();
     </script>
 </body>
 </html>
+

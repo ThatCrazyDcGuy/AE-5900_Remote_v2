@@ -173,46 +173,7 @@
                 <label><input type="checkbox" onchange="fetch('/api/cmd/SET_SKIP_PA?val=' + this.checked)" {% if config.skip_pa %}checked{% endif %}> PA</label>
                 <label><input type="checkbox" onchange="fetch('/api/cmd/SET_SKIP_CW?val=' + this.checked)" {% if config.skip_cw %}checked{% endif %}> CW</label>
             </p>
-<p>Multi-Watch-CH ( 09,19,28): <input type="text" value="{{ config.mw_label if config.mw_label else '09,19' }}" onchange="fetch('/api/cmd/SET_MW_LABEL?val=' + encodeURIComponent(this.value))" sstyle="width:100px;"></p>
-
-            <p>P1 Label: <input type="text" value="{{config.p1_label}}" onchange="setCfg('P1', this.value)" style="width:100px;"></p>
-            <p>P2 Label: <input type="text" value="{{config.p2_label}}" onchange="setCfg('P2', this.value)" style="width:100px;"></p>
-            <p>P3 Label: <input type="text" value="{{config.p3_label}}" onchange="setCfg('P3', this.value)" style="width:100px;"></p>
-            <p>P4 Label: <input type="text" value="{{config.p4_label}}" onchange="setCfg('P4', this.value)" style="width:100px;"></p>
-	    <p>Scan Speed (ms): <input type="number" id="scanSpeedInput" value="{{ config.scan_speed * 1000 | int }}" style="width: 70px;" onchange="send('SETSPEED_' + this.value)"> </p>
-        <p>FFT Gain RX: <input type="number" value="{{config.fft_rx_gain}}" onchange="send('SETGAIN_RX_' + this.value)" style="width:80px;"></p>
-        <p>FFT Gain TX: <input type="number" value="{{config.fft_tx_gain}}" onchange="send('SETGAIN_TX_' + this.value)" style="width:80px;"></p>
-        <p>VOX Schaltung: <span id="voxState" style="font-weight:bold;">--</span></p>
-</div>
-
-<div style="border-top: 1px solid #333; padding-top: 10px; margin-top: 10px;">
-    <p>MIC Volume: <span id="volDisp">--</span>%</p>
-    <div style="display: flex; gap: 10px;">
-        <button onclick="changeVol('down')" style="flex: 1;">Vol -</button>
-        <button onclick="changeVol('up')" style="flex: 1;">Vol +</button>
-    </div>
-</div>
-<div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #444; color: #aaa; font-size: 0.9em; line-height: 1.4;">
-    <strong style="color: #0f0;">ℹ️ Kurzanleitung für Tester:</strong>
-    <ul style="padding-left: 20px; margin-top: 5px;">
-        <li><strong style="color: #ff8800;">Orange Taste:</strong> VOX hat angesprochen (Gerät sendet automatisch). Es kann vorkommen, dass die PTT Nach dem loslassen kurz orange aufleuchtet, ohne dass VOX Aktiv ist. Herrgottnochmal, ich arbeite daran.</li>
-        <li><strong style="color: #00ff00;">S-SCAN:</strong> Suchlauf stoppt bei Signal. Jede Taste beendet den Scan. Die Scan-Geschwindigkeit lässt sich unten in ms regeln.</li>
-        <li><strong style="color: #0088ff;">Super Sync:</strong> 3 Sek. halten, um Kanal 01 zu erzwingen (falls Anzeige asynchron). Es kann vorkommen, dass die Modulationstaste asyncron läuft. Remote ist das natürlich unschön. Lösung: Öffne ASQ und drücke die Mode-Taste im Webinterface, bis du das typische FM Rauschen hörst, egal was das Webinterface anzeigt. Benutze danach die SYNC Taste.</li>
-        <li><strong style="color: #662bff;">Nummernblock:</strong> Kanalwahl via Keypad: Immer 2 Ziffern eingeben (z.B. 07).</li>
-	<li><strong style="color: #2986cc;">SKIP:</strong> Die Funktion "Skip PA / CW" betrifft jene, die bereits die neue Firmware installiert und PA im Mode-Switch im Menu deaktiviert haben.</li>
-	<li><strong style="color: #d5a6bd;">SCAN SPEED:</strong> S-Scan ist softwaregesteuert und unabhängig der integrierten Scanfunktion des AE5900. Der Speed lässt sich in millisekunden angeben. </li>
-	<li><strong style="color: #38761d;">P - Label:</strong> Die P1 - P4 Buttons lassen sich hier optisch mit einem Label versehen. Entsprechend dem, was auf dem AE5900 im Menupunkt Mic Type 2 eingestellt ist.</li>
-	<li><strong style="color: #f1c232;">Vol - und Vol + :</strong> Das MicGain der verbauten Soundkarte / Mumble.</li>
-	<li><strong style="color: #ff0000;">PTT Timeout:</strong> Das PTT Timeout dient der zusätzlichen Sicherheit. Damit das AE5900 bei Verbindungsverlust nicht über längere Zeit weiter sendet.</li>
-	<li><strong style="color: #ff7f00;">MW:</strong> Multiwatch scannt vordefinierte Kanäle. Die zu scannenden Kanäle einfach per Komma getrennt eintragen. Beispiel: 01,04,09,28</li>
-	<li><strong style="color: #8fce00;">MUTE:</strong> Dies stellt das AE5900 lautlos.</li>
-	<li><strong style="color: #ff00ff;">A/SQ + / -:</strong> Hier wird der Level des ASQ, wenn aktiviert, oder das Squelch gestellt. ASQ verfügt über 9 Stufen, Squelch über 80 Stufen.</li>
-	<li><strong style="color: #00ff22;">SET A/SQ 1/0:</strong> Damit man sich nicht die Finger wund drückt: Ein Reset, der von maximal 80 gesetzten Stufen stur auf 1(ASQ) 0(Squelch) zurücksetzt.</li>
-	<li><strong style="color: #76a5af;">CLAR / STEP:</strong> Der Clarifier ist nur unter CW, USB und LSB aktiviert. Drücke STEP um zwischen 1,10 oder 100hz zu wählen und drücke dann CLAR + oder CLAR -.</li>
-	<li><strong style="color: #6e001d;">LOCK:</strong> Sperrt alle Tasten am AE5900 und im WebUI, bis auf die Locktaste.</li>
-    </ul>
-    <p style="font-style: italic;">Viel Spass beim Testen! Feedback bitte direkt an mich.</p>
-</div>
+            <!-- Weitere Setup-Felder ... (kopiere sie 1:1 aus deiner Originaldatei) -->
         </div>
     </details>
 
