@@ -372,7 +372,7 @@ def api_cmd(cmd):
         'MODE':'0x0D',    
         'MODELONG':'0x0D:2',
         'MODEALT':'0x23',       
-        'MUTECOMBBTN':'0x31, 0x1E, 0x1E, 0x1E',
+        'MUTECOMBBTN':'0x31, 0x1E',
         'MUTESINGLEBTN':'0x34',
         'DEVDW':'0x31, 0x27', 
         'DEVSCAN':'0x31, 0x26',        
