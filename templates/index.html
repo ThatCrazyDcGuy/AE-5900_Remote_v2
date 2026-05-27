@@ -100,9 +100,14 @@
             width: 0%; 
             transition: width 0.1s linear; 
         }
+        /* Unsichtbarer iOS ProMotion-Wachhalter */
+        .ios-wakelock { width: 1px; height: 1px; opacity: 0.01; position: absolute; bottom: 0; left: 0; animation: pulseWakelock 0.5s infinite linear; }
+        @keyframes pulseWakelock { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
     </style>
 </head>
 <body>
+<div class="ios-wakelock"></div>
     <div class="display">
         <canvas id="audioVisualizer"></canvas>
         
@@ -112,7 +117,7 @@
         <div id="lockIndicator" style="position: absolute; top: 10px; right: 125px; font-weight: bold; font-size: 0.9em; z-index: 3;">LOCK</div>
         <div id="micgainIndicator" style="position: absolute; top: 10px; left: 15px; font-weight: bold; font-size: 0.9em; z-index: 3; color: #00ff00;">MIC: <span id="displayVolDisp">--</span>%</div>
         <div id="clarIndicator" style="position: absolute; top: 10px; left: 110px; font-weight: bold; font-size: 0.9em; z-index: 3; color: #00ff00; display: none;">CLAR: <span id="displayClarDisp">+0</span> Hz</div>
-        <div id="versionIndicator" style="position: absolute; bottom: 10px; right: 15px; font-weight: bold; font-size: 0.7em; z-index: 3; color: #333;">V-270526 i3 / a3 BETA</div>
+        <div id="versionIndicator" style="position: absolute; bottom: 10px; right: 15px; font-weight: bold; font-size: 0.7em; z-index: 3; color: #333;">V-270526 i5 / a4 BETA</div>
 
         <div id="pttStat" style="font-weight:bold; color:#444; position: relative; z-index: 2;">○ RX IDLE</div>
         <div class="freq" id="chDisp">01</div>
@@ -185,6 +190,33 @@
         <p>FFT Gain TX: <input type="number" value="{{config.fft_tx_gain}}" onchange="send('SETGAIN_TX_' + this.value)" style="width:80px;"></p>
         <p>VOX Schaltung: <span id="voxState" style="font-weight:bold;">--</span></p>
 </div>
+
+<div style="border-top: 1px solid #444; margin-top: 15px; padding-top: 15px;">
+    <strong style="color: #0f0;">🔧 Status-Korrektur (VFO-Sync Override):</strong>
+    <p style="font-size: 0.85em; color: #888; margin-top: 5px;">Hake an, was asynchron läuft. Der Zustand wird automatisch ins Gegenteil umgekehrt.</p>
+    
+    <table style="width: 100%; color: #aaa; font-size: 0.95em; margin-bottom: 10px;">
+        <tr>
+            <td>VOX-Status umkehren:</td>
+            <td style="text-align: right;"><input type="checkbox" id="tog_vox"></td>
+        </tr>
+        <tr>
+            <td>MUTE-Status umkehren:</td>
+            <td style="text-align: right;"><input type="checkbox" id="tog_mute"></td>
+        </tr>
+        <tr>
+            <td>ASQ-Status umkehren:</td>
+            <td style="text-align: right;"><input type="checkbox" id="tog_asq"></td>
+        </tr>
+        <tr>
+            <td>LOCK-Status umkehren:</td>
+            <td style="text-align: right;"><input type="checkbox" id="tog_lock"></td>
+        </tr>
+    </table>
+    <button onclick="submitConfigOverride()" style="width: 100%; background: #4a4a00; color: #fff; padding: 8px; font-weight: bold;">HÄKCHEN INVERTIEEREN & CORRIGIEREN</button>
+</div>
+
+
 
 <div style="border-top: 1px solid #333; padding-top: 10px; margin-top: 10px;">
     <p>MIC Volume: <span id="volDisp">--</span>%</p>
@@ -569,6 +601,7 @@
         const originalUpdateUI = updateUI;
         updateUI = function(data) {
             if(!data) return;
+
             
             // 1. Erst die originale updateUI-Arbeit ausführen lassen
             if (typeof originalUpdateUI === 'function') originalUpdateUI(data);
@@ -671,6 +704,8 @@
                     lockInd.style.textShadow = "none";
                 }
             }
+
+
         };
 
 
@@ -782,8 +817,39 @@ window.addEventListener('keyup', (e) => {
     }
 });
 
-        // Start
         drawSpectrum();
+
+function submitConfigOverride() {
+    const payload = {
+        toggle_vox: document.getElementById('tog_vox').checked,
+        toggle_mute: document.getElementById('tog_mute').checked,
+        toggle_asq: document.getElementById('tog_asq').checked,
+        toggle_lock: document.getElementById('tog_lock').checked
+    };
+
+    fetch('/api/config/override', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
+    .then(r => r.json())
+    .then(data => {
+        updateUI(data);
+        
+        // Alle Checkboxen nach der Korrektur sofort wieder leeren
+        document.getElementById('tog_vox').checked = false;
+        document.getElementById('tog_mute').checked = false;
+        document.getElementById('tog_asq').checked = false;
+        document.getElementById('tog_lock').checked = false;
+        
+        alert("🔧 Die asynchronen Zustände wurden erfolgreich invertiert!");
+    })
+    .catch(e => console.error("Korrektur Fehler:", e));
+}
+
+
+        // Start
+
         pollStatus();
     </script>
 </body>
