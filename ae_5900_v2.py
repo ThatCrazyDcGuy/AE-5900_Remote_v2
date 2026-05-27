@@ -717,6 +717,60 @@ def api_cmd(cmd):
         "MW_SCAN": getattr(radio, 'mw_active', False)
     })
 
+@app.route('/api/config/override', methods=['POST'])
+def api_config_override():
+    """
+    Invertiert die ausgewählten config.json Zustände, falls das 
+    Albrecht AE 5900 asynchron zur Software-Anzeige läuft.
+    """
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"status": "error", "message": "Keine Daten empfangen"}), 400
+            
+        mapping = {
+            "toggle_vox": "vox_enabled",
+            "toggle_mute": "mute_enabled",
+            "toggle_asq": "asq_enabled",
+            "toggle_lock": "lock_enabled"
+        }
+        
+        for json_key, config_key in mapping.items():
+            if data.get(json_key) is True:
+                current_state = radio.config.get(config_key, False)
+                radio.config[config_key] = not current_state
+                print(f"🔄 INVERTATION: '{config_key}' wurde manuell von {current_state} auf {not current_state} gedreht.")
+                
+                if config_key == "lock_enabled":
+                    global isWebUILocked
+                    isWebUILocked = radio.config["lock_enabled"]
+                    
+        radio.save_config()
+        
+        # --- HIER KORRIGIERT: Exakt dieselbe Status-Ausgabe wie bei deinen anderen API-Befehlen ---
+        rem = int(radio.config["ptt_timeout"] - (time.time() - radio.ptt_start_time)) if radio.is_tx else radio.config["ptt_timeout"]
+        
+        return jsonify({
+            "CH": str(radio.current_ch).zfill(2), 
+            "MODE": MODES[radio.mode_idx], 
+            "PTT": "ON" if radio.is_tx else "OFF", 
+            "VOX_TX": radio.is_device_sending,
+            "VOX_ENABLED": radio.config.get("vox_enabled", False),
+            "ASQ_ENABLED": radio.config.get("asq_enabled", False),
+            "REMAINING": max(0, rem), 
+            "BUSY": radio.is_rx, 
+            "SW_SCAN": radio.sw_scan_active,
+            "VOL": radio.config.get("vol", 50),
+            "SKIP_PA": radio.config.get("skip_pa", False),
+            "SKIP_CW": radio.config.get("skip_cw", False)
+        })
+        
+    except Exception as e:
+        print(f"⚠️ Fehler beim Config-Invert-Override: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+
 def ptt_heartbeat_watchdog(radio):
     """
     Prüft im Hintergrund, ob der Browser noch lebt.
