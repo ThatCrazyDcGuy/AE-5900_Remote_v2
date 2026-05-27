@@ -340,6 +340,11 @@ def ultra_test_page():
     # Lädt indexu.html aus dem templates-Ordner
     return render_template('indexu.html', config=radio.config)
 
+@app.route('/minimal')
+def minimal_page():
+    # Lädt index_minimal.html aus dem templates-Ordner
+    return render_template('index_minimal.html', config=radio.config)
+
 
 @app.route('/api/audio')
 def get_audio():
