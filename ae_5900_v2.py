@@ -319,6 +319,12 @@ radio = RadioInterface()
 @app.route('/')
 def index(): return render_template('index.html', config=radio.config)
 
+
+@app.route('/green')
+def green_test_page():
+    # Lädt index_green.html aus dem templates-Ordner
+    return render_template('index_green.html', config=radio.config)
+
 @app.route('/ios-test')
 def ios_test_page():
     # Lädt indexi.html aus dem templates-Ordner
