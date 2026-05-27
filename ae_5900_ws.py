@@ -1,8 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 from flask_socketio import SocketIO, emit
 import eventlet
-import json
-import time
 import serial
 import threading
 import time
@@ -15,25 +13,18 @@ import socket
 import sys
 import logging
 from logging.handlers import RotatingFileHandler
-from flask import Flask, render_template, jsonify, request
 
-# Flask + SocketIO
+# ====================== FLASK + SOCKETIO ======================
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'ae5900_ws_secret'
-socketio = SocketIO(app, 
-                   async_mode='eventlet',
-                   ping_timeout=15, 
-                   ping_interval=5,
-                   cors_allowed_origins="*")
+app.config['SECRET_KEY'] = 'ae5900_super_secret'
 
-# =============================================
+socketio = SocketIO(app,
+                    async_mode='eventlet',
+                    ping_timeout=15,
+                    ping_interval=5,
+                    cors_allowed_origins="*")
 
-
-
-
-
-
-
+# ====================== FLASK + SOCKETIO ======================
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 CONFIG_FILE = os.path.join(SCRIPT_DIR, "config.json")
@@ -44,9 +35,6 @@ MODES = ["PA", "CW", "FM", "AM", "USB", "LSB"]
 CHUNK = 512
 stream_rx = None
 stream_tx = None
-
-
-
 
 def setup_audio():
     global stream_rx, stream_tx
@@ -295,8 +283,6 @@ def mw_scan_loop(radio):
                 time.sleep(0.1)
 
     print("🛑 Multi-Watch (MW) beendet.")
-
-
 
 
 
@@ -811,32 +797,20 @@ def ptt_heartbeat_watchdog(radio):
 threading.Thread(target=ptt_heartbeat_watchdog, args=(radio,), daemon=True).start()
 
 
-
-
-
-
-
-
-
-# =============================================
-
-@app.route('/')
-def index_ws():
-    """WebSocket Test Version"""
-    return render_template('indexws.html')
+# ====================== SOCKETIO ROUTES & EVENTS ======================
 
 @app.route('/api/cmd/<command>')
 def api_command(command):
-    # Deine bestehende Command-Logik hier
-    result = process_command(command)   # deine Funktion
-    socketio.emit('status', get_current_status())  # Status an alle Clients pushen
+    result = process_command(command)   # Deine originale Funktion
+    socketio.emit('status', get_current_status(), broadcast=True)
     return jsonify(result)
 
-# SocketIO Events
+
 @socketio.on('connect')
 def handle_connect():
     print("Client via WebSocket verbunden")
     emit('status', get_current_status())
+
 
 @socketio.on('command')
 def handle_command(data):
@@ -845,19 +819,22 @@ def handle_command(data):
         process_command(cmd)
         emit('status', get_current_status(), broadcast=True)
 
-# Background Audio Task
+
 def audio_broadcast_task():
     while True:
         try:
-            audio_data = get_audio_levels()   # deine FFT Funktion
+            audio_data = get_audio_levels()   # Deine FFT-Funktion
             socketio.emit('audio', audio_data)
-            socketio.sleep(0.085)             # ca. 11-12 FPS
-        except:
+            socketio.sleep(0.085)
+        except Exception as e:
+            print("Audio broadcast error:", e)
             socketio.sleep(1)
 
-# Starte Background Task
+
+# Background Task starten
 socketio.start_background_task(audio_broadcast_task)
 
+
 if __name__ == '__main__':
-    print("🚀 Starte AE5900 WebSocket Test Server auf Port 5000")
+    print("🚀 AE5900 Remote V2 mit WebSocket gestartet (Port 5000)")
     socketio.run(app, host='0.0.0.0', port=5000, debug=False)
