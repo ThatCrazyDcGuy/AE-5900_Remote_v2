@@ -1,3 +1,6 @@
+from flask import Flask, render_template, request, jsonify
+from flask_socketio import SocketIO, emit
+import eventlet
 import serial
 import threading
 import time
@@ -10,41 +13,18 @@ import socket
 import sys
 import logging
 from logging.handlers import RotatingFileHandler
-from flask import Flask, render_template, jsonify, request
 
-
-log_filename = os.path.join(os.path.dirname(os.path.abspath(__file__)), "server.log")
-
-
-file_handler = RotatingFileHandler(log_filename, maxBytes=1024*1024, backupCount=1, encoding="utf-8")
-file_handler.setFormatter(logging.Formatter('[%(asctime)s] %(levelname)s: %(message)s', '%Y-%m-%d %H:%M:%S'))
-
-
-terminal_handler = logging.StreamHandler(sys.__stdout__)
-terminal_handler.setFormatter(logging.Formatter('%(message)s')) 
-
-
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
-logger.addHandler(file_handler)
-logger.addHandler(terminal_handler)
-
-
-class DualLoggerWriter:
-    def __init__(self, logger_func):
-        self.logger_func = logger_func
-    def write(self, message):
-        if message.strip():
-            self.logger_func(message.strip())
-    def flush(self):
-        pass
-
-sys.stdout = DualLoggerWriter(logging.info)
-sys.stderr = DualLoggerWriter(logging.error)
-
-
-
+# ====================== FLASK + SOCKETIO ======================
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'ae5900_super_secret'
+
+socketio = SocketIO(app,
+                    async_mode='eventlet',
+                    ping_timeout=15,
+                    ping_interval=5,
+                    cors_allowed_origins="*")
+
+# ====================== FLASK + SOCKETIO ======================
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 CONFIG_FILE = os.path.join(SCRIPT_DIR, "config.json")
@@ -55,9 +35,6 @@ MODES = ["PA", "CW", "FM", "AM", "USB", "LSB"]
 CHUNK = 512
 stream_rx = None
 stream_tx = None
-
-
-
 
 def setup_audio():
     global stream_rx, stream_tx
@@ -306,8 +283,6 @@ def mw_scan_loop(radio):
                 time.sleep(0.1)
 
     print("🛑 Multi-Watch (MW) beendet.")
-
-
 
 
 
@@ -821,9 +796,65 @@ def ptt_heartbeat_watchdog(radio):
 # Den Wächter beim Serverstart im Hintergrund abfeuern
 threading.Thread(target=ptt_heartbeat_watchdog, args=(radio,), daemon=True).start()
 
+# ====================== AUDIO BROADCAST TASK (korrigiert) ======================
+def audio_broadcast_task():
+    while True:
+        try:
+            # Rufe die bestehende Audio-Logik auf
+            with app.app_context():   # Wichtig für Flask-Kontext
+                audio_response = get_audio()          # Deine originale Funktion
+                audio_data = audio_response.get_json()  # Holt die JSON-Liste
+                
+                socketio.emit('audio', audio_data)
+            
+            socketio.sleep(0.085)   # ca. 11-12 FPS
+        except Exception as e:
+            # print(f"Audio broadcast error: {e}")   # Nur bei Bedarf aktivieren
+            socketio.sleep(0.5)
 
-#hreading.Thread(target=auto_patch_streams, daemon=True).start()
+
+# Background Task starten (nach allen Definitionen!)
+socketio.start_background_task(audio_broadcast_task)
+
+
+# ====================== SOCKETIO ROUTES & EVENTS ======================
+
+@app.route('/api/cmd/<command>')
+def api_command(command):
+    result = process_command(command)   # Falls du diese Funktion hast
+    socketio.emit('status', get_current_status(), broadcast=True)
+    return jsonify(result)
+
+
+@socketio.on('connect')
+def handle_connect():
+    print("Client via WebSocket verbunden")
+    emit('status', get_current_status())
+
+
+@socketio.on('command')
+def handle_command(data):
+    cmd = data.get('cmd')
+    if cmd:
+        process_command(cmd)
+        emit('status', get_current_status(), broadcast=True)
+
+
+def audio_broadcast_task():
+    while True:
+        try:
+            with app.app_context():
+                audio_response = get_audio()
+                audio_data = audio_response.get_json()
+                socketio.emit('audio', audio_data)
+            socketio.sleep(0.085)
+        except Exception as e:
+            socketio.sleep(0.5)
+
+
+socketio.start_background_task(audio_broadcast_task)
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    print("🚀 AE5900 Remote V2 mit WebSocket gestartet")
+    socketio.run(app, host='0.0.0.0', port=5000, debug=False)
