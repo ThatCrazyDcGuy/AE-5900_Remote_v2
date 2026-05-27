@@ -117,7 +117,7 @@
         <div id="lockIndicator" style="position: absolute; top: 10px; right: 125px; font-weight: bold; font-size: 0.9em; z-index: 3;">LOCK</div>
         <div id="micgainIndicator" style="position: absolute; top: 10px; left: 15px; font-weight: bold; font-size: 0.9em; z-index: 3; color: #00ff00;">MIC: <span id="displayVolDisp">--</span>%</div>
         <div id="clarIndicator" style="position: absolute; top: 10px; left: 110px; font-weight: bold; font-size: 0.9em; z-index: 3; color: #00ff00; display: none;">CLAR: <span id="displayClarDisp">+0</span> Hz</div>
-        <div id="versionIndicator" style="position: absolute; bottom: 10px; right: 15px; font-weight: bold; font-size: 0.7em; z-index: 3; color: #333;"> >>> IOS TEST<<< </div>
+        <div id="versionIndicator" style="position: absolute; bottom: 10px; right: 15px; font-weight: bold; font-size: 0.7em; z-index: 3; color: #333;"> >>> XTREME IOS TEST <<< </div>
 
         <div id="pttStat" style="font-weight:bold; color:#444; position: relative; z-index: 2;">○ RX IDLE</div>
         <div class="freq" id="chDisp">01</div>
@@ -334,9 +334,13 @@
         }
 
 
+        // ========================================================
+        // TEST 2: DIE LINEARE, ABSOLUT FLACHE EINE-FUNKTION-LOGIK
+        // ========================================================
         function updateUI(data) {
             if(!data) return;
             
+            // --- BLOCK 1: DEIN ORIGINALER PARS-CODE ---
             const ch = data.CH;
             if (document.getElementById('chDisp')) document.getElementById('chDisp').innerText = ch;
             if (document.getElementById('mhzDisp')) document.getElementById('mhzDisp').innerText = (freqs[ch] || "---.---") + " MHz";
@@ -347,8 +351,6 @@
             const sBtn = document.getElementById('scanBtn');
             const voxDisplay = document.getElementById('voxState'); 
             const asqDisplay = document.getElementById('asqState'); 
-            const muteDisplay = document.getElementById('muteState'); 
-            const lockDisplay = document.getElementById('lockState'); 
 
             if (btn && stat) {
                 if (data.PTT === "ON") {
@@ -390,20 +392,6 @@
                     sBtn.innerText = "S-SCAN";
                 }
             }
-
-            const mwBtn = document.getElementById('mwBtn');
-            if (mwBtn) {
-               if(data.MW_SCAN) {
-                   mwBtn.style.background = "#004444";
-                   mwBtn.style.boxShadow = "0 0 10px #00ffff";
-                   mwBtn.innerText = "MW...";
-               } else {
-                   mwBtn.style.background = "#333";
-                   mwBtn.style.boxShadow = "none";
-                   mwBtn.innerText = "MW";
-               }
-           }
-
 
             if(voxDisplay) {
                 if(data.VOX_ENABLED) {
@@ -451,80 +439,80 @@
                 }
             }
 
-            // Ausgrau-Logik für den ASQ Button basierend auf dem Modus
+            // --- BLOCK 2: ALLE UNSERE NEUEN ERWEITERUNGEN NAHTLOS INTEGRIERT ---
+            
+            // 1. Mic-Gain Display-Indikator
+            if(data.VOL !== undefined) {
+                const vDisp = document.getElementById('volDisp');
+                if(vDisp) vDisp.innerText = data.VOL;
+                const dvDisp = document.getElementById('displayVolDisp');
+                if(dvDisp) dvDisp.innerText = data.VOL;
+            }
+
+            // Lock-Zustand synchronisieren
+            if (data.LOCK_ENABLED !== undefined) {
+                isWebUILocked = data.LOCK_ENABLED;
+            }
+
+            // 2. Clarifier-Live-Aktualisierung (Betriebsarten & Timeout)
+            const clarUp = document.getElementById('clarUpBtn');
+            const clarHz = document.getElementById('clarHzBtn');
+            const clarDn = document.getElementById('clarDnBtn');
+            const clarInd = document.getElementById('clarIndicator');
+            const clarDisp = document.getElementById('displayClarDisp');
+
+            if (clarHz && data.MODE) {
+                const mode = data.MODE.toUpperCase();
+                if (mode === "CW" || mode === "USB" || mode === "LSB") {
+                    clarHz.disabled = false;
+                    if (clarInd) clarInd.style.display = "block";
+                    
+                    if (data.CLAR_OFFSET !== undefined && !clarTimer) {
+                        currentClarOffset = parseInt(data.CLAR_OFFSET);
+                        let displaySign = currentClarOffset >= 0 ? "+" : "";
+                        if (clarDisp) clarDisp.innerText = displaySign + currentClarOffset;
+                    }
+
+                    if (!clarTimer && (data.CLAR_STEP === "STEP" || clarHz.innerText === "STEP")) {
+                        if (clarUp) clarUp.disabled = true;
+                        if (clarDn) clarDn.disabled = true;
+                    }
+                } else {
+                    if (clarUp) clarUp.disabled = true;
+                    if (clarHz) clarHz.disabled = true;
+                    if (clarDn) clarDn.disabled = true;
+                    if (clarHz) clarHz.innerText = "STEP";
+                    if (clarInd) clarInd.style.display = "none";
+                    if (clarTimer) { clearTimeout(clarTimer); clarTimer = null; }
+                }
+            }
+
+            // 3. ASQ-Sperre für andere Betriebsarten
             const asqBtn = document.getElementById('asqBtn');
-            if (asqBtn && data.MODE) {
+            if (asqBtn && data.MODE && !isWebUILocked) {
                 const currentMode = data.MODE.toUpperCase();
-                if (currentMode === "AM" || currentMode === "FM") {
+                if (currentMode !== "AM" && currentMode !== "FM") {
+                    asqBtn.disabled = true; 
+                } else {
                     asqBtn.disabled = false;
-                } else {
-                    asqBtn.disabled = true;
                 }
             }
 
-
-
-            if(muteDisplay) {
-                if(data.MUTE_ENABLED) {
-                    muteDisplay.innerText = "SCHARF"; 
-                    muteDisplay.style.color = "#ff8800";
+            // 4. LOCK INDIKATOR LIVE ANSTEUERN
+            const lockInd = document.getElementById('lockIndicator');
+            if (lockInd) {
+                if (isWebUILocked) {
+                    lockInd.style.color = "#ff8800";   
+                    lockInd.style.opacity = "1";
+                    lockInd.style.textShadow = "0 0 10px #ff8800";
                 } else {
-                    muteDisplay.innerText = "AUS"; 
-                    muteDisplay.style.color = "#444";
+                    lockInd.style.color = "#333";      
+                    lockInd.style.opacity = "0.5";
+                    lockInd.style.textShadow = "none";
                 }
             }
+        } // <-- Hier schliesst die eine, flache updateUI-Funktion absolut sauber!
 
-            const muteInd = document.getElementById('muteIndicator');
-            if (muteInd) {
-                if (data.MUTE_ENABLED) {
-                    muteInd.style.color = "#ff8800";   
-                    muteInd.style.opacity = "1";
-                    muteInd.style.textShadow = "0 0 10px #ff8800";
-                } else {
-                    muteInd.style.color = "#333";      
-                    muteInd.style.opacity = "0.5";
-                    muteInd.style.textShadow = "none";
-                }
-            }
-
-
-    // --- LOCK INDIKATOR LIVE ANSTEUERN ---
-    const lockInd = document.getElementById('lockIndicator');
-    if (lockInd && data.LOCK_ENABLED !== undefined) {
-        if (data.LOCK_ENABLED) {
-            lockInd.style.color = "#ff8800";   // Schickes Orange wie bei VOX/ASQ
-            lockInd.style.opacity = "1";
-            lockInd.style.textShadow = "0 0 10px #ff8800";
-        } else {
-            lockInd.style.color = "#333";      // Abgedunkelt wenn inaktiv
-            lockInd.style.opacity = "0.5";
-            lockInd.style.textShadow = "none";
-        }
-    }
-
-
-    if(data.VOL !== undefined) {
-        const vDisp = document.getElementById('volDisp');
-        if(vDisp) vDisp.innerText = data.VOL;
-        
-        // NEU: Schreibt den Wert zusätzlich in das Display-Feld
-        const dvDisp = document.getElementById('displayVolDisp');
-        if(dvDisp) dvDisp.innerText = data.VOL;
-    }
-
-
-            // Ausgrau-Logik für den MUTE Button basierend auf dem Modus
-            const muteBtn = document.getElementById('muteBtn');
-            if (muteBtn && data.MODE) {
-                const currentMode = data.MODE.toUpperCase();
-                if (currentMode === "AM" || currentMode === "FM" || currentMode === "USB" || currentMode === "LSB" || currentMode === "CW") {
-                    muteBtn.disabled = false;
-                } else {
-                    muteBtn.disabled = true;
-                }
-            }
-
-        }
 
         function pollStatus() {
             fetch('/api/cmd/STATUS')

@@ -117,7 +117,7 @@
         <div id="lockIndicator" style="position: absolute; top: 10px; right: 125px; font-weight: bold; font-size: 0.9em; z-index: 3;">LOCK</div>
         <div id="micgainIndicator" style="position: absolute; top: 10px; left: 15px; font-weight: bold; font-size: 0.9em; z-index: 3; color: #00ff00;">MIC: <span id="displayVolDisp">--</span>%</div>
         <div id="clarIndicator" style="position: absolute; top: 10px; left: 110px; font-weight: bold; font-size: 0.9em; z-index: 3; color: #00ff00; display: none;">CLAR: <span id="displayClarDisp">+0</span> Hz</div>
-        <div id="versionIndicator" style="position: absolute; bottom: 10px; right: 15px; font-weight: bold; font-size: 0.7em; z-index: 3; color: #333;"> >>> IOS TEST<<< </div>
+        <div id="versionIndicator" style="position: absolute; bottom: 10px; right: 15px; font-weight: bold; font-size: 0.7em; z-index: 3; color: #333;"> >>> ULTRA IOS TEST <<< </div>
 
         <div id="pttStat" style="font-weight:bold; color:#444; position: relative; z-index: 2;">○ RX IDLE</div>
         <div class="freq" id="chDisp">01</div>
@@ -334,52 +334,72 @@
         }
 
 
+        // ========================================================
+        // ULTRA-TEST: INTELLIGENTER DATENSPIEGEL (CAPPED RENDERING)
+        // Verhindert das Einfrieren von Apples WebKit-Engine zu 100%
+        // ========================================================
+        let lastUIState = {}; // Unser lokales Gedächtnis im Browser
+
         function updateUI(data) {
             if(!data) return;
             
-            const ch = data.CH;
-            if (document.getElementById('chDisp')) document.getElementById('chDisp').innerText = ch;
-            if (document.getElementById('mhzDisp')) document.getElementById('mhzDisp').innerText = (freqs[ch] || "---.---") + " MHz";
-            if (document.getElementById('modeName')) document.getElementById('modeName').innerText = data.MODE;
+            // --- HILFSFUNKTION: Zeichnet NUR, wenn sich der Text geändert hat ---
+            function safeSetText(id, text) {
+                const el = document.getElementById(id);
+                if (el && lastUIState[id] !== text) {
+                    el.innerText = text;
+                    lastUIState[id] = text; // Neuen Zustand merken
+                }
+            }
+
+            // 1. Kanäle und Frequenzen prüfen und nur bei Wechsel neu zeichnen
+            safeSetText('chDisp', data.CH);
+            const currentMhz = (freqs[data.CH] || "---.---") + " MHz";
+            safeSetText('mhzDisp', currentMhz);
+            safeSetText('modeName', data.MODE);
             
+            // 2. PTT & SIGNAL DETECTED STATUS
             const btn = document.getElementById('pttBtn');
             const stat = document.getElementById('pttStat');
-            const sBtn = document.getElementById('scanBtn');
-            const voxDisplay = document.getElementById('voxState'); 
-            const asqDisplay = document.getElementById('asqState'); 
-            const muteDisplay = document.getElementById('muteState'); 
-            const lockDisplay = document.getElementById('lockState'); 
-
+            
             if (btn && stat) {
-                if (data.PTT === "ON") {
-                    currentBarColor = 'red';
-                    btn.style.background = "#ff0000";
-                    btn.innerText = "TX ACTIVE (" + data.REMAINING + "s)";
-                    stat.innerText = "● TRANSMIT"; 
-                    stat.style.color = "red";
-                } else if (data.VOX_TX) {
-                    currentBarColor = 'orange';
-                    btn.style.background = "#ff8800"; 
-                    btn.innerText = "VOX TRANSMITTING";
-                    stat.innerText = "● VOX ACTIVE"; 
-                    stat.style.color = "#ff8800";
-                } else if (data.BUSY) {
-                    currentBarColor = 'green';
-                    btn.style.background = "#4a0000"; 
-                    btn.innerText = "PTT TOGGLE";
-                    stat.innerText = "⚡ SIGNAL DETECTED"; 
-                    stat.style.color = "#00ff00";
-                } else {
-                    currentBarColor = 'green';
-                    btn.style.background = "#4a0000"; 
-                    btn.innerText = "PTT TOGGLE";
-                    stat.innerText = "○ RX IDLE"; 
-                    stat.style.color = "#444";
+                let pttStateKey = data.PTT + "_" + data.VOX_TX + "_" + data.BUSY + "_" + data.REMAINING;
+                if (lastUIState['ptt_state'] !== pttStateKey) {
+                    lastUIState['ptt_state'] = pttStateKey;
+                    
+                    if (data.PTT === "ON") {
+                        currentBarColor = 'red';
+                        btn.style.background = "#ff0000";
+                        btn.innerText = "TX ACTIVE (" + data.REMAINING + "s)";
+                        stat.innerText = "● TRANSMIT"; 
+                        stat.style.color = "red";
+                    } else if (data.VOX_TX) {
+                        currentBarColor = 'orange';
+                        btn.style.background = "#ff8800"; 
+                        btn.innerText = "VOX TRANSMITTING";
+                        stat.innerText = "● VOX ACTIVE"; 
+                        stat.style.color = "#ff8800";
+                    } else if (data.BUSY) {
+                        currentBarColor = 'green';
+                        btn.style.background = "#4a0000"; 
+                        btn.innerText = "PTT TOGGLE";
+                        stat.innerText = "⚡ SIGNAL DETECTED"; 
+                        stat.style.color = "#00ff00";
+                    } else {
+                        currentBarColor = 'green';
+                        btn.style.background = "#4a0000"; 
+                        btn.innerText = "PTT TOGGLE";
+                        stat.innerText = "○ RX IDLE"; 
+                        stat.style.color = "#444";
+                    }
+                    btn.classList.toggle('active', data.PTT === "ON");
                 }
-                btn.classList.toggle('active', data.PTT === "ON");
             }
             
-            if (sBtn) {
+            // 3. S-SCAN STATUS
+            const sBtn = document.getElementById('scanBtn');
+            if (sBtn && lastUIState['scan_state'] !== data.SW_SCAN) {
+                lastUIState['scan_state'] = data.SW_SCAN;
                 if(data.SW_SCAN) {
                     sBtn.style.background = "#004444";
                     sBtn.style.boxShadow = "0 0 10px #00ffff";
@@ -391,140 +411,97 @@
                 }
             }
 
-            const mwBtn = document.getElementById('mwBtn');
-            if (mwBtn) {
-               if(data.MW_SCAN) {
-                   mwBtn.style.background = "#004444";
-                   mwBtn.style.boxShadow = "0 0 10px #00ffff";
-                   mwBtn.innerText = "MW...";
-               } else {
-                   mwBtn.style.background = "#333";
-                   mwBtn.style.boxShadow = "none";
-                   mwBtn.innerText = "MW";
-               }
-           }
+            // 4. VOX & ASQ TEXT-INDIKATOREN
+            safeSetText('voxState', data.VOX_ENABLED ? "SCHARF" : "AUS");
+            const voxDispEl = document.getElementById('voxState');
+            if (voxDispEl) voxDispEl.style.color = data.VOX_ENABLED ? "#ff8800" : "#444";
 
+            safeSetText('asqState', data.ASQ_ENABLED ? "SCHARF" : "AUS");
+            const asqDispEl = document.getElementById('asqState');
+            if (asqDispEl) asqDispEl.style.color = data.ASQ_ENABLED ? "#ff8800" : "#444";
 
-            if(voxDisplay) {
-                if(data.VOX_ENABLED) {
-                    voxDisplay.innerText = "SCHARF"; 
-                    voxDisplay.style.color = "#ff8800";
-                } else {
-                    voxDisplay.innerText = "AUS"; 
-                    voxDisplay.style.color = "#444";
-                }
-            }
-
+            // 5. DEUCHT-INDIKATOREN IM DISPLAY
             const voxInd = document.getElementById('voxIndicator');
-            if (voxInd) {
-                if (data.VOX_ENABLED) {
-                    voxInd.style.color = "#ff8800";   
-                    voxInd.style.opacity = "1";
-                    voxInd.style.textShadow = "0 0 10px #ff8800";
-                } else {
-                    voxInd.style.color = "#333";      
-                    voxInd.style.opacity = "0.5";
-                    voxInd.style.textShadow = "none";
-                }
-            }
-
-            if(asqDisplay) {
-                if(data.ASQ_ENABLED) {
-                    asqDisplay.innerText = "SCHARF"; 
-                    asqDisplay.style.color = "#ff8800";
-                } else {
-                    asqDisplay.innerText = "AUS"; 
-                    asqDisplay.style.color = "#444";
-                }
+            if (voxInd && lastUIState['vox_ind'] !== data.VOX_ENABLED) {
+                lastUIState['vox_ind'] = data.VOX_ENABLED;
+                voxInd.style.color = data.VOX_ENABLED ? "#ff8800" : "#333";   
+                voxInd.style.opacity = data.VOX_ENABLED ? "1" : "0.5";
+                voxInd.style.textShadow = data.VOX_ENABLED ? "0 0 10px #ff8800" : "none";
             }
 
             const asqInd = document.getElementById('asqIndicator');
-            if (asqInd) {
-                if (data.ASQ_ENABLED) {
-                    asqInd.style.color = "#ff8800";   
-                    asqInd.style.opacity = "1";
-                    asqInd.style.textShadow = "0 0 10px #ff8800";
+            if (asqInd && lastUIState['asq_ind'] !== data.ASQ_ENABLED) {
+                lastUIState['asq_ind'] = data.ASQ_ENABLED;
+                asqInd.style.color = data.ASQ_ENABLED ? "#ff8800" : "#333";   
+                asqInd.style.opacity = data.ASQ_ENABLED ? "1" : "0.5";
+                asqInd.style.textShadow = data.ASQ_ENABLED ? "0 0 10px #ff8800" : "none";
+            }
+
+            // 6. MIC-GAIN DISPLAY-INDIKATOREN
+            if(data.VOL !== undefined) {
+                safeSetText('volDisp', data.VOL);
+                safeSetText('displayVolDisp', data.VOL);
+            }
+
+            // Lock-Zustand synchronisieren
+            if (data.LOCK_ENABLED !== undefined) {
+                isWebUILocked = data.LOCK_ENABLED;
+            }
+
+            // 7. Clarifier-Live-Aktualisierung
+            const clarUp = document.getElementById('clarUpBtn');
+            const clarHz = document.getElementById('clarHzBtn');
+            const clarDn = document.getElementById('clarDnBtn');
+            const clarInd = document.getElementById('clarIndicator');
+            const clarDisp = document.getElementById('displayClarDisp');
+
+            if (clarHz && data.MODE) {
+                const mode = data.MODE.toUpperCase();
+                if (mode === "CW" || mode === "USB" || mode === "LSB") {
+                    if (clarHz.disabled) clarHz.disabled = false;
+                    if (clarInd && clarInd.style.display !== "block") clarInd.style.display = "block";
+                    
+                    if (data.CLAR_OFFSET !== undefined && !clarTimer) {
+                        currentClarOffset = parseInt(data.CLAR_OFFSET);
+                        let displaySign = currentClarOffset >= 0 ? "+" : "";
+                        safeSetText('displayClarDisp', displaySign + currentClarOffset);
+                    }
+
+                    if (!clarTimer && (data.CLAR_STEP === "STEP" || clarHz.innerText === "STEP")) {
+                        if (clarUp && !clarUp.disabled) clarUp.disabled = true;
+                        if (clarDn && !clarDn.disabled) clarDn.disabled = true;
+                    }
                 } else {
-                    asqInd.style.color = "#333";      
-                    asqInd.style.opacity = "0.5";
-                    asqInd.style.textShadow = "none";
+                    if (clarUp && !clarUp.disabled) clarUp.disabled = true;
+                    if (clarHz && !clarHz.disabled) clarHz.disabled = true;
+                    if (clarDn && !clarDn.disabled) clarDn.disabled = true;
+                    if (clarHz && clarHz.innerText !== "STEP") clarHz.innerText = "STEP";
+                    if (clarInd && clarInd.style.display !== "none") clarInd.style.display = "none";
+                    if (clarTimer) { clearTimeout(clarTimer); clarTimer = null; }
                 }
             }
 
-            // Ausgrau-Logik für den ASQ Button basierend auf dem Modus
+            // 8. ASQ-Sperre für andere Betriebsarten
             const asqBtn = document.getElementById('asqBtn');
-            if (asqBtn && data.MODE) {
+            if (asqBtn && data.MODE && !isWebUILocked) {
                 const currentMode = data.MODE.toUpperCase();
-                if (currentMode === "AM" || currentMode === "FM") {
-                    asqBtn.disabled = false;
-                } else {
-                    asqBtn.disabled = true;
+                const shouldBeDisabled = (currentMode !== "AM" && currentMode !== "FM");
+                if (asqBtn.disabled !== shouldBeDisabled) {
+                    asqBtn.disabled = shouldBeDisabled;
                 }
             }
 
-
-
-            if(muteDisplay) {
-                if(data.MUTE_ENABLED) {
-                    muteDisplay.innerText = "SCHARF"; 
-                    muteDisplay.style.color = "#ff8800";
-                } else {
-                    muteDisplay.innerText = "AUS"; 
-                    muteDisplay.style.color = "#444";
-                }
+            // 9. LOCK INDIKATOR LIVE ANSTEUERN
+            const lockInd = document.getElementById('lockIndicator');
+            if (lockInd && lastUIState['lock_ind'] !== isWebUILocked) {
+                lastUIState['lock_ind'] = isWebUILocked;
+                lockInd.style.color = isWebUILocked ? "#ff8800" : "#333";   
+                lockInd.style.opacity = isWebUILocked ? "1" : "0.5";
+                lockInd.style.textShadow = isWebUILocked ? "0 0 10px #ff8800" : "none";
             }
+        } // <-- Hier schliesst die Ultra-Test Funktion absolut sauber!
 
-            const muteInd = document.getElementById('muteIndicator');
-            if (muteInd) {
-                if (data.MUTE_ENABLED) {
-                    muteInd.style.color = "#ff8800";   
-                    muteInd.style.opacity = "1";
-                    muteInd.style.textShadow = "0 0 10px #ff8800";
-                } else {
-                    muteInd.style.color = "#333";      
-                    muteInd.style.opacity = "0.5";
-                    muteInd.style.textShadow = "none";
-                }
-            }
-
-
-    // --- LOCK INDIKATOR LIVE ANSTEUERN ---
-    const lockInd = document.getElementById('lockIndicator');
-    if (lockInd && data.LOCK_ENABLED !== undefined) {
-        if (data.LOCK_ENABLED) {
-            lockInd.style.color = "#ff8800";   // Schickes Orange wie bei VOX/ASQ
-            lockInd.style.opacity = "1";
-            lockInd.style.textShadow = "0 0 10px #ff8800";
-        } else {
-            lockInd.style.color = "#333";      // Abgedunkelt wenn inaktiv
-            lockInd.style.opacity = "0.5";
-            lockInd.style.textShadow = "none";
-        }
-    }
-
-
-    if(data.VOL !== undefined) {
-        const vDisp = document.getElementById('volDisp');
-        if(vDisp) vDisp.innerText = data.VOL;
         
-        // NEU: Schreibt den Wert zusätzlich in das Display-Feld
-        const dvDisp = document.getElementById('displayVolDisp');
-        if(dvDisp) dvDisp.innerText = data.VOL;
-    }
-
-
-            // Ausgrau-Logik für den MUTE Button basierend auf dem Modus
-            const muteBtn = document.getElementById('muteBtn');
-            if (muteBtn && data.MODE) {
-                const currentMode = data.MODE.toUpperCase();
-                if (currentMode === "AM" || currentMode === "FM" || currentMode === "USB" || currentMode === "LSB" || currentMode === "CW") {
-                    muteBtn.disabled = false;
-                } else {
-                    muteBtn.disabled = true;
-                }
-            }
-
-        }
 
         function pollStatus() {
             fetch('/api/cmd/STATUS')
@@ -598,12 +575,10 @@
         }
 
 
-        // ========================================================
-        // TEST 1: REIHENFOLGE HARMONISIERT & BUTTON-LOOP ENTLANDET
-        // ========================================================
         const originalUpdateUI = updateUI;
         updateUI = function(data) {
             if(!data) return;
+
             
             // 1. Erst die originale updateUI-Arbeit ausführen lassen
             if (typeof originalUpdateUI === 'function') originalUpdateUI(data);
@@ -619,15 +594,13 @@
                 isWebUILocked = data.LOCK_ENABLED;
             }
 
-            // --- TEST 1: GROSSER RESET & BUTTON-LOOPS DEAKTIVIERT ---
-            // Wir kommentieren das ständige Suchen aller Tasten im Sekundentakt aus,
-            // um zu sehen, ob WebKit dadurch aufhört einzufrieren.
-            /*
+            // --- DER GROSSE RESET (NUR WENN NICHT VERRIEGELT) ---
             const allButtons = document.querySelectorAll('.controls button, .keypad button, .keypad-wrapper button');
             if (!isWebUILocked) {
+                // Wenn entsperrt: Erst einmal pauschal JEDE Taste aktivieren,
+                // damit die folgenden Spezialprüfungen die korrekten Modi sperren können.
                 allButtons.forEach(btn => btn.disabled = false);
             }
-            */
 
             // 3. Clarifier-Live-Aktualisierung (Betriebsarten & Timeout)
             const clarUp = document.getElementById('clarUpBtn');
@@ -639,8 +612,8 @@
             if (clarHz && data.MODE) {
                 const mode = data.MODE.toUpperCase();
                 if (mode === "CW" || mode === "USB" || mode === "LSB") {
-                    // Testweise ohne Lock-Prüfung direkt schalten
-                    clarHz.disabled = false;
+                    // Nur aktivieren, wenn das Gerät nicht verriegelt ist
+                    if (!isWebUILocked) clarHz.disabled = false;
                     if (clarInd) clarInd.style.display = "block";
                     
                     if (data.CLAR_OFFSET !== undefined && !clarTimer) {
@@ -654,6 +627,7 @@
                         if (clarDn) clarDn.disabled = true;
                     }
                 } else {
+                    // In AM/FM/PA die Clarifier-Gruppe eiskalt zusperren und verbergen
                     if (clarUp) clarUp.disabled = true;
                     if (clarHz) clarHz.disabled = true;
                     if (clarDn) clarDn.disabled = true;
@@ -662,27 +636,37 @@
                     if (clarTimer) { clearTimeout(clarTimer); clarTimer = null; }
                 }
             }
+            const chUpBtn = document.querySelector('button[onclick="send(\'U\')"]');
+            const chDnBtn = document.getElementById('chDnBtn') || document.querySelector('button[onclick="send(\'D\')"]');
+            
+            if (chUpBtn && chDnBtn && !isWebUILocked) {
+                // Wenn das Menü aktiv ist (Timer läuft oder Zustand ist ungleich STEP)
+                if (clarTimer || (data.CLAR_STEP && data.CLAR_STEP !== "STEP")) {
+                    chUpBtn.disabled = true;
+                    chDnBtn.disabled = true;
+                } else {
+                    // Im normalen Zustand wieder freigeben (ausser die Gesamtsperre LOCK blockiert es)
+                    chUpBtn.disabled = false;
+                    chDnBtn.disabled = false;
+                }
+            }
 
-            // 4. ASQ-Sperre (Lassen wir testweise nur für den einen Button aktiv)
+            // 4. ASQ-Sperre für andere Betriebsarten drüberrechnen
             const asqBtn = document.getElementById('asqBtn');
             if (asqBtn && data.MODE && !isWebUILocked) {
                 const currentMode = data.MODE.toUpperCase();
                 if (currentMode !== "AM" && currentMode !== "FM") {
-                    asqBtn.disabled = true; 
-                } else {
-                    asqBtn.disabled = false;
+                    asqBtn.disabled = true; // Sperren in SSB/PA
                 }
             }
 
-            // 5. GLOBALER HARDWARE-LOCK BUTTON-SCHLEIFE (DEAKTIVIERT FÜR TEST 1)
-            /*
+            // 5. GLOBALER HARDWARE-LOCK (Überschreibt am Ende ALLES falls aktiv)
             if (isWebUILocked) {
                 allButtons.forEach(btn => {
                     const isLockBtn = btn.getAttribute('onclick') && btn.getAttribute('onclick').includes('LOCKDEV');
                     if (!isLockBtn) btn.disabled = true;
                 });
             }
-            */
 
             // --- LOCK INDIKATOR LIVE ANSTEUERN ---
             const lockInd = document.getElementById('lockIndicator');
@@ -697,8 +681,9 @@
                     lockInd.style.textShadow = "none";
                 }
             }
-        };
 
+
+        };
 
 
         if (sB) {
