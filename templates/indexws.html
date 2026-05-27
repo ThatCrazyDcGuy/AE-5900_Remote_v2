@@ -1,0 +1,72 @@
+<script>
+    let socket;
+    let reconnectAttempts = 0;
+    const maxReconnects = 5;
+
+    function connectWebSocket() {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        socket = new WebSocket(`${protocol}//${window.location.host}/socket.io/?EIO=4&transport=websocket`);
+
+        socket.onopen = () => {
+            console.log("✅ WebSocket verbunden");
+            reconnectAttempts = 0;
+            document.getElementById('status').textContent = "🟢 Verbunden";
+        };
+
+        socket.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                
+                if (data.type === 'status') {
+                    updateUI(data.payload);
+                } else if (data.type === 'audio') {
+                    drawAudioBars(data.payload);
+                }
+            } catch(e) {}
+        };
+
+        socket.onclose = () => {
+            console.log("WebSocket getrennt");
+            document.getElementById('status').textContent = "🔴 Getrennt";
+            if (reconnectAttempts < maxReconnects) {
+                reconnectAttempts++;
+                setTimeout(connectWebSocket, 1500);
+            }
+        };
+
+        socket.onerror = (err) => console.error("WS Error:", err);
+    }
+
+    // Audio Visualizer (sehr leicht)
+    function drawAudioBars(data) {
+        if (!canvas || !ctx) return;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const barWidth = canvas.offsetWidth / data.length;
+
+        data.forEach((val, i) => {
+            const height = Math.min((val / 42) * canvas.offsetHeight, canvas.offsetHeight);
+            const grad = ctx.createLinearGradient(0, canvas.offsetHeight, 0, canvas.offsetHeight - height);
+            grad.addColorStop(0, '#003300');
+            grad.addColorStop(1, '#44ff44');
+            ctx.fillStyle = grad;
+            ctx.fillRect(i * barWidth, canvas.offsetHeight - height, barWidth - 1, height);
+        });
+    }
+
+    // Befehl senden
+    function send(cmd) {
+        if (socket && socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({ cmd: cmd }));
+        } else {
+            // Fallback auf fetch
+            fetch('/api/cmd/' + cmd);
+        }
+    }
+
+    // Start
+    window.onload = () => {
+        resizeCanvas();
+        connectWebSocket();
+        // Visualizer starten (wird jetzt über WS gefüttert)
+    };
+</script>
