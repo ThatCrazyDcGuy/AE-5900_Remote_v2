@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AE-5900 Remote Pro 26.05.26</title>
+    <title>AE-5900 Remote Pro 27.05.26</title>
     <style>
         body { 
             background: #1a1a1a; 
@@ -112,7 +112,7 @@
         <div id="lockIndicator" style="position: absolute; top: 10px; right: 125px; font-weight: bold; font-size: 0.9em; z-index: 3;">LOCK</div>
         <div id="micgainIndicator" style="position: absolute; top: 10px; left: 15px; font-weight: bold; font-size: 0.9em; z-index: 3; color: #00ff00;">MIC: <span id="displayVolDisp">--</span>%</div>
         <div id="clarIndicator" style="position: absolute; top: 10px; left: 110px; font-weight: bold; font-size: 0.9em; z-index: 3; color: #00ff00; display: none;">CLAR: <span id="displayClarDisp">+0</span> Hz</div>
-        <div id="versionIndicator" style="position: absolute; bottom: 10px; right: 15px; font-weight: bold; font-size: 0.7em; z-index: 3; color: #333;">V-260526 i2 / a1 BETA</div>
+        <div id="versionIndicator" style="position: absolute; bottom: 10px; right: 15px; font-weight: bold; font-size: 0.7em; z-index: 3; color: #333;">V-270526 i3 / a3 BETA</div>
 
         <div id="pttStat" style="font-weight:bold; color:#444; position: relative; z-index: 2;">○ RX IDLE</div>
         <div class="freq" id="chDisp">01</div>
@@ -624,6 +624,20 @@
                     if (clarHz) clarHz.innerText = "STEP";
                     if (clarInd) clarInd.style.display = "none";
                     if (clarTimer) { clearTimeout(clarTimer); clarTimer = null; }
+                }
+            }
+            const chUpBtn = document.querySelector('button[onclick="send(\'U\')"]');
+            const chDnBtn = document.getElementById('chDnBtn') || document.querySelector('button[onclick="send(\'D\')"]');
+            
+            if (chUpBtn && chDnBtn && !isWebUILocked) {
+                // Wenn das Menü aktiv ist (Timer läuft oder Zustand ist ungleich STEP)
+                if (clarTimer || (data.CLAR_STEP && data.CLAR_STEP !== "STEP")) {
+                    chUpBtn.disabled = true;
+                    chDnBtn.disabled = true;
+                } else {
+                    // Im normalen Zustand wieder freigeben (ausser die Gesamtsperre LOCK blockiert es)
+                    chUpBtn.disabled = false;
+                    chDnBtn.disabled = false;
                 }
             }
 
