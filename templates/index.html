@@ -117,7 +117,7 @@
         <div id="lockIndicator" style="position: absolute; top: 10px; right: 125px; font-weight: bold; font-size: 0.9em; z-index: 3;">LOCK</div>
         <div id="micgainIndicator" style="position: absolute; top: 10px; left: 15px; font-weight: bold; font-size: 0.9em; z-index: 3; color: #00ff00;">MIC: <span id="displayVolDisp">--</span>%</div>
         <div id="clarIndicator" style="position: absolute; top: 10px; left: 110px; font-weight: bold; font-size: 0.9em; z-index: 3; color: #00ff00; display: none;">CLAR: <span id="displayClarDisp">+0</span> Hz</div>
-        <div id="versionIndicator" style="position: absolute; bottom: 10px; right: 15px; font-weight: bold; font-size: 0.7em; z-index: 3; color: #333;">V-270526 i5 / a4 BETA</div>
+        <div id="versionIndicator" style="position: absolute; bottom: 10px; right: 15px; font-weight: bold; font-size: 0.7em; z-index: 3; color: #333;">V-270526 i7 / a13 WS BETA</div>
 
         <div id="pttStat" style="font-weight:bold; color:#444; position: relative; z-index: 2;">○ RX IDLE</div>
         <div class="freq" id="chDisp">01</div>
@@ -252,76 +252,105 @@
     <script>
         const freqs =  {"01":"26.965","02":"26.975","03":"26.985","04":"27.005","05":"27.015","06":"27.025","07":"27.035","08":"27.055","09":"27.065","10":"27.075","11":"27.085","12":"27.105","13":"27.115","14":"27.125","15":"27.135","16":"27.155","17":"27.165","18":"27.175","19":"27.185","20":"27.205","21":"27.215","22":"27.225","23":"27.255","24":"27.235","25":"27.245","26":"27.265","27":"27.275","28":"27.285","29":"27.295","30":"27.305","31":"27.315","32":"27.325","33":"27.335","34":"27.345","35":"27.355","36":"27.365","37":"27.375","38":"27.385","39":"27.395","40":"27.405"};
 
-        const canvas = document.getElementById('audioVisualizer');
-        const ctx = canvas.getContext('2d', { alpha: true, desynchronized: true });
+const canvas = document.getElementById('audioVisualizer');
+const ctx = canvas.getContext('2d', { alpha: true, desynchronized: true });
 
-        function resizeCanvas() {
-            if (canvas) {
-                const dpr = window.devicePixelRatio || 1;
-                canvas.width = canvas.offsetWidth * dpr;
-                canvas.height = canvas.offsetHeight * dpr;
-                ctx.scale(dpr, dpr);
+let socket;
+let lastData = new Array(32).fill(0);
+let currentBarColor = 'green';
+let useWebSocket = true;
+
+// Canvas Größe anpassen
+function resizeCanvas() {
+    if (canvas) {
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = canvas.offsetWidth * dpr;
+        canvas.height = canvas.offsetHeight * dpr;
+        ctx.scale(dpr, dpr);
+    }
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+// WebSocket Verbindung
+function initWebSocket() {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    socket = new WebSocket(`${protocol}//${window.location.host}/socket.io/?EIO=4&transport=websocket`);
+
+    socket.onopen = () => {
+        console.log("✅ WebSocket für Audio verbunden");
+    };
+
+    socket.onmessage = (event) => {
+        try {
+            const msg = JSON.parse(event.data);
+            
+            if (msg.type === 'audio' && Array.isArray(msg.data)) {
+                drawAudioBars(msg.data);
+            } else if (msg.type === 'status') {
+                updateUI(msg.data);   // Falls du Status über WS bekommst
             }
+        } catch(e) {}
+    };
+
+    socket.onclose = () => {
+        console.log("WebSocket getrennt → Fallback auf Polling");
+        useWebSocket = false;
+        setTimeout(initPollingFallback, 1500);
+    };
+
+    socket.onerror = (err) => console.error("WebSocket Error:", err);
+}
+
+// Fallback (falls WebSocket Probleme macht)
+function initPollingFallback() {
+    setInterval(() => {
+        if (!useWebSocket) {
+            fetch('/api/audio', { cache: 'no-store' })
+                .then(r => r.json())
+                .then(data => {
+                    if (Array.isArray(data)) drawAudioBars(data);
+                })
+                .catch(() => {});
         }
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
+    }, 120);
+}
 
-        let lastData = new Array(32).fill(0);
-        let currentBarColor = 'green';
-        let isDrawing = false;
-        let lastDrawTime = 0;
+// Neuer, effizienter Zeichnungs-Funktion
+function drawAudioBars(data) {
+    if (!Array.isArray(data) || data.length === 0) return;
 
-        async function drawSpectrum() {
-            const now = Date.now();
-            if (isDrawing || now - lastDrawTime < 80) {
-                requestAnimationFrame(drawSpectrum);
-                return;
-            }
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const barWidth = canvas.offsetWidth / data.length;
 
-            isDrawing = true;
-            lastDrawTime = now;
+    data.forEach((val, i) => {
+        let displayVal = Math.max(val, lastData[i] - 2.2);
+        lastData[i] = displayVal;
+        let height = Math.min((displayVal / 42) * canvas.offsetHeight, canvas.offsetHeight);
 
-            try {
-                const res = await fetch('/api/audio', { cache: 'no-store' });
-                const data = await res.json();
-
-                if (!Array.isArray(data) || data.length === 0) {
-                    isDrawing = false;
-                    requestAnimationFrame(drawSpectrum);
-                    return;
-                }
-
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                const barWidth = canvas.offsetWidth / data.length;
-
-                data.forEach((val, i) => {
-                    let displayVal = Math.max(val, lastData[i] - 2.2);
-                    lastData[i] = displayVal;
-                    let height = Math.min((displayVal / 42) * canvas.offsetHeight, canvas.offsetHeight);
-
-                    const grad = ctx.createLinearGradient(0, canvas.offsetHeight, 0, canvas.offsetHeight - height);
-                    if (currentBarColor === 'red') {
-                        grad.addColorStop(0, '#440000');
-                        grad.addColorStop(1, '#ff4444');
-                    } else if (currentBarColor === 'orange') {
-                        grad.addColorStop(0, '#442200');
-                        grad.addColorStop(1, '#ffaa44');
-                    } else {
-                        grad.addColorStop(0, '#003300');
-                        grad.addColorStop(1, '#44ff44');
-                    }
-
-                    ctx.fillStyle = grad;
-                    ctx.fillRect(i * barWidth, canvas.offsetHeight - height, barWidth - 1, height);
-                });
-            } catch (e) {
-                console.error("Audio fetch error:", e);
-            }
-
-            isDrawing = false;
-            requestAnimationFrame(drawSpectrum);
+        const grad = ctx.createLinearGradient(0, canvas.offsetHeight, 0, canvas.offsetHeight - height);
+        
+        if (currentBarColor === 'red') {
+            grad.addColorStop(0, '#440000');
+            grad.addColorStop(1, '#ff4444');
+        } else if (currentBarColor === 'orange') {
+            grad.addColorStop(0, '#442200');
+            grad.addColorStop(1, '#ffaa44');
+        } else {
+            grad.addColorStop(0, '#003300');
+            grad.addColorStop(1, '#44ff44');
         }
 
+        ctx.fillStyle = grad;
+        ctx.fillRect(i * barWidth, canvas.offsetHeight - height, barWidth - 1, height);
+    });
+}
+
+// ==================== START ====================
+window.onload = function() {
+    resizeCanvas();
+    initWebSocket();        // Primär WebSocket versuchen
+};
         // Status Polling (optimiert)
         function pollStatus() {
             fetch('/api/cmd/STATUS')
