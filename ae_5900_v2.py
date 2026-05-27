@@ -7,8 +7,42 @@ import numpy as np
 import pyaudio
 import subprocess
 import socket
-
+import sys
+import logging
+from logging.handlers import RotatingFileHandler
 from flask import Flask, render_template, jsonify, request
+
+
+log_filename = os.path.join(os.path.dirname(os.path.abspath(__file__)), "server.log")
+
+
+file_handler = RotatingFileHandler(log_filename, maxBytes=1024*1024, backupCount=1, encoding="utf-8")
+file_handler.setFormatter(logging.Formatter('[%(asctime)s] %(levelname)s: %(message)s', '%Y-%m-%d %H:%M:%S'))
+
+
+terminal_handler = logging.StreamHandler(sys.__stdout__)
+terminal_handler.setFormatter(logging.Formatter('%(message)s')) 
+
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+logger.addHandler(file_handler)
+logger.addHandler(terminal_handler)
+
+
+class DualLoggerWriter:
+    def __init__(self, logger_func):
+        self.logger_func = logger_func
+    def write(self, message):
+        if message.strip():
+            self.logger_func(message.strip())
+    def flush(self):
+        pass
+
+sys.stdout = DualLoggerWriter(logging.info)
+sys.stderr = DualLoggerWriter(logging.error)
+
+
 
 app = Flask(__name__)
 
@@ -21,6 +55,8 @@ MODES = ["PA", "CW", "FM", "AM", "USB", "LSB"]
 CHUNK = 512
 stream_rx = None
 stream_tx = None
+
+
 
 
 def setup_audio():
@@ -272,6 +308,9 @@ def mw_scan_loop(radio):
     print("🛑 Multi-Watch (MW) beendet.")
 
 
+
+
+
 # --- INSTANZ & STARTUP ---
 radio = RadioInterface()
 
@@ -335,15 +374,20 @@ def rig_ptt_control(state):
 
 @app.route('/api/cmd/<cmd>')
 def api_cmd(cmd):
-    # Der korrigierte globale Stopper:
+    global LAST_BROWSER_HEARTBEAT
+    
+    # JEDER API-Aufruf (auch der automatische STATUS-Poll) gilt als Lebenszeichen des Browsers!
+    LAST_BROWSER_HEARTBEAT = time.time()
+
+    # Deine originalen Scan- und Multiwatch-Stopper (unverändert)
     if cmd not in ['STATUS', 'MW_TOGGLE', 'SSCAN'] and not cmd.startswith('SETSPEED'):
         radio.stop_sw_scan()
         if hasattr(radio, 'mw_active') and radio.mw_active:
             radio.mw_active = False 
             
-    # Wenn MW läuft und SSCAN gedrückt wird, stoppen wir MW manuell
     if cmd == 'SSCAN' and hasattr(radio, 'mw_active') and radio.mw_active:
         radio.mw_active = False
+
 
 
 
@@ -673,9 +717,37 @@ def api_cmd(cmd):
         "MW_SCAN": getattr(radio, 'mw_active', False)
     })
 
+def ptt_heartbeat_watchdog(radio):
+    """
+    Prüft im Hintergrund, ob der Browser noch lebt.
+    Bleibt das Lebenszeichen (STATUS-Poll) bei TX für 30 Sekunden aus,
+    wird das Senden sofort abgebrochen.
+    """
+    global LAST_BROWSER_HEARTBEAT
+    print("🛡️ PTT Heartbeat-Wächter (30 Sek.) aktiv.")
+    
+    while True:
+        try:
+            if radio.is_tx:
+                # Berechnen, wie lange der Browser schon schweigt
+                silent_duration = time.time() - LAST_BROWSER_HEARTBEAT
+                
+                if silent_duration >= 30.0:
+                    print(f"🚨 PTT VERBINDUNGSABBRUCH: Browser sendet seit {int(silent_duration)}s keine Daten mehr! Trenne TX.")
+                    radio.is_tx = False
+                    radio.save_config()
+                    radio.send_cmd("4100000000000006", "4100000000000006") # Physisches PTT-Release
+            
+            time.sleep(1.0) # Jede Sekunde prüfen
+        except Exception as e:
+            print(f"⚠️ Fehler im Heartbeat-Wächter: {e}")
+            time.sleep(2.0)
+
+# Den Wächter beim Serverstart im Hintergrund abfeuern
+threading.Thread(target=ptt_heartbeat_watchdog, args=(radio,), daemon=True).start()
 
 
-threading.Thread(target=auto_patch_streams, daemon=True).start()
+#hreading.Thread(target=auto_patch_streams, daemon=True).start()
 
 
 if __name__ == '__main__':
