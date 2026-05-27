@@ -796,12 +796,34 @@ def ptt_heartbeat_watchdog(radio):
 # Den Wächter beim Serverstart im Hintergrund abfeuern
 threading.Thread(target=ptt_heartbeat_watchdog, args=(radio,), daemon=True).start()
 
+# ====================== AUDIO BROADCAST TASK (korrigiert) ======================
+def audio_broadcast_task():
+    while True:
+        try:
+            # Rufe die bestehende Audio-Logik auf
+            with app.app_context():   # Wichtig für Flask-Kontext
+                audio_response = get_audio()          # Deine originale Funktion
+                audio_data = audio_response.get_json()  # Holt die JSON-Liste
+                
+                socketio.emit('audio', audio_data)
+            
+            socketio.sleep(0.085)   # ca. 11-12 FPS
+        except Exception as e:
+            # print(f"Audio broadcast error: {e}")   # Nur bei Bedarf aktivieren
+            socketio.sleep(0.5)
+
+
+# Background Task starten (nach allen Definitionen!)
+socketio.start_background_task(audio_broadcast_task)
+
 
 # ====================== SOCKETIO ROUTES & EVENTS ======================
 
+# ... alle deine bestehenden Routen und Klassen ...
+
 @app.route('/api/cmd/<command>')
 def api_command(command):
-    result = process_command(command)   # Deine originale Funktion
+    result = process_command(command)   # Falls du diese Funktion hast
     socketio.emit('status', get_current_status(), broadcast=True)
     return jsonify(result)
 
@@ -823,18 +845,18 @@ def handle_command(data):
 def audio_broadcast_task():
     while True:
         try:
-            audio_data = get_audio_levels()   # Deine FFT-Funktion
-            socketio.emit('audio', audio_data)
+            with app.app_context():
+                audio_response = get_audio()
+                audio_data = audio_response.get_json()
+                socketio.emit('audio', audio_data)
             socketio.sleep(0.085)
         except Exception as e:
-            print("Audio broadcast error:", e)
-            socketio.sleep(1)
+            socketio.sleep(0.5)
 
 
-# Background Task starten
 socketio.start_background_task(audio_broadcast_task)
 
 
 if __name__ == '__main__':
-    print("🚀 AE5900 Remote V2 mit WebSocket gestartet (Port 5000)")
+    print("🚀 AE5900 Remote V2 mit WebSocket gestartet")
     socketio.run(app, host='0.0.0.0', port=5000, debug=False)
