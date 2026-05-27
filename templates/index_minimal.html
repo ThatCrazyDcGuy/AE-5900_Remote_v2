@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AE5900 Minimal Test</title>
+    <style>
+        body { background:#111; color:#0f0; font-family:Courier New; padding:20px; text-align:center; }
+        button { padding:15px; margin:8px; font-size:1.1em; width:80%; max-width:300px; }
+    </style>
+</head>
+<body>
+    <h2>Minimal Test - iOS Freeze Diagnose</h2>
+    <p id="status">Status: Läuft...</p>
+    <button onclick="toggleVisualizer()">Visualizer AN/AUS</button>
+    <button onclick="togglePolling()">Status-Polling AN/AUS</button>
+    <button onclick="location.reload()">Seite neu laden</button>
+
+    <canvas id="cv" width="300" height="120" style="background:#000; margin-top:20px;"></canvas>
+
+    <script>
+        let visualizerOn = false;
+        let pollingOn = true;
+        let rafId = null;
+        let pollId = null;
+
+        const canvas = document.getElementById('cv');
+        const ctx = canvas.getContext('2d');
+
+        function toggleVisualizer() {
+            visualizerOn = !visualizerOn;
+            if (visualizerOn) startVisualizer();
+            else cancelAnimationFrame(rafId);
+        }
+
+        function startVisualizer() {
+            if (!visualizerOn) return;
+            
+            ctx.clearRect(0,0,300,120);
+            ctx.fillStyle = '#0f0';
+            for(let i=0; i<32; i++) {
+                const h = Math.random()*80 + 20;
+                ctx.fillRect(i*9, 120-h, 7, h);
+            }
+            rafId = requestAnimationFrame(startVisualizer);
+        }
+
+        function togglePolling() {
+            pollingOn = !pollingOn;
+            if (pollingOn) startPolling();
+        }
+
+        function startPolling() {
+            if (!pollingOn) return;
+            fetch('/api/cmd/STATUS')
+                .then(r => r.text())
+                .then(txt => {
+                    document.getElementById('status').textContent = "Status OK: " + new Date().toLocaleTimeString();
+                    pollId = setTimeout(startPolling, 1200);
+                })
+                .catch(() => {
+                    document.getElementById('status').textContent = "Fetch Error";
+                    pollId = setTimeout(startPolling, 2000);
+                });
+        }
+
+        // Auto-Start
+        startPolling();
+    </script>
+</body>
+</html>
