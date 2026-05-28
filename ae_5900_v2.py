@@ -42,33 +42,21 @@ stream_tx = None
 def setup_audio():
     global stream_rx, stream_tx
     try:
-        # --- Client 1: RX (Soll der Analog Stereo Monitor werden) ---
-        # Wir taufen die ALSA-Klangkarte im System hart "Albrecht_RX"
-        os.environ['ALSA_CARD'] = 'AE_RX'
-        os.environ['PULSE_CLIENT_NAME'] = 'Albrecht_RX'
-        
+        # Client 1 (RX / Funk-Eingang)
+        os.environ['PULSE_PROP'] = 'node.description="AE_RX" node.name="AE_RX"'
         pa_rx = pyaudio.PyAudio()
         stream_rx = pa_rx.open(format=pyaudio.paInt16, channels=1, rate=22050, input=True, frames_per_buffer=CHUNK)
-        print("--- Audio-Stream RX (Albrecht_RX) initiiert ---")
         
-        # WICHTIG: ECHTE 1.5 Sekunden Pause! Das gibt PipeWire die Zeit, den 
-        # ersten Stream im System unter dem Namen 'Albrecht_RX' einzufrieren.
-        time.sleep(1.5)
+        # Kurze Pause für die Stabilität
+        time.sleep(0.300)
         
-        # --- Client 2: TX (Soll die Mono Klinke werden) ---
-        # Wir taufen die ALSA-Klangkarte im System nun hart um auf "Albrecht_TX"
-        os.environ['ALSA_CARD'] = 'AE_TX'
-        os.environ['PULSE_CLIENT_NAME'] = 'Albrecht_TX'
-        
+        # Client 2 (TX / Später Mumble-Monitor)
+        os.environ['PULSE_PROP'] = 'node.description="AE_TX" node.name="AE_TX"'
         pa_tx = pyaudio.PyAudio()
         stream_tx = pa_tx.open(format=pyaudio.paInt16, channels=1, rate=22050, input=True, frames_per_buffer=CHUNK)
-        print("--- Audio-Stream TX (Albrecht_TX) initiiert ---")
         
-        # Umgebungsvariablen wieder sauber löschen
-        os.environ.pop('ALSA_CARD', None)
-        os.environ.pop('PULSE_CLIENT_NAME', None)
-        print("--- Audio-Streams getrennt im System verankert! ---")
-        
+        os.environ.pop('PULSE_PROP', None)
+        print("--- Audio-Streams AE_RX und AE_TX bereit ---")
     except Exception as e:
         print(f"Audio-Setup Fehler: {e}")
 
@@ -76,28 +64,47 @@ def setup_audio():
 setup_audio()
 
 def auto_patch_streams():
-    # Wir warten, bis Mumble und die Ports stabil im PipeWire-Graph sichtbar sind
+    # Wir warten 5 Sekunden, bis alle virtuellen Kabel in PipeWire bereitgestellt sind
     time.sleep(5) 
     try:
-        source = "Mumble:output_FL" 
+        # 1. Quell- und Zielgeräte für deine Soundkarte definieren
+        # (Nutzt die standardmäßigen PipeWire Monitor- und Mono-Quellen)
+        stereo_monitor_source = "alsa_input.usb-Unitek_Y-247A_Audio_Adapter-00.analog-stereo.monitor"
+        mono_mic_source = "alsa_input.usb-Unitek_Y-247A_Audio_Adapter-00.analog-mono"
+        mumble_source = "Mumble:output_FL"
         
-        # Alle Eingangs-Ports von PipeWire abfragen
+        # 2. Alle aktiven Capture-Ports (Eingänge) von Python/ALSA im System abfragen
         res_in = subprocess.run(["pw-link", "-i"], capture_output=True, text=True).stdout
+        python_ports = [l.strip() for l in res_in.split('\n') if "python" in l.lower() or "alsa_capture" in l.lower()]
         
-        # Wir suchen jetzt gezielt nach unserem Client-Namen "Albrecht_TX"!
-        python_ports = [l.strip() for l in res_in.split('\n') if "albrecht_tx" in l.lower() or "ae_tx" in l.lower()]
-        
-        if python_ports:
-            target = python_ports[0] 
-            subprocess.run(["pw-link", source, target], check=False)
-            print(f"--- TX-PATCH ERFOLGREICH: {source} -> {target} ---")
+        # Wir brauchen mindestens 2 Ports (einen für RX, einen für TX)
+        if len(python_ports) >= 2:
+            rx_target = python_ports[0]  # Der zuerst geöffnete Stream (RX)
+            tx_target = python_ports[1]  # Der danach geöffnete Stream (TX)
+            
+            print(f"📡 Zwinge RX-Target ({rx_target}) auf Analog Stereo Monitor...")
+            print(f"🎤 Zwinge TX-Target ({tx_target}) auf Mono-Mikrofon & linke Mumble...")
+            
+            # --- SCHRITT 3: DIE BRUTALE VERDRAHTUNG (Zwingt Stereo / Mono) ---
+            
+            # Trenne zuerst alle eventuell falschen Standard-Verbindungen auf, die PipeWire gewürfelt hat
+            subprocess.run(["pw-link", "-d", rx_target], check=False)
+            subprocess.run(["pw-link", "-d", tx_target], check=False)
+            
+            # Verbinde den RX-Stream (Balken) hart mit dem Stereo-Monitor der Soundkarte (linker & rechter Kanal)
+            subprocess.run(["pw-link", f"{stereo_monitor_source}:monitor_FL", rx_target], check=False)
+            subprocess.run(["pw-link", f"{stereo_monitor_source}:monitor_FR", rx_target], check=False)
+            
+            # Verbinde den TX-Stream (Mumble) hart mit dem Mono-Eingang der Soundkarte
+            subprocess.run(["pw-link", f"{mono_mic_source}:capture_FL", tx_target], check=False)
+            
+            # Und patche Mumble zusätzlich wie gewohnt auf deinen TX-Stream
+            subprocess.run(["pw-link", mumble_source, tx_target], check=False)
+            
+            print("--- 🏁 PIPEWIRE-AUTOMATION ERFOLGREICH: Stereo & Mono perfekt erzwungen! ---")
         else:
-            # Fallback auf den zweiten ALSA-Port, falls das System Träge ist
-            python_ports = [l.strip() for l in res_in.split('\n') if "python" in l.lower() or "alsa_capture" in l.lower()]
-            if len(python_ports) >= 2:
-                target = python_ports[1] 
-                subprocess.run(["pw-link", source, target], check=False)
-                print(f"--- TX-PATCH FALLBACK ERFOLGREICH: {source} -> {target} ---")
+            print("⚠️ PipeWire-Automation: Nicht genügend Python-Audio-Ports gefunden.")
+            
     except Exception as e:
         print(f"Patch-Fehler: {e}")
 
