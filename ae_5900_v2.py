@@ -75,56 +75,70 @@ setup_audio()
 #        print(f"Patch-Fehler: {e}")
 
 def auto_patch_streams():
-    # Wir warten 5 Sekunden, bis alle virtuellen Audiokabel stabil in PipeWire sichtbar sind
-    time.sleep(5) 
+    # Wir warten 6 Sekunden, damit Mumble und deine beiden Streams stabil im Mixer sitzen
+    time.sleep(6) 
     try:
-        mumble_source = "Mumble:output_FL"
-        mumble_source_fr = "Mumble:output_FR"
+        print("🚀 [LAUTSTÄRKEREGLER AUTOMATION GESTARTET]")
         
-        # 1. Wir holen uns ALLE im Linux-System registrierten Soundkarten-Ausgänge (Sinks/Monitore)
-        res_sources = subprocess.run(["pw-link", "-o"], capture_output=True, text=True).stdout
-        all_sources = [l.strip() for l in res_sources.split('\n') if l.strip()]
+        # 1. Wir holen uns alle aktiven Aufnahme-IDs (Source Outputs) vom System
+        res = subprocess.run(["pactl", "list", "short", "source-outputs"], capture_output=True, text=True).stdout
+        lines = [l.strip() for l in res.split('\n') if l.strip()]
         
-        # Wir filtern dynamisch nach dem ersten echten Stereo-Monitor im System
-        # Jede USB-Soundkarte kriegt von PipeWire ein ".monitor" spendiert
-        stereo_source_name = next((s for s in all_sources if "analog-stereo.monitor" in s.lower() or ".monitor" in s.lower()), None)
+        # Wir filtern nach den Streams, die zu unserem Python-Skript gehören
+        python_stream_ids = []
+        for line in lines:
+            if "python" in line.lower() or "alsa" in line.lower():
+                # Die ID ist immer die allererste Zahl in der Zeile
+                python_stream_ids.append(line.split()[0])
+                
+        print(f"  ➔ Aktive Python-Mixer-IDs gefunden: {python_stream_ids}")
         
-        # 2. Wir holen uns alle aktiven ALSA/Python-Eingänge (Capture-Ports)
-        res_in = subprocess.run(["pw-link", "-i"], capture_output=True, text=True).stdout
-        ports = [l.strip() for l in res_in.split('\n') if "python" in l.lower() or "alsa_capture" in l.lower()]
+        # 2. Wir bestimmen dynamisch den Namen deines Stereo-Monitors und der Mono-Klinke
+        res_sources = subprocess.run(["pactl", "list", "short", "sources"], capture_output=True, text=True).stdout
+        source_lines = [l.strip() for l in res_sources.split('\n') if l.strip()]
         
-        print(f"🔍 [UNIVERSAL SOUNDCARD SCAN]")
-        print(f"  ➔ Dynamisch ermittelter Stereo-Monitor: {stereo_source_name}")
-        print(f"  ➔ Aktive Python-Ports im System: {ports}")
+        # Jedes Linux-System benennt den Stereo-Monitor mit ".monitor" am Ende
+        stereo_monitor = next((line.split()[1] for line in source_lines if "stereo.monitor" in line.lower() or "monitor" in line.lower()), None)
+        # Das echte Mikrofon/Mono hat meist kein ".monitor" im Namen
+        mono_mic = next((line.split()[1] for line in source_lines if "mono" in line.lower() and "monitor" not in line.lower()), None)
         
-        if len(ports) >= 2 and stereo_source_name:
-            rx_target = ports[0]  # Der zuerst geöffnete Port (Index 0) ist laut Code dein RX (Spektrum)
-            tx_target = ports[1]  # Der zweite geöffnete Port (Index 1) ist dein TX-Stream (Mumble)
+        # Falls das System keinen dedizierten Mono-Kanal listet, nehmen wir den Standard-Eingang
+        if not mono_mic and source_lines:
+            mono_mic = next((line.split()[1] for line in source_lines if "monitor" not in line.lower()), source_lines[0].split()[1])
+
+        print(f"  ➔ Gefundene Ziel-Karten im System:")
+        print(f"     🔉 Stereo Monitor: {stereo_monitor}")
+        print(f"     🎤 Mono Mikrofon:  {mono_mic}")
+
+        # 3. DIE REGEL-SCHUBS-AUTOMATION (Simuliert deine Maus-Klicks!)
+        if len(python_stream_ids) >= 2 and stereo_monitor and mono_mic:
+            rx_id = python_stream_ids[0]  # Der erste Stream (RX / Balken)
+            tx_id = python_stream_ids[1]  # Der zweite Stream (TX / Mumble)
             
-            # --- SCHRITT 3: HARDWARE-UNABHÄNGIGES ROUTING ---
+            # WIR SCHUBSEN DEN ERSTEN STREAM AUF STEREO MONITOR!
+            print(f"🎛️ Schubse RX-Stream (ID: {rx_id}) -> {stereo_monitor}")
+            subprocess.run(["pactl", "move-source-output", rx_id, stereo_monitor], check=False)
             
-            # Trenne zuerst alle eventuell falschen Standard-Verbindungen auf, die PipeWire gewürfelt hat
-            subprocess.run(["pw-link", "-d", rx_target], check=False)
-            subprocess.run(["pw-link", "-d", tx_target], check=False)
+            # WIR SCHUBSEN DEN ZWEITEN STREAM AUF MONO-MIC!
+            print(f"🎛️ Schubse TX-Stream (ID: {tx_id}) -> {mono_mic}")
+            subprocess.run(["pactl", "move-source-output", tx_id, mono_mic], check=False)
             
-            # Wir verbinden den RX-Port (Balken) direkt mit dem ermittelten Stereo-Monitor
-            # Da wir die genauen Port-Endungen brauchen (monitor_FL/FR), schneiden wir den Namen sauber an
-            base_source = stereo_source_name.split(':')[0]
+            # 4. MUMBLE WIE GEWOHNT VERDRAHTEN
+            mumble_source = "Mumble:output_FL"
+            res_links = subprocess.run(["pw-link", "-i"], capture_output=True, text=True).stdout
+            python_ports = [l.strip() for l in res_links.split('\n') if "python" in l.lower() or "alsa_capture" in l.lower()]
             
-            print(f"🚀 [PATCH] RX-Balken -> {base_source} (Stereo Monitor)")
-            subprocess.run(["pw-link", f"{base_source}:monitor_FL", rx_target], check=False)
-            subprocess.run(["pw-link", f"{base_source}:monitor_FR", rx_target], check=False)
-            
-            # --- SCHRITT 4: MUMBLE AUF DEN TX-STREAM PATCHEN ---
-            print(f"🔗 [PATCH] Mumble Senden -> TX-Stream: {mumble_source} -> {tx_target}")
-            subprocess.run(["pw-link", mumble_source, tx_target], check=False)
-            
-            print("--- 🏁 UNIVERSAL-PIPEWIRE-PATCHING PERFEKT BEENDET ---")
+            if len(python_ports) >= 2:
+                target = python_ports[1] # Verbindet Mumble fest mit dem TX-Stream
+                subprocess.run(["pw-link", mumble_source, target], check=False)
+                print(f"🔗 Mumble erfolgreich an Port {target} gelötet.")
+                
+            print("--- 🏁 ENDGEGNER VERNICHTET: ALLES STEHT PERFEKT! ---")
         else:
-            print("⚠️ Universal-Patch: Nicht genügend Ports oder kein Stereo-Monitor im System gefunden.")
+            print("⚠️ Automation fehlgeschlagen: Konnte die IDs oder Soundkarten-Profile nicht eindeutig auslesen.")
             
     except Exception as e:
-        print(f"Patch-Fehler: {e}")
+        print(f"Maus-Klick-Automation Fehler: {e}")
 
 
 class RadioInterface:
