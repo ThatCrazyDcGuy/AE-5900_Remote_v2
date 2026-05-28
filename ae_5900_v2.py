@@ -891,6 +891,7 @@ def get_current_status_dict():
 
 
 # ====================== START ======================
+threading.Thread(target=auto_patch_streams, daemon=True).start()
 if __name__ == '__main__':
     print("🚀 AE5900 Remote V2 mit WebSocket gestartet")
     socketio.run(app, host='0.0.0.0', port=5000, debug=False)
