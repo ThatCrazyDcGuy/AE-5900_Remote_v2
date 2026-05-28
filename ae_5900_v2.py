@@ -42,84 +42,62 @@ stream_tx = None
 def setup_audio():
     global stream_rx, stream_tx
     try:
-        # 1. Beide Streams ganz normal ohne fehleranfällige PULSE_PROP öffnen
+        # --- Client 1: RX (Soll der Analog Stereo Monitor werden) ---
+        # Wir taufen die ALSA-Klangkarte im System hart "Albrecht_RX"
+        os.environ['ALSA_CARD'] = 'AE_RX'
+        os.environ['PULSE_CLIENT_NAME'] = 'Albrecht_RX'
+        
         pa_rx = pyaudio.PyAudio()
         stream_rx = pa_rx.open(format=pyaudio.paInt16, channels=1, rate=22050, input=True, frames_per_buffer=CHUNK)
+        print("--- Audio-Stream RX (Albrecht_RX) initiiert ---")
         
-        # Winzige Pause, damit der erste Stream stabil registriert ist
-        time.sleep(0.200)
+        # WICHTIG: ECHTE 1.5 Sekunden Pause! Das gibt PipeWire die Zeit, den 
+        # ersten Stream im System unter dem Namen 'Albrecht_RX' einzufrieren.
+        time.sleep(1.5)
+        
+        # --- Client 2: TX (Soll die Mono Klinke werden) ---
+        # Wir taufen die ALSA-Klangkarte im System nun hart um auf "Albrecht_TX"
+        os.environ['ALSA_CARD'] = 'AE_TX'
+        os.environ['PULSE_CLIENT_NAME'] = 'Albrecht_TX'
         
         pa_tx = pyaudio.PyAudio()
         stream_tx = pa_tx.open(format=pyaudio.paInt16, channels=1, rate=22050, input=True, frames_per_buffer=CHUNK)
+        print("--- Audio-Stream TX (Albrecht_TX) initiiert ---")
         
-        print("--- Audio-Streams physisch geöffnet ---")
+        # Umgebungsvariablen wieder sauber löschen
+        os.environ.pop('ALSA_CARD', None)
+        os.environ.pop('PULSE_CLIENT_NAME', None)
+        print("--- Audio-Streams getrennt im System verankert! ---")
         
-        # 2. HIER DIE COOLE PIPEWIRE-FORCE-LOGIK ---
-        # Wir warten kurz und zwingen den ERSTEN Python-Stream auf den Monitor-Kanal
-        threading.Thread(target=force_pipewire_routing, daemon=True).start()
-
     except Exception as e:
         print(f"Audio-Setup Fehler: {e}")
 
-def force_pipewire_routing():
-    time.sleep(1.5) # Warten bis PipeWire die Streams sieht
-    try:
-        # Wir holen uns alle aktiven Aufnahme-Clients (Capture-Ports) von ALSA/PipeWire
-        res = subprocess.run(["pw-link", "-i"], capture_output=True, text=True).stdout
-        ports = [l.strip() for l in res.split('\n') if "python" in l.lower() or "alsa_capture" in l.lower()]
-        
-        # Da wir RX zuerst geöffnet haben, ist ports[0] und ports[1] der linke/rechte Kanal des RX-Streams
-        if len(ports) >= 4:
-            rx_target_l = ports[0]
-            
-            # Die genaue ID deiner Stereo-Soundkarte (Monitor) herausfinden
-            # Wir linken ports[0] (RX) hart an den Monitor-Ausgang der Soundkarte
-            monitor_source = "alsa_output.usb-Unitek_Y-247A_Audio_Adapter-00.analog-stereo.monitor"
-            
-            # Falls der Name abweicht, nutzen wir den pw-cli Befehl zum Verschieben:
-            # Wir suchen die Node-IDs der beiden python-Einträge
-            nodes_res = subprocess.run(["pw-cli", "list-objects", "Node"], capture_output=True, text=True).stdout
-            python_nodes = []
-            current_id = None
-            
-            for line in nodes_res.split('\n'):
-                if "id " in line:
-                    current_id = line.split()[1]
-                if "node.name" in line and "python" in line:
-                    python_nodes.append(current_id)
-            
-            # Wenn wir zwei separate Python-Audio-Nodes gefunden haben:
-            if len(python_nodes) >= 2:
-                rx_node = python_nodes[0] # Der zuerst geöffnete (RX)
-                
-                # Wir befehlen PipeWire, diese Node hart auf den Stereo-Monitor zu verschieben!
-                subprocess.run([
-                    "pw-metadata", "-n", "settings", "0", 
-                    f"default.configured.audio.sink:{rx_node}", 
-                    "alsa_output.usb-Unitek_Y-247A_Audio_Adapter-00.analog-stereo"
-                ], check=False)
-                
-                print(f"--- PIPEWIRE FIX: RX-Node {rx_node} erfolgreich auf Analog Stereo gezwungen! ---")
-                
-    except Exception as e:
-        print(f"PipeWire-Routing Fehler: {e}")
-
-# Funktionsaufruf
+# Funktionsaufruf beim Booten
 setup_audio()
 
 def auto_patch_streams():
+    # Wir warten, bis Mumble und die Ports stabil im PipeWire-Graph sichtbar sind
     time.sleep(5) 
     try:
         source = "Mumble:output_FL" 
-        res_in = subprocess.run(["pw-link", "-i"], capture_output=True, text=True).stdout
-        python_ports = [l.strip() for l in res_in.split('\n') if "python" in l.lower() or "alsa_capture" in l.lower()]
         
-        # Da wir wissen, dass die ersten beiden Ports (0 und 1) jetzt dank der Force-Logik 
-        # auf dem Monitor liegen, schnappen wir uns für Mumble ganz sicher die hinteren Ports (TX)
-        if len(python_ports) >= 4:
-            target = python_ports[2] # Nimmt zielsicher das Mono-TX-Schnittstellen-Paar
+        # Alle Eingangs-Ports von PipeWire abfragen
+        res_in = subprocess.run(["pw-link", "-i"], capture_output=True, text=True).stdout
+        
+        # Wir suchen jetzt gezielt nach unserem Client-Namen "Albrecht_TX"!
+        python_ports = [l.strip() for l in res_in.split('\n') if "albrecht_tx" in l.lower() or "ae_tx" in l.lower()]
+        
+        if python_ports:
+            target = python_ports[0] 
             subprocess.run(["pw-link", source, target], check=False)
             print(f"--- TX-PATCH ERFOLGREICH: {source} -> {target} ---")
+        else:
+            # Fallback auf den zweiten ALSA-Port, falls das System Träge ist
+            python_ports = [l.strip() for l in res_in.split('\n') if "python" in l.lower() or "alsa_capture" in l.lower()]
+            if len(python_ports) >= 2:
+                target = python_ports[1] 
+                subprocess.run(["pw-link", source, target], check=False)
+                print(f"--- TX-PATCH FALLBACK ERFOLGREICH: {source} -> {target} ---")
     except Exception as e:
         print(f"Patch-Fehler: {e}")
 
