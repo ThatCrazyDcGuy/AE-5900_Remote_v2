@@ -4,7 +4,7 @@
 sudo apt update && sudo apt full-upgrade -y
 
 # Pakete installieren
-sudo apt install git curl openssh-server python3-flask-socketio python3-socketio python3-eventlet python3-pyaudio python3-numpy python3-serial python3-flask pipewire pipewire-audio pipewire-alsa pipewire-pulse pipewire pipewire-audio-client-libraries pavucontrol wireplumber libpipewire-0.3-modules ladspa-sdk swh-plugins dbus-user-session mc htop mumble mumble-server -y
+sudo apt install git curl openssh-server python3-flask-socketio python3-socketio python3-eventlet python3-pyaudio python3-numpy python3-serial python3-flask pipewire pipewire-audio pipewire-alsa pipewire-pulse pipewire pipewire-audio-client-libraries pulseaudio-utils pavucontrol wireplumber libpipewire-0.3-modules ladspa-sdk swh-plugins dbus-user-session mc htop mumble mumble-server -y
 
 # Altes Session-Modul entfernen
 sudo apt remove pipewire-media-session -y
