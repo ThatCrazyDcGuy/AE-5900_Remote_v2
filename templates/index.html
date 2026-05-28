@@ -117,7 +117,7 @@
         <div id="lockIndicator" style="position: absolute; top: 10px; right: 125px; font-weight: bold; font-size: 0.9em; z-index: 3;">LOCK</div>
         <div id="micgainIndicator" style="position: absolute; top: 10px; left: 15px; font-weight: bold; font-size: 0.9em; z-index: 3; color: #00ff00;">MIC: <span id="displayVolDisp">--</span>%</div>
         <div id="clarIndicator" style="position: absolute; top: 10px; left: 110px; font-weight: bold; font-size: 0.9em; z-index: 3; color: #00ff00; display: none;">CLAR: <span id="displayClarDisp">+0</span> Hz</div>
-        <div id="versionIndicator" style="position: absolute; bottom: 10px; right: 15px; font-weight: bold; font-size: 0.7em; z-index: 3; color: #333;">V-270526 i7 / a13 WS BETA</div>
+        <div id="versionIndicator" style="position: absolute; bottom: 10px; right: 15px; font-weight: bold; font-size: 0.7em; z-index: 3; color: #333;">V-280526 i4/a6 WS STABIL</div>
 
         <div id="pttStat" style="font-weight:bold; color:#444; position: relative; z-index: 2;">○ RX IDLE</div>
         <div class="freq" id="chDisp">01</div>
@@ -278,7 +278,7 @@
 
         socket.on('connect', () => {
             console.log("✅ Socket.IO erfolgreich verbunden");
-            document.getElementById('versionIndicator').textContent = "V-270526 i7 / WS STABIL";
+            document.getElementById('versionIndicator').textContent = "V-280526 i4/a6 WS STABIL";
         });
 
         socket.on('audio', (data) => {
@@ -324,9 +324,6 @@ function drawAudioBars(data) {
 }
 
 
-    // ==================== DEIN RESTLICHER CODE (unverändert) ====================
-    // Hier kommt dein ganzer restlicher Code (pollStatus, updateUI, send, handleClarClick, etc.)
-
     function pollStatus() {
         fetch('/api/cmd/STATUS')
             .then(r => r.json())
@@ -337,7 +334,6 @@ function drawAudioBars(data) {
             .catch(() => setTimeout(pollStatus, 1500));
     }
 
-    // ... (füge hier deinen kompletten restlichen Code ein: updateUI, changeVol, send, setCfg, handleClarClick usw.) ...
         function updateUI(data) {
             if(!data) return;
             
@@ -455,7 +451,6 @@ function drawAudioBars(data) {
                 }
             }
 
-            // Ausgrau-Logik für den ASQ Button basierend auf dem Modus
             const asqBtn = document.getElementById('asqBtn');
             if (asqBtn && data.MODE) {
                 const currentMode = data.MODE.toUpperCase();
@@ -492,15 +487,14 @@ function drawAudioBars(data) {
             }
 
 
-    // --- LOCK INDIKATOR LIVE ANSTEUERN ---
     const lockInd = document.getElementById('lockIndicator');
     if (lockInd && data.LOCK_ENABLED !== undefined) {
         if (data.LOCK_ENABLED) {
-            lockInd.style.color = "#ff8800";   // Schickes Orange wie bei VOX/ASQ
+            lockInd.style.color = "#ff8800";  
             lockInd.style.opacity = "1";
             lockInd.style.textShadow = "0 0 10px #ff8800";
         } else {
-            lockInd.style.color = "#333";      // Abgedunkelt wenn inaktiv
+            lockInd.style.color = "#333";     
             lockInd.style.opacity = "0.5";
             lockInd.style.textShadow = "none";
         }
@@ -511,13 +505,13 @@ function drawAudioBars(data) {
         const vDisp = document.getElementById('volDisp');
         if(vDisp) vDisp.innerText = data.VOL;
         
-        // NEU: Schreibt den Wert zusätzlich in das Display-Feld
+
         const dvDisp = document.getElementById('displayVolDisp');
         if(dvDisp) dvDisp.innerText = data.VOL;
     }
 
 
-            // Ausgrau-Logik für den MUTE Button basierend auf dem Modus
+
             const muteBtn = document.getElementById('muteBtn');
             if (muteBtn && data.MODE) {
                 const currentMode = data.MODE.toUpperCase();
@@ -553,10 +547,10 @@ function drawAudioBars(data) {
                 .catch(e => console.error("Volume Fehler:", e));
         }
 
-        let isWebUILocked = false; // Speichert den aktuellen Lock-Zustand global im Browser
+        let isWebUILocked = false; 
 
         function send(cmd) { 
-            // Wenn LOCK aktiv ist und der Befehl NICHT 'LOCKDEV' heisst: Blockieren!
+
             if (isWebUILocked && cmd !== 'LOCKDEV') {
                 console.log("🔒 Klick blockiert: WebUI ist gesperrt!");
                 return; 
@@ -607,29 +601,28 @@ function drawAudioBars(data) {
             if(!data) return;
 
             
-            // 1. Erst die originale updateUI-Arbeit ausführen lassen
+
             if (typeof originalUpdateUI === 'function') originalUpdateUI(data);
 
-            // 2. Mic-Gain Display-Indikator füttern
+
             if(data.VOL !== undefined) {
                 const dvDisp = document.getElementById('displayVolDisp');
                 if(dvDisp) dvDisp.innerText = data.VOL;
             }
 
-            // Lock-Zustand global synchronisieren
+
             if (data.LOCK_ENABLED !== undefined) {
                 isWebUILocked = data.LOCK_ENABLED;
             }
 
-            // --- DER GROSSE RESET (NUR WENN NICHT VERRIEGELT) ---
+
             const allButtons = document.querySelectorAll('.controls button, .keypad button, .keypad-wrapper button');
             if (!isWebUILocked) {
-                // Wenn entsperrt: Erst einmal pauschal JEDE Taste aktivieren,
-                // damit die folgenden Spezialprüfungen die korrekten Modi sperren können.
+
                 allButtons.forEach(btn => btn.disabled = false);
             }
 
-            // 3. Clarifier-Live-Aktualisierung (Betriebsarten & Timeout)
+
             const clarUp = document.getElementById('clarUpBtn');
             const clarHz = document.getElementById('clarHzBtn');
             const clarDn = document.getElementById('clarDnBtn');
@@ -639,7 +632,7 @@ function drawAudioBars(data) {
             if (clarHz && data.MODE) {
                 const mode = data.MODE.toUpperCase();
                 if (mode === "CW" || mode === "USB" || mode === "LSB") {
-                    // Nur aktivieren, wenn das Gerät nicht verriegelt ist
+
                     if (!isWebUILocked) clarHz.disabled = false;
                     if (clarInd) clarInd.style.display = "block";
                     
@@ -654,7 +647,7 @@ function drawAudioBars(data) {
                         if (clarDn) clarDn.disabled = true;
                     }
                 } else {
-                    // In AM/FM/PA die Clarifier-Gruppe eiskalt zusperren und verbergen
+
                     if (clarUp) clarUp.disabled = true;
                     if (clarHz) clarHz.disabled = true;
                     if (clarDn) clarDn.disabled = true;
@@ -667,18 +660,18 @@ function drawAudioBars(data) {
             const chDnBtn = document.getElementById('chDnBtn') || document.querySelector('button[onclick="send(\'D\')"]');
             
             if (chUpBtn && chDnBtn && !isWebUILocked) {
-                // Wenn das Menü aktiv ist (Timer läuft oder Zustand ist ungleich STEP)
+
                 if (clarTimer || (data.CLAR_STEP && data.CLAR_STEP !== "STEP")) {
                     chUpBtn.disabled = true;
                     chDnBtn.disabled = true;
                 } else {
-                    // Im normalen Zustand wieder freigeben (ausser die Gesamtsperre LOCK blockiert es)
+ 
                     chUpBtn.disabled = false;
                     chDnBtn.disabled = false;
                 }
             }
 
-            // 4. ASQ-Sperre für andere Betriebsarten drüberrechnen
+
             const asqBtn = document.getElementById('asqBtn');
             if (asqBtn && data.MODE && !isWebUILocked) {
                 const currentMode = data.MODE.toUpperCase();
@@ -687,7 +680,7 @@ function drawAudioBars(data) {
                 }
             }
 
-            // 5. GLOBALER HARDWARE-LOCK (Überschreibt am Ende ALLES falls aktiv)
+
             if (isWebUILocked) {
                 allButtons.forEach(btn => {
                     const isLockBtn = btn.getAttribute('onclick') && btn.getAttribute('onclick').includes('LOCKDEV');
@@ -695,7 +688,7 @@ function drawAudioBars(data) {
                 });
             }
 
-            // --- LOCK INDIKATOR LIVE ANSTEUERN ---
+
             const lockInd = document.getElementById('lockIndicator');
             if (lockInd) {
                 if (isWebUILocked) {
@@ -714,7 +707,7 @@ function drawAudioBars(data) {
 
 
         if (sB) {
-            // Für PC / Maus
+
             sB.addEventListener('mousedown', (e) => { startS(); });
             sB.addEventListener('mouseup', () => { stopS(); });
             sB.addEventListener('mouseleave', () => { stopS(); });
@@ -774,7 +767,7 @@ function drawAudioBars(data) {
                 fetch('/api/cmd/SET_CLAR_OFFSET?val=' + currentClarOffset);
             }
 
-    // Wenn wir nicht im "STEP"-Modus sind, halten wir das Menü für 5s offen
+
     if (hzBtn.innerText !== "STEP") {
         document.getElementById('clarUpBtn').disabled = false;
         document.getElementById('clarDnBtn').disabled = false;
@@ -787,7 +780,7 @@ function drawAudioBars(data) {
             clarTimer = null;
         }, 5000);
     } else {
-        // --- NEU: HIER WIRD DER TIMER BEIM 4. KLICK RESTLOS GELÖSCHT ---
+
         if (clarTimer) {
             clearTimeout(clarTimer);
             clarTimer = null;
@@ -799,25 +792,23 @@ function drawAudioBars(data) {
 }
 
 
-
-// Schutzvariable, damit dauerhaftes Halten der Taste nicht wild triggert
 let f6KeyPressed = false;
 
 window.addEventListener('keydown', (e) => {
     if (e.key === 'F6') {
-        e.preventDefault(); // Verhindert Browser-Standardfunktionen
+        e.preventDefault(); 
         
         if (!f6KeyPressed) {
             f6KeyPressed = true;
             console.log("🦶 Fußschalter (F6) gedrückt: PTT wird geschaltet!");
-            send('P'); // Aktiviert/Deaktiviert die PTT über deine bestehende Logik
+            send('P'); 
         }
     }
 });
 
 window.addEventListener('keyup', (e) => {
     if (e.key === 'F6') {
-        f6KeyPressed = false; // Setzt die Sperre beim Loslassen wieder zurück
+        f6KeyPressed = false; 
     }
 });
 
@@ -840,7 +831,7 @@ function submitConfigOverride() {
     .then(data => {
         updateUI(data);
         
-        // Alle Checkboxen nach der Korrektur sofort wieder leeren
+
         document.getElementById('tog_vox').checked = false;
         document.getElementById('tog_mute').checked = false;
         document.getElementById('tog_asq').checked = false;
