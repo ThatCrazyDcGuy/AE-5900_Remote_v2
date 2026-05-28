@@ -60,17 +60,69 @@ def setup_audio():
 # Funktionsaufruf
 setup_audio()
 
+#def auto_patch_streams():
+#    time.sleep(5) 
+#    try:
+#        source = "Mumble:output_FL" 
+#        res_in = subprocess.run(["pw-link", "-i"], capture_output=True, text=True).stdout
+#        python_ports = [l.strip() for l in res_in.split('\n') if "python" in l.lower() or "alsa_capture" in l.lower()]
+#        
+#        if len(python_ports) >= 2:
+#            target = python_ports[0] 
+#            subprocess.run(["pw-link", source, target], check=False)
+#            print(f"--- TX-PATCH ERFOLGREICH: {source} -> {target} ---")
+#    except Exception as e:
+#        print(f"Patch-Fehler: {e}")
+
 def auto_patch_streams():
+    # Wir warten 5 Sekunden, bis alle virtuellen Audiokabel stabil in PipeWire sichtbar sind
     time.sleep(5) 
     try:
-        source = "Mumble:output_FL" 
-        res_in = subprocess.run(["pw-link", "-i"], capture_output=True, text=True).stdout
-        python_ports = [l.strip() for l in res_in.split('\n') if "python" in l.lower() or "alsa_capture" in l.lower()]
+        mumble_source = "Mumble:output_FL"
+        mumble_source_fr = "Mumble:output_FR"
         
-        if len(python_ports) >= 2:
-            target = python_ports[0] 
-            subprocess.run(["pw-link", source, target], check=False)
-            print(f"--- TX-PATCH ERFOLGREICH: {source} -> {target} ---")
+        # 1. Wir holen uns ALLE im Linux-System registrierten Soundkarten-Ausgänge (Sinks/Monitore)
+        res_sources = subprocess.run(["pw-link", "-o"], capture_output=True, text=True).stdout
+        all_sources = [l.strip() for l in res_sources.split('\n') if l.strip()]
+        
+        # Wir filtern dynamisch nach dem ersten echten Stereo-Monitor im System
+        # Jede USB-Soundkarte kriegt von PipeWire ein ".monitor" spendiert
+        stereo_source_name = next((s for s in all_sources if "analog-stereo.monitor" in s.lower() or ".monitor" in s.lower()), None)
+        
+        # 2. Wir holen uns alle aktiven ALSA/Python-Eingänge (Capture-Ports)
+        res_in = subprocess.run(["pw-link", "-i"], capture_output=True, text=True).stdout
+        ports = [l.strip() for l in res_in.split('\n') if "python" in l.lower() or "alsa_capture" in l.lower()]
+        
+        print(f"🔍 [UNIVERSAL SOUNDCARD SCAN]")
+        print(f"  ➔ Dynamisch ermittelter Stereo-Monitor: {stereo_source_name}")
+        print(f"  ➔ Aktive Python-Ports im System: {ports}")
+        
+        if len(ports) >= 2 and stereo_source_name:
+            rx_target = ports[0]  # Der zuerst geöffnete Port (Index 0) ist laut Code dein RX (Spektrum)
+            tx_target = ports[1]  # Der zweite geöffnete Port (Index 1) ist dein TX-Stream (Mumble)
+            
+            # --- SCHRITT 3: HARDWARE-UNABHÄNGIGES ROUTING ---
+            
+            # Trenne zuerst alle eventuell falschen Standard-Verbindungen auf, die PipeWire gewürfelt hat
+            subprocess.run(["pw-link", "-d", rx_target], check=False)
+            subprocess.run(["pw-link", "-d", tx_target], check=False)
+            
+            # Wir verbinden den RX-Port (Balken) direkt mit dem ermittelten Stereo-Monitor
+            # Da wir die genauen Port-Endungen brauchen (monitor_FL/FR), schneiden wir den Namen sauber an
+            base_source = stereo_source_name.split(':')[0]
+            
+            print(f"🚀 [PATCH] RX-Balken -> {base_source} (Stereo Monitor)")
+            subprocess.run(["pw-link", f"{base_source}:monitor_FL", rx_target], check=False)
+            subprocess.run(["pw-link", f"{base_source}:monitor_FR", rx_target], check=False)
+            
+            # --- SCHRITT 4: MUMBLE AUF DEN TX-STREAM PATCHEN ---
+            print(f"🔗 [PATCH] Mumble Senden -> TX-Stream: {mumble_source} -> {tx_target}")
+            subprocess.run(["pw-link", mumble_source, tx_target], check=False)
+            
+            print("--- 🏁 UNIVERSAL-PIPEWIRE-PATCHING PERFEKT BEENDET ---")
+        else:
+            print("⚠️ Universal-Patch: Nicht genügend Ports oder kein Stereo-Monitor im System gefunden.")
+            
     except Exception as e:
         print(f"Patch-Fehler: {e}")
 
