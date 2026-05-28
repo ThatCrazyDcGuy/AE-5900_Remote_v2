@@ -39,74 +39,107 @@ CHUNK = 512
 stream_rx = None
 stream_tx = None
 
+def find_unitek_devices():
+    """
+    Sucht im ALSA-System gezielt nach den getrennten Hardware-Indizes
+    der Unitek Soundkarte für Mono (Mikrofon) und Stereo (Monitor).
+    """
+    pa = pyaudio.PyAudio()
+    mono_idx = None
+    stereo_idx = None
+    
+    print("🔍 Scanne ALSA-Hardware-Kanäle...")
+    for i in range(pa.get_device_count()):
+        try:
+            dev_info = pa.get_device_info_by_index(i)
+            dev_name = dev_info.get('name', '').lower()
+            max_inputs = dev_info.get('maxInputChannels', 0)
+            
+            # Suchen nach der Unitek Soundkarte
+            if "unitek" in dev_name or "y-247a" in dev_name or "usb audio" in dev_name:
+                # Ein Stereo-Eingang oder Monitor-Kanal hat in der Regel 2 Kanäle
+                if max_inputs >= 2 and stereo_idx is None:
+                    stereo_idx = i
+                    print(f"  ➔ 🔉 Stereo/Monitor gefunden auf ALSA-Index: {i} ({dev_info.get('name')})")
+                # Ein klassischer Mikrofon-Eingang hat 1 Kanal (Mono)
+                elif max_inputs == 1 and mono_idx is None:
+                    mono_idx = i
+                    print(f"  ➔ 🎤 Mono/Mikrofon gefunden auf ALSA-Index: {i} ({dev_info.get('name')})")
+        except Exception:
+            continue
+            
+    pa.terminate()
+    # Falls das System die Kanäle nicht eindeutig benannt hat, nutzen wir schusssichere Fallbacks
+    if stereo_idx is None: stereo_idx = 0
+    if mono_idx is None: mono_idx = 1
+    return stereo_idx, mono_idx
+
 def setup_audio():
     global stream_rx, stream_tx
     try:
-        # Client 1 (RX / Funk-Eingang)
-        os.environ['PULSE_PROP'] = 'node.description="AE_RX" node.name="AE_RX"'
+        # Live die echten Hardware-Kanäle der Soundkarte bestimmen
+        stereo_hardware_index, mono_hardware_index = find_unitek_devices()
+        
+        # --- Client 1: RX (Wird hardwareseitig als Analog Stereo Monitor geöffnet) ---
+        os.environ['PULSE_PROP'] = 'node.description="AE_RX_MONITOR" node.name="AE_RX_MONITOR"'
         pa_rx = pyaudio.PyAudio()
-        stream_rx = pa_rx.open(format=pyaudio.paInt16, channels=1, rate=22050, input=True, frames_per_buffer=CHUNK)
+        stream_rx = pa_rx.open(
+            format=pyaudio.paInt16, 
+            channels=2, # Überall 2 Kanäle für echten Stereo-Monitor-Empfang erwingen!
+            rate=22050, 
+            input=True, 
+            input_device_index=stereo_hardware_index, # Bindet den Stream an das Stereo-Subdevice
+            frames_per_buffer=CHUNK
+        )
         
-        # Kurze Pause für die Stabilität
-        time.sleep(0.300)
+        time.sleep(0.500) # Dem ALSA-Treiber Zeit geben, den Port im Kernel zu sperren
         
-        # Client 2 (TX / Später Mumble-Monitor)
-        os.environ['PULSE_PROP'] = 'node.description="AE_TX" node.name="AE_TX"'
+        # --- Client 2: TX (Wird hardwareseitig als Mono-Klinke geöffnet) ---
+        os.environ['PULSE_PROP'] = 'node.description="AE_TX_MONO" node.name="AE_TX_MONO"'
         pa_tx = pyaudio.PyAudio()
-        stream_tx = pa_tx.open(format=pyaudio.paInt16, channels=1, rate=22050, input=True, frames_per_buffer=CHUNK)
+        stream_tx = pa_tx.open(
+            format=pyaudio.paInt16, 
+            channels=1, # 1 Kanal für das echte Mono-Mikrofon
+            rate=22050, 
+            input=True, 
+            input_device_index=mono_hardware_index, # Bindet den Stream an das Mono-Subdevice
+            frames_per_buffer=CHUNK
+        )
         
         os.environ.pop('PULSE_PROP', None)
-        print("--- Audio-Streams AE_RX und AE_TX bereit ---")
+        print(f"--- 🏁 HARDWARE-TUNING ERFOLGREICH: RX (Index {stereo_hardware_index}) & TX (Index {mono_hardware_index}) getrennt geladen! ---")
     except Exception as e:
         print(f"Audio-Setup Fehler: {e}")
 
-# Funktionsaufruf beim Booten
+# Funktionsaufruf beim Booten des Servers
 setup_audio()
 
 def auto_patch_streams():
-    # Wir warten 5 Sekunden, bis alle virtuellen Kabel in PipeWire bereitgestellt sind
-    time.sleep(5) 
+    # Wir warten 6 Sekunden, bis Mumble hochgefahren und in PipeWire sichtbar ist
+    time.sleep(6) 
     try:
-        # 1. Quell- und Zielgeräte für deine Soundkarte definieren
-        # (Nutzt die standardmäßigen PipeWire Monitor- und Mono-Quellen)
-        stereo_monitor_source = "alsa_input.usb-Unitek_Y-247A_Audio_Adapter-00.analog-stereo.monitor"
-        mono_mic_source = "alsa_input.usb-Unitek_Y-247A_Audio_Adapter-00.analog-mono"
-        mumble_source = "Mumble:output_FL"
+        source = "Mumble:output_FL" 
         
-        # 2. Alle aktiven Capture-Ports (Eingänge) von Python/ALSA im System abfragen
+        # Alle aktiven Eingangs-Ports von PipeWire abfragen
         res_in = subprocess.run(["pw-link", "-i"], capture_output=True, text=True).stdout
-        python_ports = [l.strip() for l in res_in.split('\n') if "python" in l.lower() or "alsa_capture" in l.lower()]
         
-        # Wir brauchen mindestens 2 Ports (einen für RX, einen für TX)
-        if len(python_ports) >= 2:
-            rx_target = python_ports[0]  # Der zuerst geöffnete Stream (RX)
-            tx_target = python_ports[1]  # Der danach geöffnete Stream (TX)
-            
-            print(f"📡 Zwinge RX-Target ({rx_target}) auf Analog Stereo Monitor...")
-            print(f"🎤 Zwinge TX-Target ({tx_target}) auf Mono-Mikrofon & linke Mumble...")
-            
-            # --- SCHRITT 3: DIE BRUTALE VERDRAHTUNG (Zwingt Stereo / Mono) ---
-            
-            # Trenne zuerst alle eventuell falschen Standard-Verbindungen auf, die PipeWire gewürfelt hat
-            subprocess.run(["pw-link", "-d", rx_target], check=False)
-            subprocess.run(["pw-link", "-d", tx_target], check=False)
-            
-            # Verbinde den RX-Stream (Balken) hart mit dem Stereo-Monitor der Soundkarte (linker & rechter Kanal)
-            subprocess.run(["pw-link", f"{stereo_monitor_source}:monitor_FL", rx_target], check=False)
-            subprocess.run(["pw-link", f"{stereo_monitor_source}:monitor_FR", rx_target], check=False)
-            
-            # Verbinde den TX-Stream (Mumble) hart mit dem Mono-Eingang der Soundkarte
-            subprocess.run(["pw-link", f"{mono_mic_source}:capture_FL", tx_target], check=False)
-            
-            # Und patche Mumble zusätzlich wie gewohnt auf deinen TX-Stream
-            subprocess.run(["pw-link", mumble_source, tx_target], check=False)
-            
-            print("--- 🏁 PIPEWIRE-AUTOMATION ERFOLGREICH: Stereo & Mono perfekt erzwungen! ---")
+        # Da wir dem TX-Stream das feste Label "AE_TX_MONO" verpasst haben, suchen wir gezielt danach
+        python_ports = [l.strip() for l in res_in.split('\n') if "ae_tx_mono" in l.lower()]
+        
+        if python_ports:
+            target = python_ports[0] 
+            subprocess.run(["pw-link", source, target], check=False)
+            print(f"--- 🔗 MULTI-PATCH ERFOLGREICH: {source} -> {target} ---")
         else:
-            print("⚠️ PipeWire-Automation: Nicht genügend Python-Audio-Ports gefunden.")
-            
+            # Klassischer Fallback, falls PipeWire die Labels beim Patchen ignoriert
+            python_ports = [l.strip() for l in res_in.split('\n') if "python" in l.lower() or "alsa_capture" in l.lower()]
+            if len(python_ports) >= 2:
+                target = python_ports[1] # Da RX auf Index 0 liegt, ist Index 1 zielsicher Mumble/TX
+                subprocess.run(["pw-link", source, target], check=False)
+                print(f"--- 🔗 FALLBACK-PATCH ERFOLGREICH: {source} -> {target} ---")
     except Exception as e:
         print(f"Patch-Fehler: {e}")
+
 
 
 class RadioInterface:
