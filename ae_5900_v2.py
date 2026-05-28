@@ -42,20 +42,18 @@ stream_tx = None
 def setup_audio():
     global stream_rx, stream_tx
     try:
-        # Client 1 (RX / Funk-Eingang) - Läuft über den Haupt-Python-Prozess
+        # Client 1 (RX / Später Funk-Eingang)
         os.environ['PULSE_PROP'] = 'node.description="AE_RX" node.name="AE_RX"'
         pa_rx = pyaudio.PyAudio()
         stream_rx = pa_rx.open(format=pyaudio.paInt16, channels=1, rate=22050, input=True, frames_per_buffer=CHUNK)
         
-        time.sleep(0.300)
-        
-        # Client 2 (TX / Später Mumble-Monitor) - Wird im System als eigenständiger Prozess registriert
+        # Client 2 (TX / Später Mumble-Monitor)
         os.environ['PULSE_PROP'] = 'node.description="AE_TX" node.name="AE_TX"'
         pa_tx = pyaudio.PyAudio()
         stream_tx = pa_tx.open(format=pyaudio.paInt16, channels=1, rate=22050, input=True, frames_per_buffer=CHUNK)
         
         os.environ.pop('PULSE_PROP', None)
-        print("--- Audio-Streams AE_RX und AE_TX wieder stabil bereit ---")
+        print("--- Audio-Streams AE_RX und AE_TX bereit ---")
     except Exception as e:
         print(f"Audio-Setup Fehler: {e}")
 
@@ -63,56 +61,18 @@ def setup_audio():
 setup_audio()
 
 def auto_patch_streams():
-    # Wir warten 5 Sekunden, bis alle virtuellen Audiokabel stabil geladen sind
     time.sleep(5) 
     try:
-        # Die exakten Systemnamen deiner C-Media Soundkarte aus deinem diff-Log:
-        stereo_source = "alsa_output.usb-C-Media_Electronics_Inc._USB_Audio_Device-00.analog-stereo"
-        mono_source = "alsa_input.usb-C-Media_Electronics_Inc._USB_Audio_Device-00.mono-fallback"
-        mumble_source = "Mumble:output_FL"
-        
-        # 1. Wir holen uns alle aktiven Ports vom System
+        source = "Mumble:output_FL" 
         res_in = subprocess.run(["pw-link", "-i"], capture_output=True, text=True).stdout
-        ports = [l.strip() for l in res_in.split('\n') if "python" in l.lower() or "alsa_capture" in l.lower()]
-        
-        print(f"🔍 Gefundene Audio-Ports beim Start: {ports}")
-        
-        # 2. SCHRITT: DEN STUREN HARDWARE-MONO-KNOTEN AUF STEREO-MONITOR ZWINGEN
-        # Wir suchen gezielt nach dem falschen 'input_MONO' Port deiner ersten PyAudio-Instanz (RX)
-        rx_mono_port = next((p for p in ports if "input_mono" in p.lower()), None)
-        
-        if rx_mono_port:
-            print(f"🔄 Trenne falschen Mono-Fallback von RX-Port: {rx_mono_port}")
-            # Alte, ungewollte Mono-Verbindung kappen
-            subprocess.run(["pw-link", "-d", f"{mono_source}:capture_MONO", rx_mono_port], check=False)
-            
-            # Jetzt verdrahten wir diesen Port hart mit dem Stereo-Monitor der Soundkarte!
-            print(f"🚀 Verbinde RX-Port erfolgreich mit Analog-Stereo Monitor (FL/FR)")
-            subprocess.run(["pw-link", f"{stereo_source}:monitor_FL", rx_mono_port], check=False)
-            subprocess.run(["pw-link", f"{stereo_source}:monitor_FR", rx_mono_port], check=False)
-        else:
-            # Falls der Port durch pavucontrol bereits als FL/FR auf die Welt kam:
-            rx_fl = next((p for p in ports if "input_fl" in p.lower()), None)
-            rx_fr = next((p for p in ports if "input_fr" in p.lower()), None)
-            if rx_fl and rx_fr:
-                subprocess.run(["pw-link", f"{stereo_source}:monitor_FL", rx_fl], check=False)
-                subprocess.run(["pw-link", f"{stereo_source}:monitor_FR", rx_fr], check=False)
-
-        # 3. SCHRITT: MUMBLE AUF DEN TX-STREAM PATCHEN
-        # Wir suchen den verbleibenden Port für den Sende-Stream (TX)
-        # Da der RX-Port abgefrühstückt ist, patchen wir Mumble wie gewohnt auf deine ALSA-Capture-Schnittstelle
         python_ports = [l.strip() for l in res_in.split('\n') if "python" in l.lower() or "alsa_capture" in l.lower()]
+        
         if len(python_ports) >= 2:
-            # Schnappt sich zielsicher den zweiten Port (TX) für Mumble
-            target = python_ports[1] 
-            subprocess.run(["pw-link", mumble_source, target], check=False)
-            print(f"--- 🔗 TX-MUMBLE-PATCH ERFOLGREICH: {mumble_source} -> {target} ---")
-            
-        print("--- 🏁 PIPEWIRE-KORREKTUR BEENDET ---")
+            target = python_ports[0] 
+            subprocess.run(["pw-link", source, target], check=False)
+            print(f"--- TX-PATCH ERFOLGREICH: {source} -> {target} ---")
     except Exception as e:
         print(f"Patch-Fehler: {e}")
-
-
 
 
 class RadioInterface:
