@@ -39,42 +39,59 @@ CHUNK = 512
 stream_rx = None
 stream_tx = None
 
-
 def setup_audio():
     global stream_rx, stream_tx
     try:
-        # Client 1 (RX / Später Funk-Eingang)
+        # --- Client 1: RX (Funk-Eingang für Empfangsbalken) ---
         os.environ['PULSE_PROP'] = 'node.description="AE_RX" node.name="AE_RX"'
         pa_rx = pyaudio.PyAudio()
         stream_rx = pa_rx.open(format=pyaudio.paInt16, channels=1, rate=22050, input=True, frames_per_buffer=CHUNK)
         
-        # Client 2 (TX / Später Mumble-Monitor)
+        # WICHTIG: Eine kurze Denkpause für Linux, damit AE_RX sauber im System einrastet
+        time.sleep(0.300)
+        
+        # --- Client 2: TX (Mumble-Monitor für Sendebalken) ---
         os.environ['PULSE_PROP'] = 'node.description="AE_TX" node.name="AE_TX"'
         pa_tx = pyaudio.PyAudio()
         stream_tx = pa_tx.open(format=pyaudio.paInt16, channels=1, rate=22050, input=True, frames_per_buffer=CHUNK)
         
+        # Umgebungsvariable sauber aufräumen
         os.environ.pop('PULSE_PROP', None)
         print("--- Audio-Streams AE_RX und AE_TX bereit ---")
     except Exception as e:
         print(f"Audio-Setup Fehler: {e}")
 
-# Funktionsaufruf
+# Funktionsaufruf beim Serverstart
 setup_audio()
 
 def auto_patch_streams():
+    # Wir warten 5 Sekunden, bis Mumble und alle Ports stabil in PipeWire sichtbar sind
     time.sleep(5) 
     try:
         source = "Mumble:output_FL" 
-        res_in = subprocess.run(["pw-link", "-i"], capture_output=True, text=True).stdout
-        python_ports = [l.strip() for l in res_in.split('\n') if "python" in l.lower() or "alsa_capture" in l.lower()]
         
-        if len(python_ports) >= 2:
+        # Holt alle verfügbaren Eingänge live von PipeWire
+        res_in = subprocess.run(["pw-link", "-i"], capture_output=True, text=True).stdout
+        
+        # KORREKTUR: Wir suchen jetzt gezielt nach dem Port, den du oben "AE_TX" getauft hast!
+        python_ports = [l.strip() for l in res_in.split('\n') if "ae_tx" in l.lower()]
+        
+        if python_ports:
+            # Falls mehrere Kanäle gefunden werden, nehmen wir den ersten Treffer
             target = python_ports[0] 
             subprocess.run(["pw-link", source, target], check=False)
             print(f"--- TX-PATCH ERFOLGREICH: {source} -> {target} ---")
+        else:
+            # Sicherheits-Fallback: Falls PipeWire den Namen AE_TX verschluckt hat, nutzen wir die alte ALSA-Suche
+            print("⚠️ TX-PATCH: Port 'AE_TX' nicht direkt gefunden. Nutze Fallback-Suche...")
+            python_ports = [l.strip() for l in res_in.split('\n') if "python" in l.lower() or "alsa_capture" in l.lower()]
+            if len(python_ports) >= 2:
+                target = python_ports[1] # Da RX stabil läuft (Port 0), schnappen wir uns Port 1 für TX
+                subprocess.run(["pw-link", source, target], check=False)
+                print(f"--- TX-PATCH FALLBACK ERFOLGREICH: {source} -> {target} ---")
+                
     except Exception as e:
         print(f"Patch-Fehler: {e}")
-
 
 # Funktionsaufruf
 setup_audio()
