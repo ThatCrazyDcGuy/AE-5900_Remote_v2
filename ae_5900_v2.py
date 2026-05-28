@@ -75,69 +75,70 @@ setup_audio()
 #        print(f"Patch-Fehler: {e}")
 
 def auto_patch_streams():
-    # Wir warten 6 Sekunden, bis alle virtuellen Audiokabel stabil geladen sind
+    # Wir geben dem System nach dem Serverstart 6 Sekunden Zeit, 
+    # damit alle virtuellen Audiokabel stabil in PipeWire sitzen
     time.sleep(6) 
     try:
-        print("🚀 [SMARTE ZWILLINGS-TRENNUNG GESTARTET]")
+        print("🛡️ [AUTOMATISCHER PIPEWIRE-WEICHENSTELLER GESTARTET]")
         
-        # 1. Wir holen uns den aktuellen 'pactl list short' Output
+        # 1. pactl list short im Hintergrund einlesen
         res = subprocess.run(["pactl", "list", "short"], capture_output=True, text=True).stdout
         lines = [l.strip() for l in res.split('\n') if l.strip()]
         
         stereo_target = None
         mono_target = None
-        python_source_outputs = []
+        python_node_ids = []
         
-        # 2. Wir scannen die Zeilen nach IDs der Soundkarte und der Python-Quellen
+        # 2. Den System-Output nach den exakten IDs scannen
         for line in lines:
+            line_lower = line.lower()
             parts = line.split()
+            
             if len(parts) >= 2:
-                # ID des Stereo-Monitors filtern (z.B. 3269)
-                if "analog-stereo.monitor" in parts[1].lower():
+                # IDs der Soundkarten-Eingänge fangen
+                if "analog-stereo.monitor" in line_lower:
                     stereo_target = parts[0]
-                # ID des echten Mono-Mikrofons filtern (z.B. 3270)
-                elif "mono-fallback" in parts[1].lower() and "monitor" not in parts[1].lower():
+                elif "mono-fallback" in line_lower and "monitor" not in line_lower:
                     mono_target = parts[0]
                 
-                # Wir suchen nach den Zeilen deiner beiden Mischer
-                if "22050hz" in line.lower() and len(parts) >= 3:
-                    source_output_id = parts[2]
-                    if source_output_id.isdigit() and source_output_id not in python_source_outputs:
-                        python_source_outputs.append(source_output_id)
+                # Jede Zeile mit deiner 22050Hz Audio-Rate gehört zu deinen Streams!
+                if "22050hz" in line_lower:
+                    node_id = parts[0]
+                    if node_id.isdigit() and node_id not in python_node_ids:
+                        python_node_ids.append(node_id)
 
-        print(f"  ➔ Stereo Monitor ID: {stereo_target}")
-        print(f"  ➔ Mono Mikrofon ID:  {mono_target}")
-        print(f"  ➔ Mischer-Quell-IDs:  {python_source_outputs}")
+        print(f"🛡️ [Wächter] Stereo Monitor ID: {stereo_target}")
+        print(f"🛡️ [Wächter] Mono Mikrofon ID:  {mono_target}")
+        print(f"🛡️ [Wächter] Python Mischer IDs: {python_node_ids}")
         
-        # 3. DIE PRÄZISE WEICHENSTEUERUNG
-        if len(python_source_outputs) >= 2 and stereo_target and mono_target:
-            rx_source_id = python_source_outputs[0] # Der obere Stream (RX / Balken)
-            tx_source_id = python_source_outputs[1] # Der untere Stream (TX / Mumble)
+        # 3. UNBARMHERZIGE REGEL-SCHUBS-AUTOMATION (Bricht den unendlichen Kreislauf)
+        if len(python_node_ids) >= 2 and stereo_target and mono_target:
+            rx_node = python_node_ids[0] # Der obere Stream (Balken)
+            tx_node = python_node_ids[1] # Der untere Stream (TX)
             
-            # WIR ERZWINGEN DIE TRENNUNG: Egal wie sie gestartet sind!
-            print(f"🎛️ WEICHE 1: Zwinge RX-Mischer ({rx_source_id}) -> Stereo Monitor ({stereo_target})")
-            subprocess.run(["pactl", "move-source-output", rx_source_id, stereo_target], check=False)
+            # Wir verschieben die Mischer-Eingänge hart an ihren Platz
+            print(f"🎛️ Zwinge RX-Mischer ({rx_node}) -> Stereo Monitor ({stereo_target})")
+            subprocess.run(["pactl", "move-source-output", rx_node, stereo_target], check=False)
             
-            print(f"🎛️ WEICHE 2: Zwinge TX-Mischer ({tx_source_id}) -> Mono-Mikrofon ({mono_target})")
-            subprocess.run(["pactl", "move-source-output", tx_source_id, mono_target], check=False)
+            print(f"🎛️ Zwinge TX-Mischer ({tx_node}) -> Mono-Mikrofon ({mono_target})")
+            subprocess.run(["pactl", "move-source-output", tx_node, mono_target], check=False)
             
-            # 4. MUMBLE WIE GEWOHNT VERDRAHTEN
+            # 4. MUMBLE VERDRAHTUNG VIA PW-LINK
             mumble_source = "Mumble:output_FL"
             res_links = subprocess.run(["pw-link", "-i"], capture_output=True, text=True).stdout
             python_ports = [l.strip() for l in res_links.split('\n') if "python" in l.lower() or "alsa_capture" in l.lower()]
             
             if len(python_ports) >= 2:
-                target = python_ports[1] # Verbindet Mumble fest mit dem zweiten Port (TX)
+                target = python_ports[1] # Zweiter Port gehört Mumble/TX
                 subprocess.run(["pw-link", mumble_source, target], check=False)
-                print(f"🔗 Mumble erfolgreich an Port {target} gelötet.")
+                print(f"🔗 Mumble-Kabel erfolgreich an Port {target} gelötet.")
                 
-            print("--- 🏁 ENDGEGNER BESIEGT: Die Zwillinge sind dauerhaft getrennt! ---")
+            print("🛡️ [🏁 SYSTEM-WEICHE PERFEKT REBOOT-SICHER EINGESTELLT]")
         else:
-            print("⚠️ Weichensteuerung fehlgeschlagen: Konnte IDs nicht eindeutig isolieren.")
+            print("⚠️ Wächter-Fehler: Konnte die Audio-Knotenpunkte nicht eindeutig isolieren.")
             
     except Exception as e:
-        print(f"Weichensteuerung Fehler: {e}")
-
+        print(f"Patch-Fehler in auto_patch_streams: {e}")
 
 class RadioInterface:
     def __init__(self):
