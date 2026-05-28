@@ -43,36 +43,18 @@ stream_tx = None
 def setup_audio():
     global stream_rx, stream_tx
     try:
-        # --- Client 1: RX (Funk-Eingang für Spektrum) ---
+        # Client 1 (RX / Später Funk-Eingang)
+        os.environ['PULSE_PROP'] = 'node.description="AE_RX" node.name="AE_RX"'
         pa_rx = pyaudio.PyAudio()
-        stream_rx = pa_rx.open(
-            format=pyaudio.paInt16, 
-            channels=1, 
-            rate=22050, 
-            input=True, 
-            frames_per_buffer=CHUNK,
-            # Hier weisen wir PipeWire die Namen direkt und fest zu:
-            stream_name="AE_RX_Monitor",
-            exception_on_overflow=False
-        )
+        stream_rx = pa_rx.open(format=pyaudio.paInt16, channels=1, rate=22050, input=True, frames_per_buffer=CHUNK)
         
-        # Kleine Denkpause für das System, damit die Kanäle sich nicht überholen
-        time.sleep(0.100)
-        
-        # --- Client 2: TX (Mumble-Monitor für Sendebalken) ---
+        # Client 2 (TX / Später Mumble-Monitor)
+        os.environ['PULSE_PROP'] = 'node.description="AE_TX" node.name="AE_TX"'
         pa_tx = pyaudio.PyAudio()
-        stream_tx = pa_tx.open(
-            format=pyaudio.paInt16, 
-            channels=1, 
-            rate=22050, 
-            input=True, 
-            frames_per_buffer=CHUNK,
-            # Hier weisen wir PipeWire die Namen direkt und fest zu:
-            stream_name="AE_TX_Mono",
-            exception_on_overflow=False
-        )
+        stream_tx = pa_tx.open(format=pyaudio.paInt16, channels=1, rate=22050, input=True, frames_per_buffer=CHUNK)
         
-        print("--- Audio-Streams AE_RX_Monitor und AE_TX_Mono bereit ---")
+        os.environ.pop('PULSE_PROP', None)
+        print("--- Audio-Streams AE_RX und AE_TX bereit ---")
     except Exception as e:
         print(f"Audio-Setup Fehler: {e}")
 
@@ -83,19 +65,13 @@ def auto_patch_streams():
     time.sleep(5) 
     try:
         source = "Mumble:output_FL" 
-        
-        # Wir holen uns alle Eingänge live vom PipeWire-Linker
         res_in = subprocess.run(["pw-link", "-i"], capture_output=True, text=True).stdout
+        python_ports = [l.strip() for l in res_in.split('\n') if "python" in l.lower() or "alsa_capture" in l.lower()]
         
-        # HIER DIE KORREKTUR: Wir suchen jetzt gezielt nach unserem festen Stream-Namen "AE_TX_Mono"!
-        python_ports = [l.strip() for l in res_in.split('\n') if "ae_tx_mono" in l.lower()]
-        
-        if python_ports:
+        if len(python_ports) >= 2:
             target = python_ports[0] 
             subprocess.run(["pw-link", source, target], check=False)
             print(f"--- TX-PATCH ERFOLGREICH: {source} -> {target} ---")
-        else:
-            print("⚠️ TX-PATCH: Ziel-Port 'AE_TX_Mono' wurde in PipeWire noch nicht gefunden.")
     except Exception as e:
         print(f"Patch-Fehler: {e}")
 
