@@ -293,30 +293,36 @@
         });
     }
 
-    function drawAudioBars(data) {
-        if (!Array.isArray(data) || data.length === 0) return;
+function drawAudioBars(data) {
+    if (!Array.isArray(data) || data.length === 0) return;
 
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        const barWidth = canvas.offsetWidth / data.length;
+    // --- NEU: Sicherstellen, dass der Canvas seine echte interne Grösse kennt ---
+    if (canvas.width !== canvas.offsetWidth) canvas.width = canvas.offsetWidth;
+    if (canvas.height !== canvas.offsetHeight) canvas.height = canvas.offsetHeight;
+    // -----------------------------------------------------------------------------
 
-        data.forEach((val, i) => {
-            let displayVal = Math.max(val, lastData[i] - 2.2);
-            lastData[i] = displayVal;
-            let height = Math.min((displayVal / 42) * canvas.offsetHeight, canvas.offsetHeight);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const barWidth = canvas.width / data.length; // Nutzen nun das feste canvas.width
 
-            const grad = ctx.createLinearGradient(0, canvas.offsetHeight, 0, canvas.offsetHeight - height);
-            if (currentBarColor === 'red') {
-                grad.addColorStop(0, '#440000'); grad.addColorStop(1, '#ff4444');
-            } else if (currentBarColor === 'orange') {
-                grad.addColorStop(0, '#442200'); grad.addColorStop(1, '#ffaa44');
-            } else {
-                grad.addColorStop(0, '#003300'); grad.addColorStop(1, '#44ff44');
-            }
+    data.forEach((val, i) => {
+        let displayVal = Math.max(val, lastData[i] - 2.2);
+        lastData[i] = displayVal;
+        let height = Math.min((displayVal / 42) * canvas.height, canvas.height);
 
-            ctx.fillStyle = grad;
-            ctx.fillRect(i * barWidth, canvas.offsetHeight - height, barWidth - 1, height);
-        });
-    }
+        const grad = ctx.createLinearGradient(0, canvas.height, 0, canvas.height - height);
+        if (currentBarColor === 'red') {
+            grad.addColorStop(0, '#440000'); grad.addColorStop(1, '#ff4444');
+        } else if (currentBarColor === 'orange') {
+            grad.addColorStop(0, '#442200'); grad.addColorStop(1, '#ffaa44');
+        } else {
+            grad.addColorStop(0, '#003300'); grad.addColorStop(1, '#44ff44');
+        }
+
+        ctx.fillStyle = grad;
+        ctx.fillRect(i * barWidth, canvas.height - height, barWidth - 1, height);
+    });
+}
+
 
     // ==================== DEIN RESTLICHER CODE (unverändert) ====================
     // Hier kommt dein ganzer restlicher Code (pollStatus, updateUI, send, handleClarClick, etc.)
