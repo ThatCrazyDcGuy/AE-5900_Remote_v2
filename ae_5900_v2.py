@@ -100,6 +100,30 @@ def auto_patch_streams():
         print(f"Patch-Fehler: {e}")
 
 
+# Funktionsaufruf
+setup_audio()
+
+def auto_patch_streams():
+    time.sleep(5) 
+    try:
+        source = "Mumble:output_FL" 
+        
+        # Wir holen uns alle Eingänge live vom PipeWire-Linker
+        res_in = subprocess.run(["pw-link", "-i"], capture_output=True, text=True).stdout
+        
+        # HIER DIE KORREKTUR: Wir suchen jetzt gezielt nach unserem festen Stream-Namen "AE_TX_Mono"!
+        python_ports = [l.strip() for l in res_in.split('\n') if "ae_tx_mono" in l.lower()]
+        
+        if python_ports:
+            target = python_ports[0] 
+            subprocess.run(["pw-link", source, target], check=False)
+            print(f"--- TX-PATCH ERFOLGREICH: {source} -> {target} ---")
+        else:
+            print("⚠️ TX-PATCH: Ziel-Port 'AE_TX_Mono' wurde in PipeWire noch nicht gefunden.")
+    except Exception as e:
+        print(f"Patch-Fehler: {e}")
+
+
 class RadioInterface:
     def __init__(self):
         self.load_config()
