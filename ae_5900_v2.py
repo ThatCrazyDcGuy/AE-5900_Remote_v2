@@ -16,22 +16,20 @@ from logging.handlers import RotatingFileHandler
 import flask
 flask.session = {}   # Notfall-Patch gegen Session-Problem
 
-# ====================== FLASK + SOCKETIO ======================
-# ====================== FLASK + SOCKETIO ======================
+# ====================== FLASK + SOCKETIO (stabil) ======================
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'ae5900_super_secret'
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['SESSION_PERMANENT'] = False
 
-# Zukunftssichere Konfiguration
 socketio = SocketIO(app,
-                    async_mode='eventlet',           # bleibt erstmal
+                    async_mode='threading',           # ← Wechsel zu threading (stabiler)
                     ping_timeout=25,
                     ping_interval=5,
                     cors_allowed_origins="*",
-                    manage_session=False,            # wichtig
-                    logger=True,
-                    engineio_logger=True)
+                    manage_session=False,
+                    logger=False,
+                    engineio_logger=False)
 # ====================== DEIN RESTLICHER CODE ======================
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
