@@ -39,6 +39,28 @@ CHUNK = 512
 stream_rx = None
 stream_tx = None
 
+# Stream für das RX-Spektrum (Visualizer)
+rx_stream = p.open(
+    format=pyaudio.paInt16,
+    channels=1,
+    rate=44100,
+    input=True,
+    input_device_index=rx_device_idx,
+    frames_per_buffer=1024,
+    stream_name="ALSA Capture von Monitor" # ← Eindeutiger Name für PipeWire
+)
+
+# Stream für die TX-Modulation
+tx_stream = p.open(
+    format=pyaudio.paInt16,
+    channels=1,
+    rate=44100,
+    input=True,
+    input_device_index=tx_device_idx,
+    frames_per_buffer=1024,
+    stream_name="ALSA Capture von Mono" # ← Eindeutiger Name für PipeWire
+)
+
 def setup_audio():
     global stream_rx, stream_tx
     try:
