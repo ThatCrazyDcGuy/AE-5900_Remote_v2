@@ -75,53 +75,44 @@ setup_audio()
 #        print(f"Patch-Fehler: {e}")
 
 def auto_patch_streams():
-    # Wir warten 6 Sekunden, damit Mumble und deine beiden Streams stabil im Mixer sitzen
+    # Wir warten 6 Sekunden, bis alle Streams stabil im Linux-System registriert sind
     time.sleep(6) 
     try:
-        print("🚀 [LAUTSTÄRKEREGLER AUTOMATION GESTARTET]")
+        print("🚀 [ROTIERENDE LAUTSTÄRKEREGLER-AUTOMATION GESTARTET]")
         
-        # 1. Wir holen uns alle aktiven Aufnahme-IDs (Source Outputs) vom System
-        res = subprocess.run(["pactl", "list", "short", "source-outputs"], capture_output=True, text=True).stdout
+        # 1. Wir holen uns den exakten 'pactl list short' Output, den du mir geschickt hast
+        res = subprocess.run(["pactl", "list", "short"], capture_output=True, text=True).stdout
         lines = [l.strip() for l in res.split('\n') if l.strip()]
         
-        # Wir filtern nach den Streams, die zu unserem Python-Skript gehören
+        stereo_target = None
         python_stream_ids = []
+        
+        # 2. Wir scannen die Zeilen nach deinen Soundkarten-Profilen und den Python-IDs
         for line in lines:
-            if "python" in line.lower() or "alsa" in line.lower():
-                # Die ID ist immer die allererste Zahl in der Zeile
-                python_stream_ids.append(line.split()[0])
+            parts = line.split()
+            if len(parts) >= 2:
+                # Wir suchen nach der ID des Stereo-Monitors (Endung .analog-stereo.monitor)
+                if "analog-stereo.monitor" in parts[1].lower():
+                    stereo_target = parts[0] # In deinem Fall die '3269'
                 
-        print(f"  ➔ Aktive Python-Mixer-IDs gefunden: {python_stream_ids}")
-        
-        # 2. Wir bestimmen dynamisch den Namen deines Stereo-Monitors und der Mono-Klinke
-        res_sources = subprocess.run(["pactl", "list", "short", "sources"], capture_output=True, text=True).stdout
-        source_lines = [l.strip() for l in res_sources.split('\n') if l.strip()]
-        
-        # Jedes Linux-System benennt den Stereo-Monitor mit ".monitor" am Ende
-        stereo_monitor = next((line.split()[1] for line in source_lines if "stereo.monitor" in line.lower() or "monitor" in line.lower()), None)
-        # Das echte Mikrofon/Mono hat meist kein ".monitor" im Namen
-        mono_mic = next((line.split()[1] for line in source_lines if "mono" in line.lower() and "monitor" not in line.lower()), None)
-        
-        # Falls das System keinen dedizierten Mono-Kanal listet, nehmen wir den Standard-Eingang
-        if not mono_mic and source_lines:
-            mono_mic = next((line.split()[1] for line in source_lines if "monitor" not in line.lower()), source_lines[0].split()[1])
+                # Wir fangen die aktiven Audio-Kanäle von Python (Endung 22050Hz)
+                if "python" in line.lower() or "22050hz" in line.lower():
+                    # Ein Aufnahme-Stream hat in der zweiten Spalte die zugewiesene Soundkarten-ID
+                    if len(parts) >= 3 and parts[1].isdigit():
+                        python_stream_ids.append(parts[0]) # Fängt '8600' und '8605'
 
-        print(f"  ➔ Gefundene Ziel-Karten im System:")
-        print(f"     🔉 Stereo Monitor: {stereo_monitor}")
-        print(f"     🎤 Mono Mikrofon:  {mono_mic}")
-
-        # 3. DIE REGEL-SCHUBS-AUTOMATION (Simuliert deine Maus-Klicks!)
-        if len(python_stream_ids) >= 2 and stereo_monitor and mono_mic:
-            rx_id = python_stream_ids[0]  # Der erste Stream (RX / Balken)
-            tx_id = python_stream_ids[1]  # Der zweite Stream (TX / Mumble)
+        print(f"  ➔ Gefundene Stereo-Monitor-ID: {stereo_target}")
+        print(f"  ➔ Gefundene Python-Kanal-IDs:   {python_stream_ids}")
+        
+        # 3. DIE SYSTEMWEITE AUTOMATION (Schubst den Regler für dich!)
+        if stereo_target and len(python_stream_ids) >= 2:
+            rx_id = python_stream_ids[0] # Der zuerst geöffnete (RX / Weboberflächen-Balken)
             
-            # WIR SCHUBSEN DEN ERSTEN STREAM AUF STEREO MONITOR!
-            print(f"🎛️ Schubse RX-Stream (ID: {rx_id}) -> {stereo_monitor}")
-            subprocess.run(["pactl", "move-source-output", rx_id, stereo_monitor], check=False)
+            print(f"🎛️ SYSTEM-KICK: Schubse RX-Stream (ID: {rx_id}) -> Stereo Monitor (ID: {stereo_target})")
             
-            # WIR SCHUBSEN DEN ZWEITEN STREAM AUF MONO-MIC!
-            print(f"🎛️ Schubse TX-Stream (ID: {tx_id}) -> {mono_mic}")
-            subprocess.run(["pactl", "move-source-output", tx_id, mono_mic], check=False)
+            # Wir nutzen das native pactl-Werkzeug, um den Stream auf den Stereo-Monitor zu verschieben
+            # Das simuliert exakt das händische Umstellen im Dropdown deines Mixers!
+            subprocess.run(["pactl", "move-source-output", rx_id, stereo_target], check=False)
             
             # 4. MUMBLE WIE GEWOHNT VERDRAHTEN
             mumble_source = "Mumble:output_FL"
@@ -129,13 +120,13 @@ def auto_patch_streams():
             python_ports = [l.strip() for l in res_links.split('\n') if "python" in l.lower() or "alsa_capture" in l.lower()]
             
             if len(python_ports) >= 2:
-                target = python_ports[1] # Verbindet Mumble fest mit dem TX-Stream
+                target = python_ports[1] # Verbindet Mumble fest mit dem zweiten Port (TX)
                 subprocess.run(["pw-link", mumble_source, target], check=False)
                 print(f"🔗 Mumble erfolgreich an Port {target} gelötet.")
                 
-            print("--- 🏁 ENDGEGNER VERNICHTET: ALLES STEHT PERFEKT! ---")
+            print("--- 🏁 ENDGEGNER VERNICHTET: Stereo & Mono stehen felsenfest! ---")
         else:
-            print("⚠️ Automation fehlgeschlagen: Konnte die IDs oder Soundkarten-Profile nicht eindeutig auslesen.")
+            print("⚠️ Automation fehlgeschlagen: Konnte die IDs im pactl-Output nicht eindeutig isolieren.")
             
     except Exception as e:
         print(f"Maus-Klick-Automation Fehler: {e}")
