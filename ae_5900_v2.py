@@ -301,30 +301,6 @@ radio = RadioInterface()
 def index(): return render_template('index.html', config=radio.config)
 
 
-@app.route('/green')
-def green_test_page():
-    # Lädt index_green.html aus dem templates-Ordner
-    return render_template('index_green.html', config=radio.config)
-
-@app.route('/ios-test')
-def ios_test_page():
-    # Lädt indexi.html aus dem templates-Ordner
-    return render_template('indexi.html', config=radio.config)
-
-@app.route('/xtreme-test')
-def xtreme_test_page():
-    # Lädt indexx.html aus dem templates-Ordner
-    return render_template('indexx.html', config=radio.config)
-
-@app.route('/ultra-test')
-def ultra_test_page():
-    # Lädt indexu.html aus dem templates-Ordner
-    return render_template('indexu.html', config=radio.config)
-
-@app.route('/minimal')
-def minimal_page():
-    # Lädt index_minimal.html aus dem templates-Ordner
-    return render_template('index_minimal.html', config=radio.config)
 
 
 @app.route('/api/audio')
