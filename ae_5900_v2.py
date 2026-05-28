@@ -1,6 +1,5 @@
 from flask import Flask, render_template, request, jsonify
 from flask_socketio import SocketIO, emit
-import eventlet
 import serial
 import threading
 import time
@@ -13,23 +12,21 @@ import socket
 import sys
 import logging
 from logging.handlers import RotatingFileHandler
-import flask
-flask.session = {}   # Notfall-Patch gegen Session-Problem
 
 # ====================== FLASK + SOCKETIO (stabil) ======================
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'ae5900_super_secret'
-app.config['SESSION_TYPE'] = 'filesystem'
-app.config['SESSION_PERMANENT'] = False
 
+# SocketIO mit Standard-Gunicorn/Werkzeug Threading initialisieren
 socketio = SocketIO(app,
-                    async_mode='threading',           # ← Wechsel zu threading (stabiler)
+                    async_mode='threading',
                     ping_timeout=25,
                     ping_interval=5,
                     cors_allowed_origins="*",
-                    manage_session=False,
+                    manage_session=False, # Reicht völlig aus ohne den flask.session Patch
                     logger=False,
                     engineio_logger=False)
+
 # ====================== DEIN RESTLICHER CODE ======================
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
