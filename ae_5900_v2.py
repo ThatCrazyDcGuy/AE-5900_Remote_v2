@@ -826,6 +826,20 @@ def get_current_status_dict():
     }
 
 
+
+# --- AUTOMATISCHER PIPEWIRE-WÄCHTER-START ---
+# Ermittelt den genauen Ordnerpfad, in dem diese ae_5900_v2.py liegt
+current_dir = os.path.dirname(os.path.abspath(__file__))
+watchdog_path = os.path.join(current_dir, "pw_watchdog.sh")
+
+# Startet das Skript unsichtbar und absolut betriebssicher im Linux-Hintergrund
+if os.path.exists(watchdog_path):
+    subprocess.Popen([watchdog_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    print("🛡️ PipeWire-Wächter erfolgreich im Hintergrund abgefeuert!")
+else:
+    print(f"⚠️ Warnung: Wächter-Skript nicht gefunden unter: {watchdog_path}")
+# ---------------------------------------------
+
 # ====================== START ======================
 if __name__ == '__main__':
     print("🚀 AE5900 Remote V2 mit WebSocket gestartet")
