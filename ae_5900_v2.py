@@ -824,9 +824,9 @@ socketio.start_background_task(audio_broadcast_task)
 def handle_connect():
     print("✅ WebSocket Client verbunden")
     try:
-        emit('status', get_current_status_dict(), broadcast=False)
-    except Exception as e:
-        print(f"Status emit Fehler: {e}")
+        emit('status', get_current_status_dict())
+    except:
+        pass  # Kein Absturz bei Problemen
 
 
 def get_current_status_dict():
