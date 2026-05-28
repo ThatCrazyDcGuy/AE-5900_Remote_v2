@@ -78,42 +78,48 @@ def auto_patch_streams():
     # Wir warten 6 Sekunden, bis alle virtuellen Audiokabel stabil geladen sind
     time.sleep(6) 
     try:
-        print("🚀 [PRÄZISE MISCHER-STEUERUNG GESTARTET]")
+        print("🚀 [SMARTE ZWILLINGS-TRENNUNG GESTARTET]")
         
         # 1. Wir holen uns den aktuellen 'pactl list short' Output
         res = subprocess.run(["pactl", "list", "short"], capture_output=True, text=True).stdout
         lines = [l.strip() for l in res.split('\n') if l.strip()]
         
         stereo_target = None
+        mono_target = None
         python_source_outputs = []
         
-        # 2. Wir scannen die Zeilen nach der Soundkarte und den Python-Quellen
+        # 2. Wir scannen die Zeilen nach IDs der Soundkarte und der Python-Quellen
         for line in lines:
             parts = line.split()
             if len(parts) >= 2:
-                # Wir filtern die ID des Stereo-Monitors (In deinem Fall die '3269')
+                # ID des Stereo-Monitors filtern (z.B. 3269)
                 if "analog-stereo.monitor" in parts[1].lower():
                     stereo_target = parts[0]
+                # ID des echten Mono-Mikrofons filtern (z.B. 3270)
+                elif "mono-fallback" in parts[1].lower() and "monitor" not in parts[1].lower():
+                    mono_target = parts[0]
                 
-                # Wir suchen nach den Zeilen, die deine beiden python3.13-Prozesse beschreiben
-                # Beispiel: "8615  3269  8614  PipeWire  s16le 1ch 22050Hz"
+                # Wir suchen nach den Zeilen deiner beiden Mischer
                 if "22050hz" in line.lower() and len(parts) >= 3:
-                    # KORREKTUR: parts[2] ist die echte Mischer-ID (z.B. 8614 oder 8619)!
                     source_output_id = parts[2]
                     if source_output_id.isdigit() and source_output_id not in python_source_outputs:
                         python_source_outputs.append(source_output_id)
 
-        print(f"  ➔ Gefundene Stereo-Monitor-ID: {stereo_target}")
-        print(f"  ➔ Gefundene Mischer-Quell-IDs:  {python_source_outputs}")
+        print(f"  ➔ Stereo Monitor ID: {stereo_target}")
+        print(f"  ➔ Mono Mikrofon ID:  {mono_target}")
+        print(f"  ➔ Mischer-Quell-IDs:  {python_source_outputs}")
         
-        # 3. DIE ABSOLUTE REGEL-SCHUBS-AUTOMATION
-        if stereo_target and len(python_source_outputs) >= 2:
-            rx_source_id = python_source_outputs[0] # Der zuerst geöffnete Stream (RX / Balken)
+        # 3. DIE PRÄZISE WEICHENSTEUERUNG
+        if len(python_source_outputs) >= 2 and stereo_target and mono_target:
+            rx_source_id = python_source_outputs[0] # Der obere Stream (RX / Balken)
+            tx_source_id = python_source_outputs[1] # Der untere Stream (TX / Mumble)
             
-            print(f"🎛️ SYSTEM-SCHUBS: Verschiebe RX-Mischer (ID: {rx_source_id}) -> Stereo Monitor (ID: {stereo_target})")
-            
-            # Dieser Befehl schiebt jetzt exakt die richtige ID an die richtige Stelle!
+            # WIR ERZWINGEN DIE TRENNUNG: Egal wie sie gestartet sind!
+            print(f"🎛️ WEICHE 1: Zwinge RX-Mischer ({rx_source_id}) -> Stereo Monitor ({stereo_target})")
             subprocess.run(["pactl", "move-source-output", rx_source_id, stereo_target], check=False)
+            
+            print(f"🎛️ WEICHE 2: Zwinge TX-Mischer ({tx_source_id}) -> Mono-Mikrofon ({mono_target})")
+            subprocess.run(["pactl", "move-source-output", tx_source_id, mono_target], check=False)
             
             # 4. MUMBLE WIE GEWOHNT VERDRAHTEN
             mumble_source = "Mumble:output_FL"
@@ -125,13 +131,12 @@ def auto_patch_streams():
                 subprocess.run(["pw-link", mumble_source, target], check=False)
                 print(f"🔗 Mumble erfolgreich an Port {target} gelötet.")
                 
-            print("--- 🏁 ENDGEGNER VERNICHTET: Stereo & Mono stehen stabil! ---")
+            print("--- 🏁 ENDGEGNER BESIEGT: Die Zwillinge sind dauerhaft getrennt! ---")
         else:
-            print("⚠️ Automation fehlgeschlagen: Konnte die Mischer-IDs nicht eindeutig isolieren.")
+            print("⚠️ Weichensteuerung fehlgeschlagen: Konnte IDs nicht eindeutig isolieren.")
             
     except Exception as e:
-        print(f"Maus-Klick-Automation Fehler: {e}")
-
+        print(f"Weichensteuerung Fehler: {e}")
 
 
 class RadioInterface:
