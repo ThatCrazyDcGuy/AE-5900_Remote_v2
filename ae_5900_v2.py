@@ -13,21 +13,21 @@ import sys
 import logging
 from logging.handlers import RotatingFileHandler
 
-# ====================== FLASK + SOCKETIO (stabil) ======================
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'ae5900_super_secret'
 
-# SocketIO mit Standard-Gunicorn/Werkzeug Threading initialisieren
+
 socketio = SocketIO(app,
                     async_mode='threading',
                     ping_timeout=25,
                     ping_interval=5,
                     cors_allowed_origins="*",
-                    manage_session=False, # Reicht völlig aus ohne den flask.session Patch
+                    manage_session=False, 
                     logger=False,
                     engineio_logger=False)
 
-# ====================== DEIN RESTLICHER CODE ======================
+
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 CONFIG_FILE = os.path.join(SCRIPT_DIR, "config.json")
@@ -57,26 +57,11 @@ def setup_audio():
     except Exception as e:
         print(f"Audio-Setup Fehler: {e}")
 
-# Funktionsaufruf
+
 setup_audio()
 
-#def auto_patch_streams():
-#    time.sleep(5) 
-#    try:
-#        source = "Mumble:output_FL" 
-#        res_in = subprocess.run(["pw-link", "-i"], capture_output=True, text=True).stdout
-#        python_ports = [l.strip() for l in res_in.split('\n') if "python" in l.lower() or "alsa_capture" in l.lower()]
-#        
-#        if len(python_ports) >= 2:
-#            target = python_ports[0] 
-#            subprocess.run(["pw-link", source, target], check=False)
-#            print(f"--- TX-PATCH ERFOLGREICH: {source} -> {target} ---")
-#    except Exception as e:
-#        print(f"Patch-Fehler: {e}")
 
 def auto_patch_streams():
-    # Wir geben dem System nach dem Serverstart 6 Sekunden Zeit, 
-    # damit alle virtuellen Audiokabel stabil in PipeWire sitzen
     time.sleep(6) 
     try:
         print("🛡️ [AUTOMATISCHER PIPEWIRE-WEICHENSTELLER GESTARTET]")
@@ -95,13 +80,13 @@ def auto_patch_streams():
             parts = line.split()
             
             if len(parts) >= 2:
-                # IDs der Soundkarten-Eingänge fangen
+
                 if "analog-stereo.monitor" in line_lower:
                     stereo_target = parts[0]
                 elif "mono-fallback" in line_lower and "monitor" not in line_lower:
                     mono_target = parts[0]
                 
-                # Jede Zeile mit deiner 22050Hz Audio-Rate gehört zu deinen Streams!
+
                 if "22050hz" in line_lower:
                     node_id = parts[0]
                     if node_id.isdigit() and node_id not in python_node_ids:
@@ -111,7 +96,7 @@ def auto_patch_streams():
         print(f"🛡️ [Wächter] Mono Mikrofon ID:  {mono_target}")
         print(f"🛡️ [Wächter] Python Mischer IDs: {python_node_ids}")
         
-        # 3. UNBARMHERZIGE REGEL-SCHUBS-AUTOMATION (Bricht den unendlichen Kreislauf)
+
         if len(python_node_ids) >= 2 and stereo_target and mono_target:
             rx_node = python_node_ids[0] # Der obere Stream (Balken)
             tx_node = python_node_ids[1] # Der untere Stream (TX)
@@ -312,16 +297,15 @@ def mw_scan_loop(radio):
             break
 
         for ch in channels:
-            # Falls MW zwischendurch gestoppt wurde, sofort abbrechen
+
             if not radio.mw_active:
                 break
                 
-            # --- SIGNAL-PRÜFUNG ---
-            # Wenn das Funkgerät ein Signal empfängt (Busy), warten wir auf diesem Kanal
+
             while radio.is_rx and radio.mw_active:
                 time.sleep(0.2) # Schnelle Prüfung, ob Signal noch da ist
                 
-            # Falls während des Wartens MW deaktiviert wurde
+
             if not radio.mw_active:
                 break
 
