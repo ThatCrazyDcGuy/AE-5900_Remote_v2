@@ -7,25 +7,9 @@ Switch lang. to EN: [🇬🇧 English](https://github.com/ThatCrazyDcGuy/AE5900_
 Ein LAN/Web Rig Control System für das Albrecht AE-5900 Funkgerät, dass das AMM-500 Mikrofon simuliert. Das AE5900 wird so per Webbrowser bedienbar.
 =======================================================
 
-### Das Vorwort: Der Blickwinkel und das Hörensagen:
+### Das Vorwort:
 
-In Userforen und Gruppen diverser Messenger wird die Legalität des Projekts heiss diskutiert.
-Dazu sei folgendes vermerkt:
-
-Dieses Projekt bietet lediglich eine Möglichkeit, das Gerät aus der Ferne zu steuern. Zeigt also nur auf, was unter gegebenen Umständen ohne Modifikation an der Funkgerätehardware technisch möglich ist.
-Es handelt sich hierbei auch nicht um eine Modifikation, sondern um einen Adapter, der ein nicht modifiziertes AE5900 (evtl. auch ein AT-5000) aus der Ferne bedienbar macht.
-Was jener, der dies hier nachbaut und testet, aus dieser Möglichkeit macht ist seine Angelegenheit.
-
-Rechtlich ist es so, dass je nach Landesbestimmung, ein CB-Funkgerät vom Besitzer/Nutzer nur Lokal betrieben werden darf.
-Dass man nun aber sein Smartphone lokal mit einer WebUI nicht als Mikrofon und Steuereinheit für dieses CB-Funkgerät nutzen darf, ist gesetzlich abzuklären.
-Es sei auch erwähnt, dass das Funkgerät amateurfunktauglich ist und für jene, lizensierte Amateurfunker, der Remotebetrieb aus der Ferne legal ist.
-
-Das durchaus witzige an dieser Diskussion ist jedoch, dass in selbigen Kreisen Powermodifikationen und Frequenzerweiterungen durch direkten Eingriff in die Hardware des Funkgerätes beinahe schon gerühmt werden.
-Vermerk dazu: Frequenz und Power-Modifikationen werden durch offizielle Shops für kleines Geld angeboten.
-
-Daher sehe ich mich zu nachfolgendem verpflichtet:
-
-**WARNUNG!!!** Es besteht also die Gefahr, dass die Nutzung je nach Landesbestimmung strafbar ist.
+**WARNUNG!!!** Es besteht die Gefahr, dass die Nutzung je nach Landesbestimmung strafbar ist.
 Klärt das mit eurem Gewissen. Ich bin nicht eure Mutti!
 
 ### Hauptziel des Projekts:
@@ -202,10 +186,9 @@ Schau dir einfach OpenwebrxPlus an: https://luarvique.github.io/ppa/ RTL-SDR Blo
 
 ### Was noch fehlt // Was noch nicht funktioniert
 
-1. EMG und DW, Funktionen die man auf die P1 - P4 Tasten legen könnte, geben noch keine Rückmeldung an das WebUI.
+1. Es fehlt immer irgendetwas. Was nicht ist, das kommt noch.
 
-2. Das Geräteeigene "Scan", welches man auch auf  P1 - P4 Tasten legen könnte, hat ein Timingproblem.
-Daher wurde eine eigene S-Scan Funktion implementiert.
+2. ....
 
 ### Extras und Testläufe
 
@@ -214,8 +197,6 @@ Es sollte allerdings eine Kleinigkeit sein, hier noch eine PTT Funktion für ent
 
 2. User Feedback vom 30. April 2026: Linux Mint um die Version 21.3 und drunter, versteht die Python- Vol- und Vol+ nicht.
 Nur falls jemand au so einem System testet. Ein mintupgrade hilft das Problem zu lösen.
-
-3. Das Script ae_5900_maninthemiddle.py wurde hinzugefügt. Damit lassen sich HEX Codes zwischen Mikrofon und Funkgerät auslesen.
 
 ### Was du sonst noch erwarten kannst:
 
