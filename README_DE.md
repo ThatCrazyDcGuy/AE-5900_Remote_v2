@@ -54,6 +54,13 @@ Ich habe mein AE5900 von https://gmw-funktechnik.ch/, einem fantastischen Fachge
 
 ![AE5900_Remote_v2](/pictures/v218mar2.jpeg)
 
+Für die Nutzung des RX und TX Audio per RJ45 Mic Anschluss ist nachfolgendes zu beachten:
+
+1. Verzichtet auf die Klinkenstecker zu 600:600 Transformatorschaltung und schaltet 2x 102 Keramikkondensatoren in Reihe zu den Leitungen und 1x 104 Keramikkondensator paralel zum Signal und GND. Das RX Audio wird hier über EXT-AF und GND  am Mic/RJ45 abgegriffen.
+2. Eine ordentliche Erdung am Funkgerät wird hierdurch wichtiger dennje. Dadurch alleine lassen sich gut 90% der HF Einstrahlung in die Soundkarte verhindern.
+3. Die Audioeinstellungen ändern sich geringfügig, da die Kondensatoren stärker drosseln als die Trnsformatorschaltung. Ihr müsst am Funkgerät also lauter drehen.
+4. Will man dass das Gerät bei Remotenutzung zu Hause stumm da sitzt, muss man einen Klinkenstecker als Dummy in den PA Ausgang stecken.
+
 ### Über das Gerät & Warum
 
 Das Albrecht AE-5900 ist das fantastische neue (2026) FM/AM/SSB/CW-Funkgerät, mit dem ich nicht gerechnet hatte. Es bietet riesiges Potenzial für jede Menge Spaß und hat mich nach 35 Jahren Funkstille wieder "infiziert".
@@ -118,22 +125,6 @@ Restliche Komponenten:
 
 Man kann die USB Geräte natürlich auch einfach in einen USB Hub stecken, aber wo bleibt da der Spass am "so klein wie möglich" bauen?
 Die beiden Filter muss man aber dennoch löten.
-
-Es ist auch möglich ohne Klinkenstecker das Audio des AE5900 abzugreifen. Der Mic Plug bietet die Pins EXT-AF und GND. Da liegt ein schwaches Signal, womöglich extra für Soundkarten an.
-Hier gibt es aber 2 Probleme:
-
-1. Zumindest auf meinem AE5900 hatte ich dort unschöne HF drauf, trotz Mantelwellensperre und Filter.
-2. Will man dass das Gerät bei Remotenutzung zu Hause stumm da sitzt, muss man einen Klinkenstecker als Dummy in den PA Ausgan stecken.
-
-Für die Nutzung des RX und TX Audio per RJ45 Mic Anschluss ist nachfolgends zu beachten:
-
-1. Verzichtet auf die Klinkenstecker zu 600:600 Transformatorschaltung und schaltet 2x 102 Keramikkondensatoren in Reihe zu den Leitungen und 1x 104 Keramikkondensator paralel zum Signal und GND. Das RX Audio wird hier über EXT-AF und GND  am Mic/RJ45 abgegriffen.
-2. Eine ordentliche Erdung am Funkgerät wird hierdurch wichtiger dennje. Dadurch alleine lassen sich gut 90% der HF Einstrahlung in die Soundkarte verhindern.
-3. Die Audioeinstellungen ändern sich geringfügig, da die Kondensatoren stärker drosseln als die Trnsformatorschaltung. Ihr müsst am Funkgerät also lauter drehen.
-
-- Hier eine Version der Bastelei ohne Klinkenstecker
-
-![AE5900_Remote_v2](/pictures/rj45audiosingle.png)
 
 #### Wie ist das eigentlich möglich
 
