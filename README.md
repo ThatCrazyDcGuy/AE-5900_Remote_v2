@@ -195,22 +195,10 @@ They serve merely as an example here.
 - Pavucontrol:
 
 ![AE5900_Remote_v2](/pictures/pavucontrolsettings.png)
-![AE5900_Remote_v2](/pictures/pavucontrol2.png)
-The "PipeWire Alsa" area here only controls the audio visualization.
-
-![AE5900_Remote_v2](/pictures/pavucontrol3.png)
-Important: Output is input and vice versa. The output area thus controls your mic gain.
-This can also be controlled via the WebUI.
-
-![AE5900_Remote_v2](/pictures/pavucontrol4.png)
-The area with 25% controls what you hear. I have the AE5900 set to 25 clicks on the device volume control.
-
-![AE5900_Remote_v2](/pictures/pavucontrol5.png)
 
 - Mumble:
 
-![AE5900_Remote_v2](/pictures/mumble1.png)
-![AE5900_Remote_v2](/pictures/mumble2.png)
+![AE5900_Remote_v2](/pictures/mumblesettings.png)
 
 It's a good idea to run a WebSDR at home to check your installation if necessary (channel/modulation).
 A good WebSDR can be easily set up with OpenWebRX, a Raspberry Pi, an RTL-SDR dongle (e.g., RTL-SDR Blog V3 or V4 / Nooelec NESDR V5), and an antenna.
