@@ -70,16 +70,17 @@ That's exactly why.
 
 1. Connect the custom device to a Raspberry Pi or another host computer on which the Python script can be executed. This device then serves as a server.
 2. Connect the Adapter to Mic Port of AE5900.
-3. Increase the output volume of the AE5900 from 0 to about 75% on the volume control.
-4. Ideally, the AE5900 is already set to FM and channel 1.
-5. Set your AE5900 microphone to TYPE 2, set your P1 - P4 key shortcuts. I use P1 ASQ / P2 VOX / P3 MUTE
-6. Start Mumble on the host computer and your device (phone/laptop, etc.)
-7. Run `python3 ae_5900_v2.py` on the host/server.
-8. Open `HOSTNAMEIP:5000` in your browser on the device. You should now have control of your AE5900.
-9. Open Setup at the bottom of the WebUI and run Sync.
-10. Set the appropriate labels for the P1 to P4 buttons as you have set them on the AE5900.
-11. On the host computer, you may need to make adjustments in the volume control (pavucontrol). Typical adjustments would be: Menu item "Configuration" default sound card your network-connected sound card.
-12. On the host computer in Mumble, PulseAudio and Standard/Default can now be used for input and output. Audio input: Transmission should be set to continuous, quality to about 44kb/s.
+3. You have to plug a jack plug into the PA/EXT output as a dummy to silence the speaker.
+4. Increase the output volume of the AE5900 from 0 to about 75% on the volume control.
+5. Ideally, the AE5900 is already set to FM and channel 1.
+6. Set your AE5900 microphone to TYPE 2, set your P1 - P4 key shortcuts. I use P1 ASQ / P2 VOX / P3 MUTE
+7. Start Mumble on the host computer and your device (phone/laptop, etc.)
+8. Run `python3 ae_5900_v2.py` on the host/server.
+9. Open `HOSTNAMEIP:5000` in your browser on the device. You should now have control of your AE5900.
+10. Open Setup at the bottom of the WebUI and run Sync.
+11. Set the appropriate labels for the P1 to P4 buttons as you have set them on the AE5900.
+12. On the host computer, you may need to make adjustments in the volume control (pavucontrol). Typical adjustments would be: Menu item "Configuration" default sound card your network-connected sound card.
+13. On the host computer in Mumble, PulseAudio and Standard/Default can now be used for input and output. Audio input: Transmission should be set to continuous, quality to about 44kb/s.
 
 The script is currently only designed for the EU region. Other regions will follow, as will VFO mode.
 
