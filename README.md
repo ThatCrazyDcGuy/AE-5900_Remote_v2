@@ -194,7 +194,7 @@ They serve merely as an example here.
 
 - Pavucontrol:
 
-![AE5900_Remote_v2](/pictures/pavucontrol1.png)
+![AE5900_Remote_v2](/pictures/pavucontrolsettings.png)
 ![AE5900_Remote_v2](/pictures/pavucontrol2.png)
 The "PipeWire Alsa" area here only controls the audio visualization.
 
