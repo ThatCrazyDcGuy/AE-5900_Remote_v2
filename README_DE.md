@@ -115,10 +115,10 @@ Restliche Komponenten:
 
 ![AE5900_Remote_v2](/pictures/allpartsv2.jpg)
 
-- Ich habe euch ein schönes Bild gemalt. Sieht zwar aus wie von einem Dreijährigen aber so verstehts vielleicht jeder Hobbybastler und Lötkolbenbesitzer.
+- Ich habe euch ein schönes Bild gemalt. Sieht zwar aus wie von einem Dreijährigen aber so verstehts vielleicht jeder Hobbybastler und Lötkolbenbesitzer. Ignoriert den Klinkenstecker zu Transformator Teil.
+Nutzt die unten beschriebene 10nf // 100 Ohm Schaltung für das RX Audiosignal.
 
 ![AE5900_Remote_v2](/pictures/overview_v2.png)
-![AE5900_Remote_v2](/pictures/audiofilter.jpg)
 
 Man kann die USB Geräte natürlich auch einfach in einen USB Hub stecken, aber wo bleibt da der Spass am "so klein wie möglich" bauen?
 Die beiden Filter muss man aber dennoch löten.
