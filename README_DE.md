@@ -57,15 +57,16 @@ Flexible Lösungen verschaffen besseren Zugang. Und genau das soll dieses Projek
 2. Adapter mit dem Mikrofonport verbinden.
 3. Um den Lautsprecher stummzuschalten, muss ein Klinkenstecker als Blindstecker in den PA/EXT-Ausgang eingesteckt werden.
 4. Stelle die Ausgabelautstärke des AE5900 von 0 auf etwa 75% am Lautstärkeregler hoch.
-5. Bestenfalls ist das AE5900 bereits auf FM und den Kanal 1 gesetzt.
-6. Stelle an deinem AE5900 Mikrofon TYPE 2 ein, setze deine P1 - P4 Key-Shortcuts. Ich nutze P1 ASQ / P2 VOX / P3 MUTE
-7. Starte Mumble auf dem Host-Rechner und deinem Endgerät (Handy /Laptop etc.)
-8. Führe `python3 ae_5900_v2.py` auf dem Hostrechner/Server aus.
-9. Öffne auf dem Endgerät `HOSTNAMEIP:5000` in deinem Browser. Du solltest nun bereits Kontrolle über dein AE5900 haben.
-10. Öffne ganz unten im WebUI das Setup und führe den Sync aus.
-11. Setze die entsprechenden Labels für die P1 bis P4 Tasten so, wie du sie am AE5900 gesetzt hast.
-12. Auf dem Hostrechner solltest du im Lautstärkeregler (pavucontrol) gegebenenfalls Anpassungen machen. Typische Anpassungen wären hier: Menupunkt "Konfiguration" Standard Soundkarte deine im Netzwerk angebundene Soundkarte.
-13. Auf dem Hostrechner in Mumble kann nun im In & Output PulseAudio und Standard/Default verwendet werden. Audioeingabe: Die Übertragung sollte auf kontinuierlich gesetzt sein, die Qualität auf etwa 44kb/s.
+5. Sorgen Sie für eine ordnungsgemäße Erdung, um HF-Störungen zu vermeiden.
+6. Bestenfalls ist das AE5900 bereits auf FM und den Kanal 1 gesetzt.
+7. Stelle an deinem AE5900 Mikrofon TYPE 2 ein, setze deine P1 - P4 Key-Shortcuts. Ich nutze P1 ASQ / P2 VOX / P3 MUTE
+8. Starte Mumble auf dem Host-Rechner und deinem Endgerät (Handy /Laptop etc.)
+9. Führe `python3 ae_5900_v2.py` auf dem Hostrechner/Server aus.
+10. Öffne auf dem Endgerät `HOSTNAMEIP:5000` in deinem Browser. Du solltest nun bereits Kontrolle über dein AE5900 haben.
+11. Öffne ganz unten im WebUI das Setup und führe den Sync aus.
+12. Setze die entsprechenden Labels für die P1 bis P4 Tasten so, wie du sie am AE5900 gesetzt hast.
+13. Auf dem Hostrechner solltest du im Lautstärkeregler (pavucontrol) gegebenenfalls Anpassungen machen. Typische Anpassungen wären hier: Menupunkt "Konfiguration" Standard Soundkarte deine im Netzwerk angebundene Soundkarte.
+14. Auf dem Hostrechner in Mumble kann nun im In & Output PulseAudio und Standard/Default verwendet werden. Audioeingabe: Die Übertragung sollte auf kontinuierlich gesetzt sein, die Qualität auf etwa 44kb/s.
 
 Das Script ist derzeitig nur für die Region (EU) ausgelegt. Die anderen Regionen folgen noch, so wie auch der VFO Mode.
 
