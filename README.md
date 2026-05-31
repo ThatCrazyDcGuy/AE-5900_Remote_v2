@@ -19,9 +19,6 @@ While it's not comparable to rigctl or hamlib, it works.
 Ultimately, the purpose is also to revive CB radio and make it more attractive.
 Flexible solutions provide better access. And that's exactly what this project should enable.
 
-If you don't know the radio: https://www.alan-electronics.de/product-details.aspx?WPParams=50C9D4C6C5D2E6BDA5A98494A895
-I got my AE5900 from https://gmw-funktechnik.ch/, a fantastic specialist shop for classic CB and amateur radio equipment.
-
 ### A picture will tell you more than your wife:
 
 - A screenshot of the current UI, in the browser, on your smartphone
@@ -53,18 +50,6 @@ I got my AE5900 from https://gmw-funktechnik.ch/, a fantastic specialist shop fo
 - A photo of the newest prototype without jack conector. All audio & control over RJ45.
 
 ![AE5900_Remote_v2](/pictures/v218mar2.jpeg)
-
-### About the Device & Why
-
-The Albrecht AE-5900 is the fantastic new (2026) FM/AM/SSB/CW radio that I didn't expect. It offers huge potential for lots of fun and has "infected" me again after 35 years of radio silence.
-So I built something extra for it, and someone (yes, thanks again, buddy!) advised me to publish it on GitHub. I thought: why not.
-The device is based on an FT232RL FT232 FTDI USB 3.3V 5.5V to TTL serial adapter, an inexpensive USB soundcard, a USB hub breakout board, coils, resistors, capacitors, and a metal enclosure.
-
-But why?
-
-It's a hobby for which you simply won't have enough time. Especially if you're an older guy with kids, a garden, one or more jobs, and all the other surprises life brings.
-
-That's exactly why.
 
 ### How It Works:
 
