@@ -120,7 +120,7 @@ Remaining components:
 
 Use the 10nF // 100 Ohm circuit described above for the RX audio signal. A new schematic will follow.
 
-![AE5900_Remote_v2](/pictures/overview_v2.png)
+![AE5900_Remote_v2](/pictures/overview_v3.png)
 
 You can, of course, simply plug the USB devices into a USB hub, but where's the fun in building something "as small as possible"?
 You still have to solder the two filters, though.
