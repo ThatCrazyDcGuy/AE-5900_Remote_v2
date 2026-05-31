@@ -189,23 +189,11 @@ Sie dienen hier lediglich als Beispiel.
 
 - Pavucontrol:
 
-![AE5900_Remote_v2](/pictures/pavucontrol1.png)
-![AE5900_Remote_v2](/pictures/pavucontrol2.png)
-Der Bereich "PipeWire Alsa" steuert hier lediglich die Audiovisualisierung.
-
-![AE5900_Remote_v2](/pictures/pavucontrol3.png)
-Wichtig: Ausgabe ist Eingabe und umgekehrt. Der bereich Ausgabe steuert somit dein Mic-Gain.
-Dies lässt sich aber auch über die WebUI regeln.
-
-![AE5900_Remote_v2](/pictures/pavucontrol4.png)
-Der Berich mit 25% steuert was du hörst. Das AE5900 habe ich auf 25 Klicks am Gerätelautstärkeregler eingestellt.
-
-![AE5900_Remote_v2](/pictures/pavucontrol5.png)
+![AE5900_Remote_v2](/pictures/pavucontrolsettings.png)
 
 - Mumble:
 
-![AE5900_Remote_v2](/pictures/mumble1.png)
-![AE5900_Remote_v2](/pictures/mumble2.png)
+![AE5900_Remote_v2](/pictures/mumblesettings.png)
 
 Es empfiehlt sich zu Hause einen WebSDR zu betreiben umd die Installation ggf. überrüfen (Kanal/Modulation) zu können.
 Ein guter WebSDR lässt sich einfach mit OpenWebRX, einem Raspberry Pi, einem RTL-SDR-Dongle (z. B. RTL-SDR Blog V3 oder V4 / Nooelec NESDR V5) und einer Antenne aufbauen.
