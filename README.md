@@ -7,24 +7,7 @@ Wechsle Sprache zu DE: [🇩🇪 Deutsch](https://github.com/ThatCrazyDcGuy/AE59
 A LAN/Web Rig Control System for the Albrecht AE-5900 radio, simulating the AMM-500 microphone. This allows the AE5900 to be operated via a web browser.
 =======================================================
 
-### The Foreword: The Perspective and Hearsay:
-
-The legality of this project is hotly debated in user forums and groups on various messaging apps.
-
-The following should be noted:
-
-This project merely offers a way to control the device remotely. It simply demonstrates what is technically possible under given circumstances without modifying the radio hardware.
-This is not a modification, but rather an adapter that allows an unmodified AE5900 (and possibly an AT-5000) to be operated remotely.
-What someone who replicates and tests this capability does with it is their own business.
-
-Legally, depending on national regulations, a CB radio may only be operated locally by its owner/user.
-Whether one is allowed to use their smartphone locally with a web interface as a microphone and control unit for this CB radio needs to be clarified legally.
-It should also be mentioned that the transceiver is suitable for amateur radio use, and remote operation is legal for licensed amateur radio operators.
-
-The rather amusing aspect of this discussion, however, is that in these same circles, power modifications and frequency extensions achieved by directly modifying the transceiver's hardware are almost celebrated.
-Note: Frequency and power modifications are offered by official shops for a small price.
-
-Therefore, I feel compelled to issue the following warning:
+### The Foreword:
 
 **WARNING!!!** There is a risk that using this equipment may be illegal, depending on the laws of your country.
 Consider this with your conscience. I'm not your mother!
@@ -207,10 +190,9 @@ Check out OpenwebrxPlus: https://luarvique.github.io/ppa/ RTL-SDR Blog v4: https
 
 ### What's Still Missing // What Doesn't Work Yet
 
-1. EMG and DW, functions that could be placed on the P1 - P4 buttons, don't yet provide feedback to the WebUI.
+1. There's always something missing. What isn't there, will come later.
 
-2. The device's own "Scan", which could also be placed on P1 - P4 buttons, has a timing problem.
-Therefore, a custom S-Scan function has been implemented.
+2. ....
 
 ### Extras and Test Runs
 
@@ -219,8 +201,6 @@ But it should be simple to add a PTT function for the appropriate software.
 
 2. User feedback from April 30, 2026: Linux Mint around version 21.3 and below don't understand the Python Vol- and Vol+.
 Just in case someone tests on such a system. A mint upgrade helps solve the problem.
-
-3. The script ae_5900_maninthemiddle.py has been added. With this you can read hex codes between the microphone and the radio.
 
 ### What Else to Expect:
 
