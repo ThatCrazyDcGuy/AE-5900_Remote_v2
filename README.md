@@ -50,9 +50,9 @@ I got my AE5900 from https://gmw-funktechnik.ch/, a fantastic specialist shop fo
 
 [![AE5900 Webinterface V2 TX ](https://img.youtube.com/vi/BA9iDk-M_aI/0.jpg)](https://www.youtube.com/watch?v=BA9iDk-M_aI)
 
-- A photo, well, two photos in one of the prototype
+- A photo of the newest prototype without jack conector. All audio & control over RJ45.
 
-![AE5900_Remote_v2](/pictures/prototype2.jpg)
+![AE5900_Remote_v2](/pictures/v218mar2.jpeg)
 
 ### About the Device & Why
 
