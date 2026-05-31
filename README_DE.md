@@ -115,8 +115,8 @@ Restliche Komponenten:
 
 ![AE5900_Remote_v2](/pictures/allpartsv2.jpg)
 
-- Ich habe euch ein schönes Bild gemalt. Sieht zwar aus wie von einem Dreijährigen aber so verstehts vielleicht jeder Hobbybastler und Lötkolbenbesitzer. Ignoriert den Klinkenstecker zu Transformator Teil.
-Nutzt die unten beschriebene 10nf // 100 Ohm Schaltung für das RX Audiosignal.
+- Ich habe euch ein schönes Bild gemalt. Sieht zwar aus wie von einem Dreijährigen aber so verstehts vielleicht jeder Hobbybastler und Lötkolbenbesitzer. Ignoriert den Klinkenstecker zu Transformator teil.
+Nutzt die oben beschriebene 10nf // 100 Ohm Schaltung für das RX Audiosignal. Ein neuer Plan folgt.
 
 ![AE5900_Remote_v2](/pictures/overview_v2.png)
 
