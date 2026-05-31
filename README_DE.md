@@ -99,14 +99,11 @@ Mit Bildern und allem was man wissen muss.
 
 Für die Audiofilter nutzen wir hier nun:
 
-1. 2x 600:600 Ohm Transformatoren
+1. 1x 600:600 Ohm Transformatoren
 2. 1x 100 Ohm Widerstand
 3. 1x 10 KOhm Widerstand
-4. 1x Keramikkondensator 100nF (104) (mindestens einer um die HF zu filtern)
+4. 1x Keramikkondensator 10nF (103) (mindestens einer um die HF zu filtern)
 5. 1x Elco Kondensator 10µF (c.a 16 - 50v)
-6. Klinkenstecker Buchse
-
-![AE5900_Remote_v2](/pictures/filterkomponenten.jpg)
 
 Restliche Komponenten:
 
@@ -116,7 +113,7 @@ Restliche Komponenten:
 4. Rj45 Terminal
 5. Ein Gehäuse aus Metall
 
-![AE5900_Remote_v2](/pictures/steuerungkomponenten.jpg)
+![AE5900_Remote_v2](/pictures/allpartsv2.jpg)
 
 - Ich habe euch ein schönes Bild gemalt. Sieht zwar aus wie von einem Dreijährigen aber so verstehts vielleicht jeder Hobbybastler und Lötkolbenbesitzer.
 
