@@ -100,14 +100,11 @@ With pictures and everything you need to know.
 
 For the audio filters we use:
 
-1. 2x 600:600 Ohm transformers
+1. 1x 600:600 Ohm transformers
 2. 1x 100 Ohm resistor
 3. 1x 10 kOhm resistor
-4. 1x 100nF ceramic capacitor (104) (at least one to filter the RF)
+4. 1x 10nF ceramic capacitor (103) (at least one to filter the RF)
 5. 1x 10µF electrolytic capacitor (approx. 16 - 50v)
-6. Jack connector socket
-
-![AE5900_Remote_v2](/pictures/filterkomponenten.jpg)
 
 Remaining components:
 
@@ -117,7 +114,7 @@ Remaining components:
 4. RJ45 terminal
 5. A metal enclosure
 
-![AE5900_Remote_v2](/pictures/steuerungkomponenten.jpg)
+![AE5900_Remote_v2](/pictures/allpartsv2.jpg)
 
 - I drew you a nice picture. It looks like it was drawn by a three-year-old, but maybe every hobbyist builder and soldering iron owner will understand it.
 
