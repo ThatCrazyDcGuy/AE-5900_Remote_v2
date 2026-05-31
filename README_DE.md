@@ -19,9 +19,6 @@ Es ist zwar nicht mit rigctl oder hamlib vergleichbar, aber es funktioniert.
 Sinn und Zweck ist schlussendlich auch, das Thema Funk wieder zu beleben und attraktiver zu machen.
 Flexible Lösungen verschaffen besseren Zugang. Und genau das soll dieses Projekt ermöglichen.
 
-Falls Du das Funkgerät nicht kennst: https://www.alan-electronics.de/product-details.aspx?WPParams=50C9D4C6C5D2E6BDA5A98494A895
-Ich habe mein AE5900 von https://gmw-funktechnik.ch/, einem fantastischen Fachgeschäft für klassische CB- und Amateurfunkgeräte.
-
 ### Ein Bild erzählt dir mehr als deine Ehefrau:
 
 - Ein Screenshot vom aktuellen UI, im Browser, auf dem Smartphone
@@ -53,17 +50,6 @@ Ich habe mein AE5900 von https://gmw-funktechnik.ch/, einem fantastischen Fachge
 - Ein Foto vom neuesten Prototyp ohne Klinkenstecker. Audio und Steuerung über RJ45.
 
 ![AE5900_Remote_v2](/pictures/v218mar2.jpeg)
-
-### Über das Gerät & Warum
-
-Das Albrecht AE-5900 ist das fantastische neue (2026) FM/AM/SSB/CW-Funkgerät, mit dem ich nicht gerechnet hatte. Es bietet riesiges Potenzial für jede Menge Spaß und hat mich nach 35 Jahren Funkstille wieder "infiziert".
-Also habe ich etwas Zusätzliches dafür gebaut, und jemand (ja, danke nochmal, Kumpel!) hat mir geraten, es auf GitHub zu veröffentlichen. Ich dachte mir: Na gut.
-Das Gerät basiert auf einem FT232RL FT232 FTDI USB 3,3 V 5,5 V zu TTL Seriell Adapter, einer günstigen USB-Soundkarte, einem USB-Hub-Breakout-Board, Spulen, Widerständen, Kondensatoren und einem Gehäuse aus Metall.
-
-Aber warum?
-
-Es ist ein Hobby, für das man einfach nicht genug Zeit haben wird. Besonders, wenn man ein älterer Kerl mit Kindern, Garten, einem oder mehreren Jobs und all den anderen Überraschungen des Lebens ist.
-Genau deshalb.
 
 ### So funktioniert es:
 
