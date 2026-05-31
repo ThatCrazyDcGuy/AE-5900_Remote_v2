@@ -54,13 +54,6 @@ I got my AE5900 from https://gmw-funktechnik.ch/, a fantastic specialist shop fo
 
 ![AE5900_Remote_v2](/pictures/v218mar2.jpeg)
 
-For using RX and TX audio via the RJ45 microphone connector, please note the following:
-
-1. Omit the jack-to-600:600 transformer circuit and connect one 103 ceramic capacitor in paralel with the lines and one 100 Ohm resistor in series on signal line. The RX audio is then tapped from the microphone/RJ45 connector via EXT-AF and ground.
-2. Proper grounding of the transceiver becomes more important than ever. This alone can prevent approximately 90% of RF interference from reaching the sound card.
-3. The audio settings will change slightly because the capacitors attenuate the signal more than the transformer circuit. You will need to turn up the volume on the transceiver.
-4. You have to plug a jack plug into the PA/EXT output as a dummy.
-
 ### About the Device & Why
 
 The Albrecht AE-5900 is the fantastic new (2026) FM/AM/SSB/CW radio that I didn't expect. It offers huge potential for lots of fun and has "infected" me again after 35 years of radio silence.
