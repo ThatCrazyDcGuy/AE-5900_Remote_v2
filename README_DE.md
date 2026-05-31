@@ -118,7 +118,7 @@ Restliche Komponenten:
 - Ich habe euch ein schönes Bild gemalt. Sieht zwar aus wie von einem Dreijährigen aber so verstehts vielleicht jeder Hobbybastler und Lötkolbenbesitzer. Ignoriert den Klinkenstecker zu Transformator teil.
 Nutzt die oben beschriebene 10nf // 100 Ohm Schaltung für das RX Audiosignal. Ein neuer Plan folgt.
 
-![AE5900_Remote_v2](/pictures/overview_v2.png)
+![AE5900_Remote_v2](/pictures/overview_v3.png)
 
 Man kann die USB Geräte natürlich auch einfach in einen USB Hub stecken, aber wo bleibt da der Spass am "so klein wie möglich" bauen?
 Die beiden Filter muss man aber dennoch löten.
