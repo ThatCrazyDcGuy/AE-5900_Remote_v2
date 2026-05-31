@@ -4,7 +4,7 @@ Wechsle Sprache zu DE: [🇩🇪 Deutsch](https://github.com/ThatCrazyDcGuy/AE59
 
 ## ENGLISH VERSION OF README
 
-A LAN/Web Rig Control System for the Albrecht AE-5900 radio, simulating the AMM-500 microphone. This allows the AE5900 to be operated via a web browser.
+A LAN/Web Rig Control System for the Albrecht AE-5900 radio, simulating the AMM-500 microphone. This allows the AE5900 to be operated via a web browser in a webinterface.
 =======================================================
 
 ### The Foreword:
@@ -29,6 +29,12 @@ I got my AE5900 from https://gmw-funktechnik.ch/, a fantastic specialist shop fo
 1. Visual audio feedback
 2. Adjustable microphone volume
 3. Optimized scan function with adjustable speed
+4. Clarifier
+5. Lock
+6. Mute
+7. Vox
+8. MW (multi chanel scan)
+9. Squelch // Autosquelch
 
 ![AE5900_Remote_v2](/pictures/webui260526_1.jpeg)
 
