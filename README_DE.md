@@ -50,9 +50,9 @@ Ich habe mein AE5900 von https://gmw-funktechnik.ch/, einem fantastischen Fachge
 
 [![AE5900 Webinterface V2 TX ](https://img.youtube.com/vi/BA9iDk-M_aI/0.jpg)](https://www.youtube.com/watch?v=BA9iDk-M_aI)
 
-- Ein Foto, ok, zwei Fotos in einem vom Prototyp
+- Ein Foto vom neuesten Prototyp ohne Klinkenstecker. Audio und Steuerung über RJ45.
 
-![AE5900_Remote_v2](/pictures/prototype2.jpg)
+![AE5900_Remote_v2](/pictures/v218mar2.jpeg)
 
 ### Über das Gerät & Warum
 
