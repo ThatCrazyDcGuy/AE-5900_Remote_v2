@@ -56,7 +56,7 @@ Ich habe mein AE5900 von https://gmw-funktechnik.ch/, einem fantastischen Fachge
 
 Für die Nutzung des RX und TX Audio per RJ45 Mic Anschluss ist nachfolgendes zu beachten:
 
-1. Verzichtet auf die Klinkenstecker zu 600:600 Transformatorschaltung und schaltet 2x 102 Keramikkondensatoren in Reihe zu den Leitungen und 1x 104 Keramikkondensator paralel zum Signal und GND. Das RX Audio wird hier über EXT-AF und GND  am Mic/RJ45 abgegriffen.
+1. Verzichtet auf die Klinkenstecker zu 600:600 Transformatorschaltung und schaltet 1x 103 Keramikkondensator in Serie zu den Leitungen und 1x 100 Ohm Widerstand in Serie zur Signalleitung. Das RX Audio wird hier über EXT-AF und GND am Mic/RJ45 abgegriffen.
 2. Eine ordentliche Erdung am Funkgerät wird hierdurch wichtiger dennje. Dadurch alleine lassen sich gut 90% der HF Einstrahlung in die Soundkarte verhindern.
 3. Die Audioeinstellungen ändern sich geringfügig, da die Kondensatoren stärker drosseln als die Trnsformatorschaltung. Ihr müsst am Funkgerät also lauter drehen.
 4. Will man dass das Gerät bei Remotenutzung zu Hause stumm da sitzt, muss man einen Klinkenstecker als Dummy in den PA Ausgang stecken.
