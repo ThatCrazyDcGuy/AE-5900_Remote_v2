@@ -54,6 +54,13 @@ I got my AE5900 from https://gmw-funktechnik.ch/, a fantastic specialist shop fo
 
 ![AE5900_Remote_v2](/pictures/v218mar2.jpeg)
 
+For using RX and TX audio via the RJ45 microphone connector, please note the following:
+
+1. Omit the jack-to-600:600 transformer circuit and connect one 103 ceramic capacitor in paralel with the lines and one 100 Ohm resistor in series on signal line. The RX audio is then tapped from the microphone/RJ45 connector via EXT-AF and ground.
+2. Proper grounding of the transceiver becomes more important than ever. This alone can prevent approximately 90% of RF interference from reaching the sound card.
+3. The audio settings will change slightly because the capacitors attenuate the signal more than the transformer circuit. You will need to turn up the volume on the transceiver.
+4. You have to plug a jack plug into the PA/EXT output as a dummy.
+
 ### About the Device & Why
 
 The Albrecht AE-5900 is the fantastic new (2026) FM/AM/SSB/CW radio that I didn't expect. It offers huge potential for lots of fun and has "infected" me again after 35 years of radio silence.
@@ -119,24 +126,6 @@ Remaining components:
 
 You can, of course, simply plug the USB devices into a USB hub, but where's the fun in building something "as small as possible"?
 You still have to solder the two filters, though.
-
-It's also possible to tap into the AE5900's audio without a jack plug. The mic plug offers the EXT-AF and GND pins. There's a weak signal there, possibly intended specifically for sound cards.
-
-However, there are two problems here:
-
-1. At least on my AE5900, I had unpleasant RF interference there, despite the common-mode choke and filter.
-2. If you want the device to be muted when used remotely at home, you have to plug a jack plug into the PA/EXT output as a dummy.
-
-
-For using RX and TX audio via the RJ45 microphone connector, please note the following:
-
-1. Omit the jack-to-600:600 transformer circuit and connect two 102 ceramic capacitors in series with the lines and one 104 ceramic capacitor in parallel with the signal and ground. The RX audio is then tapped from the microphone/RJ45 connector via EXT-AF and ground.
-2. Proper grounding of the transceiver becomes more important than ever. This alone can prevent approximately 90% of RF interference from reaching the sound card.
-3. The audio settings will change slightly because the capacitors attenuate the signal more than the transformer circuit. You will need to turn up the volume on the transceiver.
-
-- Here is a version of the project without the jack-to-transformer.
-
-![AE5900_Remote_v2](/pictures/rj45audiosingle.png)
 
 #### How Is This Actually Possible
 
