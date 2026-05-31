@@ -68,8 +68,8 @@ Genau deshalb.
 ### So funktioniert es:
 
 1. Schließe das gebastelte Gerät an einen Raspberry Pi oder einen anderen Host-Rechner, auf dem das Python-Skript ausgeführt werden kann an. Dieses Gerät dient dann als Server.
-2. Außerdem sollten Mikrofon RJ45 Stecker und Lautsprecherausgang des AE5900 angeschlossen sein.
-3. Stelle die Ausgabelautstärke des AE5900 von 0 auf etwa 20 Klicks am Lautstärkeregler hoch.
+2. Adapter mit dem Mikrofonport verbinden.
+3. Stelle die Ausgabelautstärke des AE5900 von 0 auf etwa 75% am Lautstärkeregler hoch.
 4. Bestenfalls ist das AE5900 bereits auf FM und den Kanal 1 gesetzt.
 5. Stelle an deinem AE5900 Mikrofon TYPE 2 ein, setze deine P1 - P4 Key-Shortcuts. Ich nutze P1 ASQ / P2 VOX / P3 MUTE
 6. Starte Mumble auf dem Host-Rechner und deinem Endgerät (Handy /Laptop etc.)
@@ -123,7 +123,7 @@ Prinzip: Man in the middle.
 
 Da das AE-5900 selbst erst nach einem Handshake mit dem AMM-500 seine Codes freigibt, musste dies erst käuflich erworben und sehnlichst erwartet werden.
 
-#### Benötigte Software
+#### Benötigte Software // Installation
 
 Mumble & Mumble Server für die Audioübertragung (Audio Chat)
 
@@ -167,8 +167,6 @@ Sie dienen hier lediglich als Beispiel.
 
 Es empfiehlt sich zu Hause einen WebSDR zu betreiben umd die Installation ggf. überrüfen (Kanal/Modulation) zu können.
 Ein guter WebSDR lässt sich einfach mit OpenWebRX, einem Raspberry Pi, einem RTL-SDR-Dongle (z. B. RTL-SDR Blog V3 oder V4 / Nooelec NESDR V5) und einer Antenne aufbauen.
-
-Schau dir einfach OpenwebrxPlus an: https://luarvique.github.io/ppa/ RTL-SDR Blog v4: https://www.rtl-sdr.com/v4/
 
 ### Was noch fehlt // Was noch nicht funktioniert
 
