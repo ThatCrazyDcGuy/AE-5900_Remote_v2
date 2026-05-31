@@ -54,13 +54,6 @@ Ich habe mein AE5900 von https://gmw-funktechnik.ch/, einem fantastischen Fachge
 
 ![AE5900_Remote_v2](/pictures/v218mar2.jpeg)
 
-Für die Nutzung des RX und TX Audio per RJ45 Mic Anschluss ist nachfolgendes zu beachten:
-
-1. Verzichtet auf die Klinkenstecker zu 600:600 Transformatorschaltung und schaltet 1x 103 Keramikkondensator in Serie zu den Leitungen und 1x 100 Ohm Widerstand in Serie zur Signalleitung. Das RX Audio wird hier über EXT-AF und GND am Mic/RJ45 abgegriffen.
-2. Eine ordentliche Erdung am Funkgerät wird hierdurch wichtiger dennje. Dadurch alleine lassen sich gut 90% der HF Einstrahlung in die Soundkarte verhindern.
-3. Die Audioeinstellungen ändern sich geringfügig, da die Kondensatoren stärker drosseln als die Trnsformatorschaltung. Ihr müsst am Funkgerät also lauter drehen.
-4. Will man dass das Gerät bei Remotenutzung zu Hause stumm da sitzt, muss man einen Klinkenstecker als Dummy in den PA Ausgang stecken.
-
 ### Über das Gerät & Warum
 
 Das Albrecht AE-5900 ist das fantastische neue (2026) FM/AM/SSB/CW-Funkgerät, mit dem ich nicht gerechnet hatte. Es bietet riesiges Potenzial für jede Menge Spaß und hat mich nach 35 Jahren Funkstille wieder "infiziert".
@@ -115,8 +108,7 @@ Restliche Komponenten:
 
 ![AE5900_Remote_v2](/pictures/allpartsv2.jpg)
 
-- Ich habe euch ein schönes Bild gemalt. Sieht zwar aus wie von einem Dreijährigen aber so verstehts vielleicht jeder Hobbybastler und Lötkolbenbesitzer. Ignoriert den Klinkenstecker zu Transformator teil.
-Nutzt die oben beschriebene 10nf // 100 Ohm Schaltung für das RX Audiosignal. Ein neuer Plan folgt.
+- Ich habe euch ein schönes Bild gemalt. Sieht zwar aus wie von einem Dreijährigen aber so verstehts vielleicht jeder Hobbybastler und Lötkolbenbesitzer.
 
 ![AE5900_Remote_v2](/pictures/overview_v3.png)
 
