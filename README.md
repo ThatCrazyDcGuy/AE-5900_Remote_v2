@@ -76,8 +76,8 @@ That's exactly why.
 ### How It Works:
 
 1. Connect the custom device to a Raspberry Pi or another host computer on which the Python script can be executed. This device then serves as a server.
-2. Also connect the microphone RJ45 connector and speaker output of the AE5900.
-3. Increase the output volume of the AE5900 from 0 to about 20 clicks on the volume control.
+2. Connect the Adapter to Mic Port of AE5900.
+3. Increase the output volume of the AE5900 from 0 to about 75% on the volume control.
 4. Ideally, the AE5900 is already set to FM and channel 1.
 5. Set your AE5900 microphone to TYPE 2, set your P1 - P4 key shortcuts. I use P1 ASQ / P2 VOX / P3 MUTE
 6. Start Mumble on the host computer and your device (phone/laptop, etc.)
