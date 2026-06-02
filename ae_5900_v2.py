@@ -64,7 +64,7 @@ setup_audio()
 def auto_patch_streams():
     time.sleep(6) 
     try:
-        print("🛡️ [AUTOMATISCHER PIPEWIRE-WEICHENSTELLER GESTARTET]")
+        print("[AUTOMATISCHER PIPEWIRE-WEICHENSTELLER GESTARTET]")
         
         # 1. pactl list short im Hintergrund einlesen
         res = subprocess.run(["pactl", "list", "short"], capture_output=True, text=True).stdout
@@ -92,9 +92,9 @@ def auto_patch_streams():
                     if node_id.isdigit() and node_id not in python_node_ids:
                         python_node_ids.append(node_id)
 
-        print(f"🛡️ [Wächter] Stereo Monitor ID: {stereo_target}")
-        print(f"🛡️ [Wächter] Mono Mikrofon ID:  {mono_target}")
-        print(f"🛡️ [Wächter] Python Mischer IDs: {python_node_ids}")
+        print(f"[Wächter] Stereo Monitor ID: {stereo_target}")
+        print(f"[Wächter] Mono Mikrofon ID:  {mono_target}")
+        print(f"[Wächter] Python Mischer IDs: {python_node_ids}")
         
 
         if len(python_node_ids) >= 2 and stereo_target and mono_target:
@@ -102,10 +102,10 @@ def auto_patch_streams():
             tx_node = python_node_ids[1] # Der untere Stream (TX)
             
             # Wir verschieben die Mischer-Eingänge hart an ihren Platz
-            print(f"🎛️ Zwinge RX-Mischer ({rx_node}) -> Stereo Monitor ({stereo_target})")
+            print(f"Zwinge RX-Mischer ({rx_node}) -> Stereo Monitor ({stereo_target})")
             subprocess.run(["pactl", "move-source-output", rx_node, stereo_target], check=False)
             
-            print(f"🎛️ Zwinge TX-Mischer ({tx_node}) -> Mono-Mikrofon ({mono_target})")
+            print(f"Zwinge TX-Mischer ({tx_node}) -> Mono-Mikrofon ({mono_target})")
             subprocess.run(["pactl", "move-source-output", tx_node, mono_target], check=False)
             
             # 4. MUMBLE VERDRAHTUNG VIA PW-LINK
@@ -116,11 +116,11 @@ def auto_patch_streams():
             if len(python_ports) >= 2:
                 target = python_ports[1] # Zweiter Port gehört Mumble/TX
                 subprocess.run(["pw-link", mumble_source, target], check=False)
-                print(f"🔗 Mumble-Kabel erfolgreich an Port {target} gelötet.")
+                print(f"Mumble-Kabel erfolgreich an Port {target} gelötet.")
                 
-            print("🛡️ [🏁 SYSTEM-WEICHE PERFEKT REBOOT-SICHER EINGESTELLT]")
+            print("[SYSTEM-WEICHE PERFEKT REBOOT-SICHER EINGESTELLT]")
         else:
-            print("⚠️ Wächter-Fehler: Konnte die Audio-Knotenpunkte nicht eindeutig isolieren.")
+            print("Wächter-Fehler: Konnte die Audio-Knotenpunkte nicht eindeutig isolieren.")
             
     except Exception as e:
         print(f"Patch-Fehler in auto_patch_streams: {e}")
@@ -217,7 +217,7 @@ class RadioInterface:
                         if vox_detected and not self.config.get("vox_enabled", False) and not self.is_tx:
                             with self.lock:
                                 self.ser.write(bytes.fromhex("4100000000000006"))
-                            print("🚫 VOX-VETO: Automatisches Senden unterdrückt.")
+                            print("VOX-VETO: Automatisches Senden unterdrückt.")
                             vox_detected = False
 
                         if self.force_rx:
@@ -227,7 +227,7 @@ class RadioInterface:
                                     self.ser.write(stop_cmd)
                                     time.sleep(0.01) 
                             self.force_rx = False 
-                            print("🚨 Manueller Abbruch ausgeführt.")
+                            print("Manueller Abbruch ausgeführt.")
 
                         self.is_device_sending = vox_detected
                         raw_buffer = raw_buffer[idx+16:]
@@ -282,7 +282,7 @@ def mw_scan_loop(radio):
     Der Multi-Watch Loop: Wechselt die Kanäle aus der Config im Sekundentakt.
     Stoppt bei Signal (Busy) und pausiert dort.
     """
-    print("🚀 Multi-Watch (MW) gestartet.")
+    print("Multi-Watch (MW) gestartet.")
     
     while radio.mw_active:
         # Kanäle live aus der Config auslesen und säubern
@@ -290,12 +290,12 @@ def mw_scan_loop(radio):
         try:
             channels = [c.strip().zfill(2) for c in ch_string.split(",") if c.strip()]
         except Exception:
-            print("⚠️ Fehler beim Parsen der MW-Kanäle. Abbruch.")
+            print("Fehler beim Parsen der MW-Kanäle. Abbruch.")
             radio.mw_active = False
             break
             
         if not channels:
-            print("⚠️ Keine Kanäle für Multi-Watch definiert.")
+            print("Keine Kanäle für Multi-Watch definiert.")
             radio.mw_active = False
             break
 
@@ -313,7 +313,7 @@ def mw_scan_loop(radio):
                 break
 
             # --- KANAL UMSCHALTEN ---
-            print(f"🔄 MW schaltet auf Kanal: {ch}")
+            print(f"MW schaltet auf Kanal: {ch}")
             
             # Kanal im Radio-Objekt setzen
             radio.current_ch = int(ch)
@@ -338,7 +338,7 @@ def mw_scan_loop(radio):
                     break
                 time.sleep(0.1)
 
-    print("🛑 Multi-Watch (MW) beendet.")
+    print("Multi-Watch (MW) beendet.")
 
 
 
@@ -384,13 +384,13 @@ def rig_ptt_control(state):
     """
     try:
         if state == 1 and not radio.is_tx:
-            print("📡 JS8Call (HTTP): Schalte TX ein")
+            print("JS8Call (HTTP): Schalte TX ein")
             radio.is_tx = True
             radio.ptt_start_time = time.time()
             with radio.lock:
                 radio.ser.write(bytes.fromhex("4101000000000006"))
         elif state == 0 and radio.is_tx:
-            print("○ JS8Call (HTTP): Zurück zu RX")
+            print("JS8Call (HTTP): Zurück zu RX")
             radio.is_tx = False
             with radio.lock:
                 radio.ser.write(bytes.fromhex("4100000000000006"))
@@ -509,8 +509,6 @@ def api_cmd(cmd):
             
         elif cmd == 'SSCAN':
             radio.sw_scan_active = not radio.sw_scan_active
-            #current_mode = MODES[radio.mode_idx].upper()
-            #if current_mode not in ["AM", "FM", "USB", "LSB", "CW"]: continue
             if radio.sw_scan_active: 
                 threading.Thread(target=radio.sw_scan_loop, daemon=True).start()
                 
