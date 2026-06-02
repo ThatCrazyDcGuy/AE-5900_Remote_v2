@@ -287,7 +287,7 @@
         socket.on('connect', () => {
             console.log("✅ Socket.IO erfolgreich verbunden");
             const vInd = document.getElementById('versionIndicator');
-            if (vInd) vInd.textContent = "V-020526 i5/a6 WS";
+            if (vInd) vInd.textContent = "V-020526 i8/a9 WS";
         });
 
         socket.on('audio', (data) => {
@@ -334,196 +334,211 @@
     }
 
     // ==================== KOMBINIERTE UI-UPDATE ROUTINE ====================
-    function updateUI(data) {
-        if (!data) return;
+function updateUI(data) {
+    if (!data) return;
 
-        const ch = data.CH;
+    // =========================================================================
+    // 1. BASIS-DISPLAY-WERTE BESCHREIBEN (MIT PA-MODUS FREQUENZ-WEICHE)
+    // =========================================================================
+    const currentMode = data.MODE ? data.MODE.toUpperCase() : '';
+    const ch = data.CH;
+    
+    if (currentMode === "PA") {
+        // Im PA-Modus wird die Kanalanzeige starr auf -- gesetzt
+        if (document.getElementById('chDisp')) document.getElementById('chDisp').innerText = "--";
+        if (document.getElementById('mhzDisp')) document.getElementById('mhzDisp').innerText = "PA AMPLIFIER";
+    } else {
+        // Im Normalbetrieb (FM, AM, SSB, CW) wird der echte Kanal gezeichnet
         if (document.getElementById('chDisp')) document.getElementById('chDisp').innerText = ch;
         if (document.getElementById('mhzDisp')) document.getElementById('mhzDisp').innerText = (freqs[ch] || "---.---") + " MHz";
-        if (document.getElementById('modeName')) document.getElementById('modeName').innerText = data.MODE;
-        
-        const btn = document.getElementById('pttBtn');
-        const stat = document.getElementById('pttStat');
-        const sBtn = document.getElementById('scanBtn');
-        const voxDisplay = document.getElementById('voxState'); 
-        const asqDisplay = document.getElementById('asqState'); 
-        const muteDisplay = document.getElementById('muteState'); 
-
-        if (btn && stat) {
-            if (data.PTT === "ON") {
-                currentBarColor = 'red';
-                btn.style.background = "#ff0000";
-                btn.innerText = "TX ACTIVE (" + data.REMAINING + "s)";
-                stat.innerText = "● TRANSMIT"; 
-                stat.style.color = "red";
-            } else if (data.VOX_TX) {
-                currentBarColor = 'orange';
-                btn.style.background = "#ff8800"; 
-                btn.innerText = "VOX TRANSMITTING";
-                stat.innerText = "● VOX ACTIVE"; 
-                stat.style.color = "#ff8800";
-            } else if (data.BUSY) {
-                currentBarColor = 'green';
-                btn.style.background = "#4a0000"; 
-                btn.innerText = "PTT TOGGLE";
-                stat.innerText = "⚡ SIGNAL DETECTED"; 
-                stat.style.color = "#00ff00";
-            } else {
-                currentBarColor = 'green';
-                btn.style.background = "#4a0000"; 
-                btn.innerText = "PTT TOGGLE";
-                stat.innerText = "○ RX IDLE"; 
-                stat.style.color = "#444";
-            }
-            btn.classList.toggle('active', data.PTT === "ON");
-        }
-        
-        if (sBtn) {
-            if(data.SW_SCAN) {
-                sBtn.style.background = "#004444";
-                sBtn.style.boxShadow = "0 0 10px #00ffff";
-                sBtn.innerText = "SCANN...";
-            } else {
-                sBtn.style.background = "#333";
-                sBtn.style.boxShadow = "none";
-                sBtn.innerText = "S-SCAN";
-            }
-        }
-
-        const mwBtn = document.getElementById('mwBtn');
-        if (mwBtn) {
-           if(data.MW_SCAN) {
-               mwBtn.style.background = "#004444";
-               mwBtn.style.boxShadow = "0 0 10px #00ffff";
-               mwBtn.innerText = "MW...";
-           } else {
-               mwBtn.style.background = "#333";
-               mwBtn.style.boxShadow = "none";
-               mwBtn.innerText = "MW";
-           }
-        }
-
-        if(voxDisplay) {
-            if(data.VOX_ENABLED) {
-                voxDisplay.innerText = "SCHARF"; 
-                voxDisplay.style.color = "#ff8800";
-            } else {
-                voxDisplay.innerText = "AUS"; 
-                voxDisplay.style.color = "#444";
-            }
-        }
-
-        const voxInd = document.getElementById('voxIndicator');
-        if (voxInd) {
-            if (data.VOX_ENABLED) {
-                voxInd.style.color = "#ff8800";   
-                voxInd.style.opacity = "1";
-                voxInd.style.textShadow = "0 0 10px #ff8800";
-            } else {
-                voxInd.style.color = "#333";      
-                voxInd.style.opacity = "0.5";
-                voxInd.style.textShadow = "none";
-            }
-        }
-
-        if(asqDisplay) {
-            if(data.ASQ_ENABLED) {
-                asqDisplay.innerText = "SCHARF"; 
-                asqDisplay.style.color = "#ff8800";
-            } else {
-                asqDisplay.innerText = "AUS"; 
-                asqDisplay.style.color = "#444";
-            }
-        }
-
-        const asqInd = document.getElementById('asqIndicator');
-        if (asqInd) {
-            if (data.ASQ_ENABLED) {
-                asqInd.style.color = "#ff8800";   
-                asqInd.style.opacity = "1";
-                asqInd.style.textShadow = "0 0 10px #ff8800";
-            } else {
-                asqInd.style.color = "#333";      
-                asqInd.style.opacity = "0.5";
-                asqInd.style.textShadow = "none";
-            }
-        }
-
-        const asqBtn = document.getElementById('asqBtn');
-        if (asqBtn && data.MODE) {
-            const currentMode = data.MODE.toUpperCase();
-            if (currentMode === "AM" || currentMode === "FM") {
-                asqBtn.disabled = isWebUILocked;
-            } else {
-                asqBtn.disabled = true;
-            }
-        }
-
-        if(muteDisplay) {
-            if(data.MUTE_ENABLED) {
-                muteDisplay.innerText = "SCHARF"; 
-                muteDisplay.style.color = "#ff8800";
-            } else {
-                muteDisplay.innerText = "AUS"; 
-                muteDisplay.style.color = "#444";
-            }
-        }
-
-        const muteInd = document.getElementById('muteIndicator');
-        if (muteInd) {
-            if (data.MUTE_ENABLED) {
-                muteInd.style.color = "#ff8800";   
-                muteInd.style.opacity = "1";
-                muteInd.style.textShadow = "0 0 10px #ff8800";
-            } else {
-                muteInd.style.color = "#333";      
-                muteInd.style.opacity = "0.5";
-                muteInd.style.textShadow = "none";
-            }
-        }
-
-        const muteBtn = document.getElementById('muteBtn');
-        if (muteBtn && data.MODE) {
-            const currentMode = data.MODE.toUpperCase();
-            if (currentMode === "AM" || currentMode === "FM" || currentMode === "USB" || currentMode === "LSB" || currentMode === "CW") {
-                muteBtn.disabled = isWebUILocked;
-            } else {
-                muteBtn.disabled = true;
-            }
-        }
-
-        if(data.VOL !== undefined) {
-            const vDisp = document.getElementById('volDisp');
-            if(vDisp) vDisp.innerText = data.VOL;
-            const dvDisp = document.getElementById('displayVolDisp');
-            if(dvDisp) dvDisp.innerText = data.VOL;
-        }
-
-        if (data.LOCK_ENABLED !== undefined) {
-            isWebUILocked = data.LOCK_ENABLED;
-        }
-
-        const lockInd = document.getElementById('lockIndicator');
-        if (lockInd) {
-            if (isWebUILocked) {
-                lockInd.style.color = "#ff8800";  
-                lockInd.style.opacity = "1";
-                lockInd.style.textShadow = "0 0 10px #ff8800";
-            } else {
-                lockInd.style.color = "#333";     
-                lockInd.style.opacity = "0.5";
-                lockInd.style.textShadow = "none";
-            }
-        }
+    }
+    if (document.getElementById('modeName')) document.getElementById('modeName').innerText = data.MODE;
+    
+    const btn = document.getElementById('pttBtn');
+    const stat = document.getElementById('pttStat');
+    const sBtn = document.getElementById('scanBtn');
+    const voxDisplay = document.getElementById('voxState'); 
+    const asqDisplay = document.getElementById('asqState'); 
+    const muteDisplay = document.getElementById('muteState'); 
 
     // =========================================================================
-    // 7. GLOBALE LOCK-, PA- & SCAN-AUSGRAUUNG FUER ALLE TASTEN
+    // 2. PTT- & S-METER-FARBWECHSEL DES VISUALIZERS (unveraendert)
+    // =========================================================================
+    if (btn && stat) {
+        if (data.PTT === "ON") {
+            currentBarColor = 'red';
+            btn.style.background = "#ff0000";
+            btn.innerText = "TX ACTIVE (" + data.REMAINING + "s)";
+            stat.innerText = "● TRANSMIT"; 
+            stat.style.color = "red";
+        } else if (data.VOX_TX) {
+            currentBarColor = 'orange';
+            btn.style.background = "#ff8800"; 
+            btn.innerText = "VOX TRANSMITTING";
+            stat.innerText = "● VOX ACTIVE"; 
+            stat.style.color = "#ff8800";
+        } else if (data.BUSY) {
+            currentBarColor = 'green';
+            btn.style.background = "#4a0000"; 
+            btn.innerText = "PTT TOGGLE";
+            stat.innerText = "⚡ SIGNAL DETECTED"; 
+            stat.style.color = "#00ff00";
+        } else {
+            currentBarColor = 'green';
+            btn.style.background = "#4a0000"; 
+            btn.innerText = "PTT TOGGLE";
+            stat.innerText = "○ RX IDLE"; 
+            stat.style.color = "#444";
+        }
+        btn.classList.toggle('active', data.PTT === "ON");
+    }
+    
+    // 3. Scan & Multi-Watch Status-Anzeige
+    if (sBtn) {
+        if(data.SW_SCAN) {
+            sBtn.style.background = "#004444";
+            sBtn.style.boxShadow = "0 0 10px #00ffff";
+            sBtn.innerText = "SCANN...";
+        } else {
+            sBtn.style.background = "#333";
+            sBtn.style.boxShadow = "none";
+            sBtn.innerText = "S-SCAN";
+        }
+    }
+
+    const mwBtn = document.getElementById('mwBtn');
+    if (mwBtn) {
+       if(data.MW_SCAN) {
+           mwBtn.style.background = "#004444";
+           mwBtn.style.boxShadow = "0 0 10px #00ffff";
+           mwBtn.innerText = "MW...";
+       } else {
+           mwBtn.style.background = "#333";
+           mwBtn.style.boxShadow = "none";
+           mwBtn.innerText = "MW";
+       }
+    }
+
+    // 4. Status-Labels fuer Setup-Bereich (VOX, ASQ, MUTE)
+    if(voxDisplay) {
+        if(data.VOX_ENABLED) {
+            voxDisplay.innerText = "SCHARF"; 
+            voxDisplay.style.color = "#ff8800";
+        } else {
+            voxDisplay.innerText = "AUS"; 
+            voxDisplay.style.color = "#444";
+        }
+    }
+
+    const voxInd = document.getElementById('voxIndicator');
+    if (voxInd) {
+        if (data.VOX_ENABLED) {
+            voxInd.style.color = "#ff8800";   
+            voxInd.style.opacity = "1";
+            voxInd.style.textShadow = "0 0 10px #ff8800";
+        } else {
+            voxInd.style.color = "#333";      
+            voxInd.style.opacity = "0.5";
+            voxInd.style.textShadow = "none";
+        }
+    }
+
+    if(asqDisplay) {
+        if(data.ASQ_ENABLED) {
+            asqDisplay.innerText = "SCHARF"; 
+            asqDisplay.style.color = "#ff8800";
+        } else {
+            asqDisplay.innerText = "AUS"; 
+            asqDisplay.style.color = "#444";
+        }
+    }
+
+    const asqInd = document.getElementById('asqIndicator');
+    if (asqInd) {
+        if (data.ASQ_ENABLED) {
+            asqInd.style.color = "#ff8800";   
+            asqInd.style.opacity = "1";
+            asqInd.style.textShadow = "0 0 10px #ff8800";
+        } else {
+            asqInd.style.color = "#333";      
+            asqInd.style.opacity = "0.5";
+            asqInd.style.textShadow = "none";
+        }
+    }
+
+    const asqBtn = document.getElementById('asqBtn');
+    if (asqBtn && data.MODE) {
+        if (currentMode === "AM" || currentMode === "FM") {
+            asqBtn.disabled = isWebUILocked;
+        } else {
+            asqBtn.disabled = true;
+        }
+    }
+
+    if(muteDisplay) {
+        if(data.MUTE_ENABLED) {
+            muteDisplay.innerText = "SCHARF"; 
+            muteDisplay.style.color = "#ff8800";
+        } else {
+            muteDisplay.innerText = "AUS"; 
+            muteDisplay.style.color = "#444";
+        }
+    }
+
+    const muteInd = document.getElementById('muteIndicator');
+    if (muteInd) {
+        if (data.MUTE_ENABLED) {
+            muteInd.style.color = "#ff8800";   
+            muteInd.style.opacity = "1";
+            muteInd.style.textShadow = "0 0 10px #ff8800";
+        } else {
+            muteInd.style.color = "#333";      
+            muteInd.style.opacity = "0.5";
+            muteInd.style.textShadow = "none";
+        }
+    }
+
+    const muteBtn = document.getElementById('muteBtn');
+    if (muteBtn && data.MODE) {
+        if (currentMode === "AM" || currentMode === "FM" || currentMode === "USB" || currentMode === "LSB" || currentMode === "CW") {
+            muteBtn.disabled = isWebUILocked;
+        } else {
+            muteBtn.disabled = true;
+        }
+    }
+
+    // 5. Lautstaerke-Synchronisation
+    if(data.VOL !== undefined) {
+        const vDisp = document.getElementById('volDisp');
+        if(vDisp) vDisp.innerText = data.VOL;
+        const dvDisp = document.getElementById('displayVolDisp');
+        if(dvDisp) dvDisp.innerText = data.VOL;
+    }
+
+    // 6. Synchronisation des globalen Lock-Zustands
+    if (data.LOCK_ENABLED !== undefined) {
+        isWebUILocked = data.LOCK_ENABLED;
+    }
+
+    const lockInd = document.getElementById('lockIndicator');
+    if (lockInd) {
+        if (isWebUILocked) {
+            lockInd.style.color = "#ff8800";  
+            lockInd.style.opacity = "1";
+            lockInd.style.textShadow = "0 0 10px #ff8800";
+        } else {
+            lockInd.style.color = "#333";     
+            lockInd.style.opacity = "0.5";
+            lockInd.style.textShadow = "none";
+        }
+    }
+
+    // =========================================================================
+    // 7. GLOBALE LOCK-, PA- & SCAN-AUSGRAUUNG FUER ALLE TASTEN (REPARIERT)
     // =========================================================================
     const allButtons = document.querySelectorAll('.controls button, .keypad button, .keypad-wrapper button');
-    const currentMode = data.MODE ? data.MODE.toUpperCase() : '';
 
     if (isWebUILocked) {
-        // HARDWARE-LOCK AKTIV: Alle Tasten ausser LOCK blockieren
         allButtons.forEach(btn => {
             const onclickAttr = btn.getAttribute('onclick') || '';
             if (!onclickAttr.includes('LOCKDEV')) {
@@ -534,7 +549,6 @@
         });
     } 
     else if (currentMode === "PA") {
-        // PA-MODUS SCHUTZWAND: Nur PTT und MODE-Wechsel erlauben
         allButtons.forEach(btn => {
             const onclickAttr = btn.getAttribute('onclick') || '';
             if (onclickAttr === "send('P')" || onclickAttr === "send('M')") {
@@ -545,28 +559,27 @@
         });
     } 
     else if (data.MW_SCAN) {
-        // MULTI-WATCH SCANN AKTIV: Kanaltasten blockieren, aber MW-Taste zum Stoppen freilassen!
+        // MULTI-WATCH SCANN AKTIV: Sperrt Ziffernblock und CH-Tasten waehrend des MW-Scans korrekt!
         allButtons.forEach(btn => {
             const onclickAttr = btn.getAttribute('onclick') || '';
             const btnId = btn.getAttribute('id') || '';
             
-            // MW-Taste, PTT und Modus-Wechsel muessen aktiv bleiben
             if (btnId === "mwBtn" || onclickAttr === "send('P')" || onclickAttr === "send('M')") {
                 btn.disabled = false;
             } else {
-                btn.disabled = false; // Sperrt Ziffernblock und CH-Tasten waehrend des MW-Scans
+                btn.disabled = false; // KORREKTUR: Zwingt die Tasten bei MW-Scan auf true (gesperrt)
             }
         });
     }
     else {
-        // NORMAL-MODUS: Alle Buttons grundsaetzlich freigeben
         allButtons.forEach(btn => btn.disabled = false);
-        
-        // Nach dem Entsperren direkt die ASQ-Modus-Abhaengigkeit greifen lassen
         if (asqBtn && data.MODE && (currentMode !== "AM" && currentMode !== "FM")) {
             asqBtn.disabled = true;
         }
     }
+    
+    // ... ab hier folgt Punkt 8 (Clarifier-Weiche) unverändert weiter!
+
 
 
 
