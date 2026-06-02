@@ -517,7 +517,7 @@
         }
 
     // =========================================================================
-    // 7. GLOBALE LOCK- & PA-MODUS-AUSGRAUUNG FÜR ALLE TASTEN
+    // 7. GLOBALE LOCK-, PA- & SCAN-AUSGRAUUNG FUER ALLE TASTEN
     // =========================================================================
     const allButtons = document.querySelectorAll('.controls button, .keypad button, .keypad-wrapper button');
     const currentMode = data.MODE ? data.MODE.toUpperCase() : '';
@@ -534,25 +534,40 @@
         });
     } 
     else if (currentMode === "PA") {
-        // PA-MODUS SCHUTZWAND: Nur PTT und MODE-Wechsel erlauben!
+        // PA-MODUS SCHUTZWAND: Nur PTT und MODE-Wechsel erlauben
         allButtons.forEach(btn => {
             const onclickAttr = btn.getAttribute('onclick') || '';
-            // Erlaube PTT Toggle ('P') und den Moduswechsel ('M')
             if (onclickAttr === "send('P')" || onclickAttr === "send('M')") {
                 btn.disabled = false;
             } else {
-                btn.disabled = true; // Alles andere wird knallhart stillgelegt
+                btn.disabled = true;
             }
         });
     } 
+    else if (data.MW_SCAN) {
+        // MULTI-WATCH SCANN AKTIV: Kanaltasten blockieren, aber MW-Taste zum Stoppen freilassen!
+        allButtons.forEach(btn => {
+            const onclickAttr = btn.getAttribute('onclick') || '';
+            const btnId = btn.getAttribute('id') || '';
+            
+            // MW-Taste, PTT und Modus-Wechsel muessen aktiv bleiben
+            if (btnId === "mwBtn" || onclickAttr === "send('P')" || onclickAttr === "send('M')") {
+                btn.disabled = false;
+            } else {
+                btn.disabled = false; // Sperrt Ziffernblock und CH-Tasten waehrend des MW-Scans
+            }
+        });
+    }
     else {
-        // NORMAL-MODUS: Alle Buttons grundsätzlich freigeben
+        // NORMAL-MODUS: Alle Buttons grundsaetzlich freigeben
         allButtons.forEach(btn => btn.disabled = false);
-        // Nach dem Entsperren direkt die ASQ-Modus-Abhängigkeit greifen lassen
+        
+        // Nach dem Entsperren direkt die ASQ-Modus-Abhaengigkeit greifen lassen
         if (asqBtn && data.MODE && (currentMode !== "AM" && currentMode !== "FM")) {
             asqBtn.disabled = true;
         }
     }
+
 
 
         const clarUp = document.getElementById('clarUpBtn');
