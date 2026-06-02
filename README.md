@@ -32,6 +32,7 @@ Flexible solutions provide better access. And that's exactly what this project s
 7. Vox
 8. MW (multi chanel scan)
 9. Squelch // Autosquelch
+10. PTT kill switch activates after 30 seconds following connection loss.
 
 ![AE5900_Remote_v2](/pictures/webui260526_1.jpeg)
 
