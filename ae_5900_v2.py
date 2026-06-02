@@ -576,8 +576,7 @@ def api_cmd(cmd):
             macro_string = superkey_codes[cmd]
             commands = [c.strip() for c in macro_string.split(",")]
             
-            # SYSTEM FÜR FLAPPING-SCHUTZ SPERREN
-            radio.macro_active = True
+            # HIER OBEN GELÖSCHT! macro_active wird NICHT mehr global für alle Superkeys gesetzt!
             
             for single_cmd in commands:
                 if not single_cmd: continue
@@ -591,6 +590,8 @@ def api_cmd(cmd):
                 hex_clean = hex_part.replace("0x", "").zfill(2)
                 
                 if "VOX_TOGGLE" in current_label or cmd == "VOX_TOGGLE":
+                    # NUR HIER BEIM VOX-TOGGLE AKTIVIEREN
+                    radio.macro_active = True
                     if radio.config.get("vox_enabled", False):
                         import os
                         old_vol = radio.config.get("vol", 85)
@@ -615,7 +616,7 @@ def api_cmd(cmd):
                         radio.ser.write(bytes.fromhex("41000000" + hex_clean + "000006"))
                         radio.config["vox_enabled"] = True
                         radio.save_config()
-                        radio.macro_active = False
+                        radio.macro_active = False # Sofort wieder freigeben
                         
                 elif "ASQ_ON_OFF" in current_label or cmd == "ASQ_ON_OFF":
                     current_mode = MODES[radio.mode_idx].upper()
@@ -639,18 +640,25 @@ def api_cmd(cmd):
                 elif "MUTECOMBBTN" in current_label or cmd == "MUTECOMBBTN":
                     current_mode = MODES[radio.mode_idx].upper()
                     if current_mode not in ["AM", "FM", "USB", "LSB", "CW"]: continue
+                    
+                    # NUR HIER BEIM MUTE-MAKRO AKTIVIEREN
+                    radio.macro_active = True
+                    
                     radio.config["mute_enabled"] = not radio.config.get("mute_enabled", False)
                     radio.save_config()
                     for m_cmd in commands:
                         if not m_cmd: continue
                         h_part = m_cmd.split(":") if ":" in m_cmd else m_cmd
                         dur = float(m_cmd.split(":")) if ":" in m_cmd else 0.150
-                        h_str = h_part[0] if isinstance(h_part, list) else h_part
+                        h_str = h_part if isinstance(h_part, list) else h_part
                         h_cl = h_str.replace("0x", "").zfill(2)
                         radio.ser.write(bytes.fromhex(f"41000100{h_cl}000006"))
                         time.sleep(dur)
                         radio.ser.write(bytes.fromhex(f"41000000{h_cl}000006"))
                         time.sleep(0.050)
+                        
+                    # MUTE FERTIG -> SOFORT WIEDER FREIGEBEN
+                    radio.macro_active = False
                     break 
 
                 elif "LOCKDEV" in current_label or cmd == "LOCKDEV":
@@ -665,11 +673,10 @@ def api_cmd(cmd):
                     time.sleep(duration)
                     radio.ser.write(bytes.fromhex("41000000" + hex_clean + "000006"))
                 time.sleep(0.050)
-                
-            # SYSTEM NACH BEENDIGUNG ALLER MAKRO-SCHLEIFEN FREIGEBEN
-            if not "VOX_TOGGLE" in current_label and cmd != "VOX_TOGGLE":
-                radio.macro_active = False
 
+        # =========================================================================
+        # AB HIER REINER ASCII-CONFIG- EDITOR (OHNE DOPPELTE ELIF-WEICHEN)
+        # =========================================================================
         elif cmd.startswith('SET_'):
             parts = cmd.split('_')
             val = request.args.get('val')
@@ -696,22 +703,46 @@ def api_cmd(cmd):
                     radio.config[key_name] = val
             radio.save_config()
 
+        elif cmd.startswith('T'): 
+            radio.config["ptt_timeout"] = int(cmd[1:])
+            radio.save_config()
+            
+        elif cmd.startswith('SETGAIN_'):
+            parts = cmd.split('_')
+            if len(parts) == 3:
+                key = f"fft_{parts[1].lower()}_gain"
+                radio.config[key] = int(parts[2])
+                radio.save_config() 
+
+        elif cmd == 'MW_TOGGLE':
+            radio.mw_active = not getattr(radio, 'mw_active', False)
+            if radio.mw_active:
+                radio.stop_sw_scan() 
+                threading.Thread(target=mw_scan_loop, args=(radio,), daemon=True).start()
+
+        if radio.is_tx and (time.time() - radio.ptt_start_time >= radio.config["ptt_timeout"]):
+            radio.is_tx = False
+            radio.save_config() 
+            radio.ser.write(bytes.fromhex("4100000000000006"))
 
     # =========================================================================
     # END LOCK SECTION (Hier schliesst with radio.lock)
     # =========================================================================
 
     rem = int(radio.config["ptt_timeout"] - (time.time() - radio.ptt_start_time)) if radio.is_tx else radio.config["ptt_timeout"]
+    
+    # Sende im JSON stur den Soll-Wert, falls ein Makro die Hardware blockiert!
+    is_macro = getattr(radio, 'macro_active', False)
+    vox_stat = radio.config.get("vox_enabled", False) if is_macro else radio.config.get("vox_enabled", False)
+    mute_stat = radio.config.get("mute_enabled", False) if is_macro else radio.config.get("mute_enabled", False)
+
     return jsonify({
         "CH": str(radio.current_ch).zfill(2), 
         "MODE": MODES[radio.mode_idx], 
         "PTT": "ON" if radio.is_tx else "OFF", 
         "VOX_TX": radio.is_device_sending,
-        
-        # HIER DIE KORREKTUR: Wenn Makro aktiv, nimm stur den Config-Sollwert!
-        "VOX_ENABLED": radio.config.get("vox_enabled", False),
-        "MUTE_ENABLED": radio.config.get("mute_enabled", False),
-        
+        "VOX_ENABLED": vox_stat,
+        "MUTE_ENABLED": mute_stat,
         "ASQ_ENABLED": radio.config.get("asq_enabled", False),
         "REMAINING": max(0, rem), 
         "BUSY": radio.is_rx, 
@@ -724,6 +755,7 @@ def api_cmd(cmd):
         "LOCK_ENABLED": radio.config.get("lock_enabled", False),
         "MW_SCAN": getattr(radio, 'mw_active', False)
     })
+
 
 
 @app.route('/api/config/override', methods=['POST'])
