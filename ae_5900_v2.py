@@ -573,6 +573,9 @@ def api_cmd(cmd):
             macro_string = superkey_codes[cmd]
             commands = [c.strip() for c in macro_string.split(",")]
             
+            # SYSTEM FÜR FLAPPING-SCHUTZ SPERREN
+            radio.macro_active = True
+            
             for single_cmd in commands:
                 if not single_cmd: continue
                 if ":" in single_cmd:
@@ -601,6 +604,7 @@ def api_cmd(cmd):
                             time.sleep(2.5)
                             os.system(f"amixer set Master {old_vol}%")
                             radio.audio_mute = False
+                            radio.macro_active = False # Erst ganz am Ende freigeben
                         threading.Thread(target=delayed_vox_superkey_off, args=(hex_clean, duration), daemon=True).start()
                     else:
                         radio.ser.write(bytes.fromhex(f"41000100{hex_clean}000006"))
@@ -608,6 +612,7 @@ def api_cmd(cmd):
                         radio.ser.write(bytes.fromhex("41000000" + hex_clean + "000006"))
                         radio.config["vox_enabled"] = True
                         radio.save_config()
+                        radio.macro_active = False
                         
                 elif "ASQ_ON_OFF" in current_label or cmd == "ASQ_ON_OFF":
                     current_mode = MODES[radio.mode_idx].upper()
@@ -643,6 +648,7 @@ def api_cmd(cmd):
                         time.sleep(dur)
                         radio.ser.write(bytes.fromhex(f"41000000{h_cl}000006"))
                         time.sleep(0.050)
+                    break 
 
                 elif "LOCKDEV" in current_label or cmd == "LOCKDEV":
                     is_locked = radio.config.get("lock_enabled", False)
@@ -656,12 +662,15 @@ def api_cmd(cmd):
                     time.sleep(duration)
                     radio.ser.write(bytes.fromhex("41000000" + hex_clean + "000006"))
                 time.sleep(0.050)
+                
+            # SYSTEM NACH BEENDIGUNG ALLER MAKRO-SCHLEIFEN FREIGEBEN
+            if not "VOX_TOGGLE" in current_label and cmd != "VOX_TOGGLE":
+                radio.macro_active = False
 
         elif cmd.startswith('SET_'):
             parts = cmd.split('_')
             val = request.args.get('val')
             
-            # 1. Invertierungs-Editor Verknuepfungen (VOX, MUTE, ASQ, LOCK)
             if "VOX" in cmd:
                 radio.config["vox_enabled"] = (val.lower() == 'true')
             elif "MUTE" in cmd:
@@ -670,47 +679,20 @@ def api_cmd(cmd):
                 radio.config["asq_enabled"] = (val.lower() == 'true')
             elif "LOCK" in cmd:
                 radio.config["lock_enabled"] = (val.lower() == 'true')
-                
-            # 2. Originale Skip-Logik fuer Modi
             elif "SKIP" in cmd: 
                 key_name = "skip_pa" if "PA" in cmd else "skip_cw"
                 radio.config[key_name] = (val.lower() == 'true')
-                
-            # 3. Originale Clarifier-Einstellungen
             elif "CLAR" in cmd:
                 if "OFFSET" in cmd: 
                     radio.config["clar_offset"] = int(val)
                 else: 
                     radio.config["clar_step"] = val
-                    
-            # 4. Standard P-Label Zuweisungen
             else: 
                 if len(parts) >= 2:
                     key_name = f"{parts[1].lower()}_label"
                     radio.config[key_name] = val
-            radio.save_config() 
-            
-        elif cmd.startswith('T'): 
-            radio.config["ptt_timeout"] = int(cmd[1:])
             radio.save_config()
-            
-        elif cmd.startswith('SETGAIN_'):
-            parts = cmd.split('_')
-            if len(parts) == 3:
-                key = f"fft_{parts[1].lower()}_gain"
-                radio.config[key] = int(parts[2])
-                radio.save_config() 
 
-        elif cmd == 'MW_TOGGLE':
-            radio.mw_active = not getattr(radio, 'mw_active', False)
-            if radio.mw_active:
-                radio.stop_sw_scan() 
-                threading.Thread(target=mw_scan_loop, args=(radio,), daemon=True).start()
-
-        if radio.is_tx and (time.time() - radio.ptt_start_time >= radio.config["ptt_timeout"]):
-            radio.is_tx = False
-            radio.save_config() 
-            radio.ser.write(bytes.fromhex("4100000000000006"))
 
     # =========================================================================
     # END LOCK SECTION (Hier schliesst with radio.lock)
@@ -722,9 +704,12 @@ def api_cmd(cmd):
         "MODE": MODES[radio.mode_idx], 
         "PTT": "ON" if radio.is_tx else "OFF", 
         "VOX_TX": radio.is_device_sending,
+        
+        # HIER DIE KORREKTUR: Wenn Makro aktiv, nimm stur den Config-Sollwert!
         "VOX_ENABLED": radio.config.get("vox_enabled", False),
-        "ASQ_ENABLED": radio.config.get("asq_enabled", False),
         "MUTE_ENABLED": radio.config.get("mute_enabled", False),
+        
+        "ASQ_ENABLED": radio.config.get("asq_enabled", False),
         "REMAINING": max(0, rem), 
         "BUSY": radio.is_rx, 
         "SW_SCAN": radio.sw_scan_active,
@@ -736,6 +721,7 @@ def api_cmd(cmd):
         "LOCK_ENABLED": radio.config.get("lock_enabled", False),
         "MW_SCAN": getattr(radio, 'mw_active', False)
     })
+
 
 @app.route('/api/config/override', methods=['POST'])
 def api_config_override():
