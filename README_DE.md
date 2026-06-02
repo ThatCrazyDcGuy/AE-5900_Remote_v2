@@ -32,7 +32,7 @@ Flexible Lösungen verschaffen besseren Zugang. Und genau das soll dieses Projek
 7. Vox
 8. MW (multi chanel scan)
 9. Squelch // Autosquelch
-10. PTT killswich nach 30sec nach Verbindungsverlust
+10. Der PTT-Kill-Schalter wird 30 Sekunden nach Verbindungsverlust aktiviert.
 
 ![AE5900_Remote_v2](/pictures/webui260526_1.jpeg)
 
