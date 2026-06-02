@@ -257,6 +257,9 @@ class RadioInterface:
                 if self.is_tx:
                     self.sw_scan_active = False
                     break
+            if self.sw_scan_active:
+                time.sleep(1.5) # S-Scan Haltezeit nach Signalverlust (Verzögerung)
+
         print("Software-Scan beendet.")
 
     def stop_sw_scan(self):
