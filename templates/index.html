@@ -287,7 +287,7 @@
         socket.on('connect', () => {
             console.log("✅ Socket.IO erfolgreich verbunden");
             const vInd = document.getElementById('versionIndicator');
-            if (vInd) vInd.textContent = "V-020526 i8/a9 WS";
+            if (vInd) vInd.textContent = "V-030526 i1/a0 WS";
         });
 
         socket.on('audio', (data) => {
@@ -661,11 +661,14 @@ function updateUI(data) {
             });
     }
 
-    // ==================== CLARIFIER-KLICK LOGIK ====================
+    // =========================================================================
+    // REPARIERTE CLARIFIER-KLICK LOGIK (TIMER LÄUFT AUCH AM ANSCHLAG WEITER)
+    // =========================================================================
     function handleClarClick(cmd) {
         const hzBtn = document.getElementById('clarHzBtn');
         if (!hzBtn || hzBtn.disabled) return;
 
+        // 1. TIMER-RESET DIREKT AM ANFANG FEUERN (Verhindert das Einfrieren)
         if (clarTimer) clearTimeout(clarTimer);
         let currentText = hzBtn.innerText;
 
@@ -686,12 +689,21 @@ function updateUI(data) {
             if (activeStepText === "10 Hz") stepSize = 10;
             else if (activeStepText === "100 Hz") stepSize = 100;
 
+            // --- SAFETIES INNERHALB DER BLÖCKE STATT GLOBALEM RETURN ---
             if (cmd === 'CLARUP') {
-                if (currentClarOffset + stepSize > 500) return;
+                if (currentClarOffset + stepSize > 500) {
+                    // Wenn Anschlag erreicht, Timer trotzdem starten und Funktion beenden
+                    startClarTimeout(hzBtn);
+                    return;
+                }
                 currentClarOffset += stepSize;
             }
             if (cmd === 'CLARDN') {
-                if (currentClarOffset - stepSize < -500) return;
+                if (currentClarOffset - stepSize < -500) {
+                    // Wenn Anschlag erreicht, Timer trotzdem starten und Funktion beenden
+                    startClarTimeout(hzBtn);
+                    return;
+                }
                 currentClarOffset -= stepSize;
             }
 
@@ -702,6 +714,13 @@ function updateUI(data) {
             send('SET_CLAR_OFFSET?val=' + currentClarOffset);
         }
 
+        // 2. REGULÄRER TIMER-START FÜR DIE NORMALEN DRÜCKE
+        startClarTimeout(hzBtn);
+        send(cmd);
+    }
+
+    // KLEINE HILFSFUNKTION FÜR DEN AUTOMATISCHEN TIMEOUT-START
+    function startClarTimeout(hzBtn) {
         if (hzBtn.innerText !== "STEP") {
             document.getElementById('clarUpBtn').disabled = false;
             document.getElementById('clarDnBtn').disabled = false;
@@ -712,17 +731,13 @@ function updateUI(data) {
                 document.getElementById('clarUpBtn').disabled = true;
                 document.getElementById('clarDnBtn').disabled = true;
                 clarTimer = null;
-            }, 6000);
+            }, 5000); // Hier stehen deine 5000ms (oder 8000ms, falls du es erhöht hast)
         } else {
-            if (clarTimer) {
-                clearTimeout(clarTimer);
-                clarTimer = null;
-            }
             document.getElementById('clarUpBtn').disabled = true;
             document.getElementById('clarDnBtn').disabled = true;
         }
-        send(cmd);
     }
+
 
     // ==================== ZUSATZFUNKTIONEN & EVENTS ====================
     let f6KeyPressed = false;
