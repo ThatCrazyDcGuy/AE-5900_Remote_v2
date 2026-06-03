@@ -242,7 +242,7 @@ class RadioInterface:
                             if not self.config.get("vox_enabled", False) and not getattr(self, 'is_vox_changing', False):
                                 with self.lock:
                                     self.ser.write(bytes.fromhex("4100000000000006"))
-                                print("🚫 VOX-VETO: Automatisches Senden unterdrueckt (Config-Sync).")
+                                print("VOX-VETO: Automatisches Senden unterdrueckt (Config-Sync).")
                                 vox_detected = False
 
                         # KORREKTUR: Manueller Abbruch darf den Umschalt-Befehl NICHT blockieren!
@@ -253,7 +253,7 @@ class RadioInterface:
                                     self.ser.write(stop_cmd)
                                     time.sleep(0.01) 
                             self.force_rx = False 
-                            print("🚨 Manueller Abbruch ausgefuehrt.")
+                            print("Manueller Abbruch ausgefuehrt.")
 
 
 
