@@ -174,7 +174,7 @@
         <div style="background: #222; padding: 20px; border-radius: 10px;">
             <button id="syncBtn" class="hold-button"><span style="position:relative; z-index:2;">SUPER SYNC (CH 01 - Hold 3s)</span><div class="progress-bar" id="syncProgress"></div></button>
             <p>PTT Timeout: <input type="number" id="pttInput" value="{{ config.ptt_timeout }}" style="width: 60px;" onchange="updateTimeout()"> s</p>
-            <!-- Restliche Setup-Elemente bleiben gleich -->
+            <!-- Testlauf 22 -->
             <p>Mode-Skip (FW v1.12): 
                 <label><input type="checkbox" onchange="fetch('/api/cmd/SET_SKIP_PA?val=' + this.checked)" {% if config.skip_pa %}checked{% endif %}> PA</label>
                 <label><input type="checkbox" onchange="fetch('/api/cmd/SET_SKIP_CW?val=' + this.checked)" {% if config.skip_cw %}checked{% endif %}> CW</label>
@@ -285,7 +285,7 @@
         socket = io();
 
         socket.on('connect', () => {
-            console.log("✅ Socket.IO erfolgreich verbunden");
+            console.log("Socket.IO erfolgreich verbunden");
             const vInd = document.getElementById('versionIndicator');
             if (vInd) vInd.textContent = "V-030526 i1/a0 WS";
         });
@@ -297,7 +297,7 @@
         });
 
         socket.on('disconnect', () => {
-            console.log("❌ Socket.IO getrennt");
+            console.log("Socket.IO getrennt");
             const vInd = document.getElementById('versionIndicator');
             if (vInd) vInd.textContent = "SOCKET RECONNECTING...";
         });
@@ -578,7 +578,7 @@ function updateUI(data) {
         }
     }
     
-    // ... ab hier folgt Punkt 8 (Clarifier-Weiche) unverändert weiter!
+    //  Punkt 8 (Clarifier-Weiche) 
 
 
 
@@ -630,7 +630,7 @@ function updateUI(data) {
     // ==================== HEKTIKSICHERE WARTESCHLANGE ====================
     function send(cmd) { 
         if (isWebUILocked && cmd !== 'LOCKDEV') {
-            console.log("🔒 Klick blockiert: WebUI ist gesperrt!");
+            console.log("Klick blockiert: WebUI ist gesperrt!");
             return; 
         }
         
@@ -747,7 +747,7 @@ function updateUI(data) {
             e.preventDefault(); 
             if (!f6KeyPressed) {
                 f6KeyPressed = true;
-                console.log("🦶 Fußschalter (F6) gedrückt: PTT wird geschaltet!");
+                console.log("Fußschalter (F6) gedrückt: PTT wird geschaltet!");
                 send('P'); 
             }
         }
@@ -826,7 +826,7 @@ function updateUI(data) {
             document.getElementById('tog_mute').checked = false;
             document.getElementById('tog_asq').checked = false;
             document.getElementById('tog_lock').checked = false;
-            alert("🔧 Die asynchronen Zustände wurden erfolgreich invertiert!");
+            alert("Die asynchronen Zustände wurden erfolgreich invertiert!");
         })
         .catch(e => console.error("Korrektur Fehler:", e));
     }
