@@ -676,10 +676,22 @@ def api_cmd(cmd):
     current_channel_offset = radio.config["clar_offsets"].get(current_ch_str, 0)
     rem = int(radio.config["ptt_timeout"] - (time.time() - radio.ptt_start_time)) if radio.is_tx else radio.config["ptt_timeout"]
     
-    vox_is_transmitting = False
-    if radio.config.get("vox_enabled", False):
-        if radio.is_device_sending or radio.is_rx:
-            vox_is_transmitting = True
+    # =========================================================================
+    # REIN SOFTWAREBASIERTER VOX- UND BUSY-WEICHENSTELLER (FAILSAFE)
+    # =========================================================================
+    vox_active_ui = False
+    busy_active_ui = False
+
+    # Wenn das Funkgeraet ein Signal sieht oder der Listen-Loop anschlaegt:
+    if radio.is_rx or radio.is_device_sending:
+        if radio.config.get("vox_enabled", False) and not radio.is_tx:
+            # Wenn VOX scharf ist und wir NICHT manuell druecken, ist es EIGENES SENDEN!
+            vox_active_ui = True
+            busy_active_ui = False
+        else:
+            # Wenn VOX aus ist oder wir im normalen Empfang sind, ist es FREMDER EMPFANG!
+            vox_active_ui = False
+            busy_active_ui = True
 
     current_ch_str = str(radio.current_ch).zfill(2)
     current_channel_offset = radio.config["clar_offsets"].get(current_ch_str, 0)
@@ -690,14 +702,14 @@ def api_cmd(cmd):
         "MODE": MODES[radio.mode_idx], 
         "PTT": "ON" if radio.is_tx else "OFF", 
         
-        # HIER FLIEGT DIE RETTUNG REIN: Das visuelle Feedback wird rein softwarebasiert erzwungen!
-        "VOX_TX": vox_is_transmitting,
+        # HIER FLIEGEN DIE SPRECH- UND HÖR-ZUSTÄNDE GLASKLAR AN DEN BROWSER!
+        "VOX_TX": vox_active_ui,
+        "BUSY": busy_active_ui,
         
         "VOX_ENABLED": radio.config.get("vox_enabled", False), 
         "MUTE_ENABLED": radio.config.get("mute_enabled", False), 
         "ASQ_ENABLED": radio.config.get("asq_enabled", False),
         "REMAINING": max(0, rem), 
-        "BUSY": radio.is_rx, 
         "SW_SCAN": radio.sw_scan_active, 
         "VOL": radio.config.get("vol", 50),
         "SKIP_PA": radio.config.get("skip_pa", False), 
@@ -710,7 +722,6 @@ def api_cmd(cmd):
         "PTT_HOTKEY": radio.config.get("ptt_hotkey", "F6"), 
         "CURRENT_BEEP": radio.config.get("current_beep", "None")
     })
-
 @app.route('/api/config/override', methods=['POST'])
 def api_config_override():
     try:
