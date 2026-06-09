@@ -668,12 +668,26 @@ def api_cmd(cmd):
     rem = int(radio.config["ptt_timeout"] - (time.time() - radio.ptt_start_time)) if radio.is_tx else radio.config["ptt_timeout"]
     
     return jsonify({
-        "CH": current_ch_str, "MODE": MODES[radio.mode_idx], "PTT": "ON" if radio.is_tx else "OFF", "VOX_TX": radio.is_device_sending,
-        "VOX_ENABLED": radio.config.get("vox_enabled", False), "MUTE_ENABLED": radio.config.get("mute_enabled", False), "ASQ_ENABLED": radio.config.get("asq_enabled", False),
-        "REMAINING": max(0, rem), "BUSY": radio.is_rx, "SW_SCAN": radio.sw_scan_active, "VOL": radio.config.get("vol", 50),
-        "SKIP_PA": radio.config.get("skip_pa", False), "SKIP_CW": radio.config.get("skip_cw", False), "CLAR_STEP": radio.config.get("clar_step", "STEP"), "CLAR_OFFSET": current_channel_offset,
-        "LOCK_ENABLED": radio.config.get("lock_enabled", False), "MW_SCAN": getattr(radio, 'mw_active', False), "KEY_BUF": radio.key_buffer,
-        "PTT_HOTKEY": radio.config.get("ptt_hotkey", "F6"), "CURRENT_BEEP": radio.config.get("current_beep", "None")
+        "CH": current_ch_str, 
+        "MODE": MODES[radio.mode_idx], 
+        "PTT": "ON" if radio.is_tx else "OFF", 
+        "VOX_TX": bool(radio.is_device_sending),        
+        "VOX_ENABLED": radio.config.get("vox_enabled", False), 
+        "MUTE_ENABLED": radio.config.get("mute_enabled", False), 
+        "ASQ_ENABLED": radio.config.get("asq_enabled", False),
+        "REMAINING": max(0, rem), 
+        "BUSY": radio.is_rx, 
+        "SW_SCAN": radio.sw_scan_active, 
+        "VOL": radio.config.get("vol", 50),
+        "SKIP_PA": radio.config.get("skip_pa", False), 
+        "SKIP_CW": radio.config.get("skip_cw", False), 
+        "CLAR_STEP": radio.config.get("clar_step", "STEP"), 
+        "CLAR_OFFSET": current_channel_offset,
+        "LOCK_ENABLED": radio.config.get("lock_enabled", False), 
+        "MW_SCAN": getattr(radio, 'mw_active', False), 
+        "KEY_BUF": radio.key_buffer,
+        "PTT_HOTKEY": radio.config.get("ptt_hotkey", "F6"), 
+        "CURRENT_BEEP": radio.config.get("current_beep", "None")
     })
 
 @app.route('/api/config/override', methods=['POST'])
