@@ -672,11 +672,23 @@ def api_cmd(cmd):
     current_channel_offset = radio.config["clar_offsets"].get(current_ch_str, 0)
     rem = int(radio.config["ptt_timeout"] - (time.time() - radio.ptt_start_time)) if radio.is_tx else radio.config["ptt_timeout"]
     
+    vox_is_transmitting = False
+    if radio.config.get("vox_enabled", False):
+        if radio.is_device_sending or radio.is_rx:
+            vox_is_transmitting = True
+
+    current_ch_str = str(radio.current_ch).zfill(2)
+    current_channel_offset = radio.config["clar_offsets"].get(current_ch_str, 0)
+    rem = int(radio.config["ptt_timeout"] - (time.time() - radio.ptt_start_time)) if radio.is_tx else radio.config["ptt_timeout"]
+    
     return jsonify({
         "CH": current_ch_str, 
         "MODE": MODES[radio.mode_idx], 
         "PTT": "ON" if radio.is_tx else "OFF", 
-        "VOX_TX": bool(radio.is_device_sending),        
+        
+        # HIER FLIEGT DIE RETTUNG REIN: Das visuelle Feedback wird rein softwarebasiert erzwungen!
+        "VOX_TX": vox_is_transmitting,
+        
         "VOX_ENABLED": radio.config.get("vox_enabled", False), 
         "MUTE_ENABLED": radio.config.get("mute_enabled", False), 
         "ASQ_ENABLED": radio.config.get("asq_enabled", False),
