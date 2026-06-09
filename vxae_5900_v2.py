@@ -211,12 +211,17 @@ class RadioInterface:
                             break 
                         packet = raw_buffer[idx:idx+16]
                         
-                        # REPARATUR: S-Meter liest explizit Index 1 und Index 2 des Arrays
-                        self.is_rx = (packet[1] > 0 or packet[2] > 0)
-
-                        # REPARATUR: VOX-Status liest explizit das Byte an Index 13
+                        # 1. VOX-STATUS DIREKT ERMITTELN (Index 13)
                         vox_detected = (packet[13] == 0x01)
                         
+                        # 2. SIGNAL-ERKENNUNG (S-Meter an Index 1 und 2)
+                        # DAU-KORREKTUR: Ein Signal wird NUR als Empfang (RX) gewertet,
+                        # wenn wir NICHT gerade manuell oder per VOX auf Sendung stehen!
+                        if not self.is_tx and not vox_detected:
+                            self.is_rx = (packet[1] > 0 or packet[2] > 0)
+                        else:
+                            self.is_rx = False # Unterdrückt den BUSY-Status beim Senden
+
                         if vox_detected and not self.is_tx:
                             try:
                                 if os.path.exists(CONFIG_FILE):
