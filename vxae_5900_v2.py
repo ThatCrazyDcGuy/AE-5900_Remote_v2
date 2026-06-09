@@ -199,17 +199,22 @@ class RadioInterface:
             time.sleep(0.6)
 
     def listen_loop(self):
+        """Erkennt Signal (RX) und VOX-Status (TX)"""
         raw_buffer = b""
         while self.ser:
             if self.ser.in_waiting > 0:
                 try:
+                    raw_buffer += self.ser.read(self.ser.in_waiting)
+                    while b'\x53' in raw_buffer:
+                        idx = raw_buffer.find(b'\x53')
+                        if len(raw_buffer[idx:]) < 16: 
+                            break 
                         packet = raw_buffer[idx:idx+16]
                         
-                        # KORREKTUR 1: S-Meter liest explizit Index 1 und 2 aus dem 16-Byte-Paket!
+                        # 1. SIGNAL-ERKENNUNG (S-Meter an Index 1 und 2)
                         self.is_rx = (packet[1] > 0 or packet[2] > 0)
 
-                        # KORREKTUR 2: VOX-Status liest das exakte Byte aus dem Paket (Index 13)!
-                        # Wenn das Geraet VOX-Senden meldet, steht an dieser Stelle die 1.
+                        # 2. VOX-ERKENNUNG (VOX-Status-Byte an Index 13)
                         vox_detected = (packet[13] == 0x01)
                         
                         if vox_detected and not self.is_tx:
@@ -236,10 +241,8 @@ class RadioInterface:
                             self.force_rx = False 
                             print("Manueller Abbruch ausgefuehrt.")
 
-                        # Hier wird das reparierte Signal glasklar an das JSON uebergeben!
                         self.is_device_sending = vox_detected
                         raw_buffer = raw_buffer[idx+16:]
-
                 except Exception as e:
                     print(f"Listen Loop Fehler: {e}")
                     pass
