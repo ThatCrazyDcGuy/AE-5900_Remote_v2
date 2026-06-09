@@ -75,6 +75,15 @@ The script is currently only designed for the EU region. Other regions will foll
 
 That's basically it, and anyone who's not completely clueless should be able to figure it out.
 
+### Minimum requirements for this project:
+
+1. Reading comprehension skills
+2. Understanding skills
+3. Implementation skills
+4. Soldering experience
+5. Raspberry Pi 3
+6. Some spare cash for parts
+
 ### The Hardware Build
 
 With pictures and everything you need to know.
