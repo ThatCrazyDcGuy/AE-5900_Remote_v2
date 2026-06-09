@@ -33,6 +33,8 @@ Flexible Lösungen verschaffen besseren Zugang. Und genau das soll dieses Projek
 8. MW (multi chanel scan)
 9. Squelch // Autosquelch
 10. Der PTT-Kill-Schalter wird 30 Sekunden nach Verbindungsverlust aktiviert.
+11. Eigene Rogerbeeps erstellen. Einfach zu den Bestätigungstönen im Ordner hinzufügen.
+12. Physische PTT-Taste/Sondertaste am Telefon oder an der Tastatur verwenden.
 
 ![AE5900_Remote_v2](/pictures/webui260526_1.jpeg)
 
