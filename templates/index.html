@@ -371,6 +371,7 @@ function updateUI(data) {
         if (document.getElementById('chDisp')) document.getElementById('chDisp').innerText = ch;
         if (document.getElementById('mhzDisp')) document.getElementById('mhzDisp').innerText = (freqs[ch] || "---.---") + " MHz";
     }
+
     if (document.getElementById('modeName')) document.getElementById('modeName').innerText = data.MODE;
     
     const btn = document.getElementById('pttBtn');
@@ -381,7 +382,7 @@ function updateUI(data) {
     const muteDisplay = document.getElementById('muteState'); 
 
     // =========================================================================
-    // 2. PTT- & S-METER-FARBWECHSEL DES VISUALIZERS (VOX-FEEDBACK REPARIERT)
+    // 2. PTT- & S-METER-FARBWECHSEL DES VISUALIZERS (unveraendert)
     // =========================================================================
     if (btn && stat) {
         if (data.PTT === "ON") {
@@ -390,32 +391,27 @@ function updateUI(data) {
             btn.innerText = "TX ACTIVE (" + data.REMAINING + "s)";
             stat.innerText = "● TRANSMIT"; 
             stat.style.color = "red";
-        } 
-        // BOMBENSICHERE WEICHE: Wenn das Funkgerät echtes VOX-Senden meldet -> Orange!
-        else if (data.VOX_TX === true || data.VOX_TX === "true") {
+        } else if (data.VOX_TX) {
             currentBarColor = 'orange';
             btn.style.background = "#ff8800"; 
             btn.innerText = "VOX TRANSMITTING";
             stat.innerText = "● VOX ACTIVE"; 
             stat.style.color = "#ff8800";
-        } 
-        else if (data.BUSY) {
+        } else if (data.BUSY) {
             currentBarColor = 'green';
             btn.style.background = "#4a0000"; 
             btn.innerText = "PTT TOGGLE";
             stat.innerText = "⚡ SIGNAL DETECTED"; 
             stat.style.color = "#00ff00";
-        } 
-        else {
+        } else {
             currentBarColor = 'green';
             btn.style.background = "#4a0000"; 
             btn.innerText = "PTT TOGGLE";
             stat.innerText = "○ RX IDLE"; 
             stat.style.color = "#444";
         }
-        btn.classList.toggle('active', data.PTT === "ON" || data.VOX_TX === true);
+        btn.classList.toggle('active', data.PTT === "ON");
     }
-
     
     // 3. Scan & Multi-Watch Status-Anzeige
     if (sBtn) {
