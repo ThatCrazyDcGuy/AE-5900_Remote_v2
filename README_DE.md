@@ -23,7 +23,7 @@ Flexible Lösungen verschaffen besseren Zugang. Und genau das soll dieses Projek
 
 - Ein Screenshot vom aktuellen UI, im Browser, auf dem Smartphone
 
-1. visuelles Audiofeedback
+1. Visuelles Audiofeedback
 2. Lautstärke des Mikrofons regelbar
 3. Optimierte Scan-Funktion mit regelbarer Geschwindigkeit
 4. Clarifier
@@ -74,6 +74,15 @@ Flexible Lösungen verschaffen besseren Zugang. Und genau das soll dieses Projek
 Das Script ist derzeitig nur für die Region (EU) ausgelegt. Die anderen Regionen folgen noch, so wie auch der VFO Mode.
 
 Das ist eigentlich alles und wer nicht komplett ahnungslos ist, bekommt das schon hin.
+
+###Mindestanforderung für dieses Projekt:
+
+1. Die Fähigkeit zu lesen
+2. Die Fähigkeit zu verstehen
+3. Die Fähigkeit umzusetzen
+4. Lötkolbenerfahrung
+5. Raspberry PI 3
+6. Etwas Kleingeld für die Teile
 
 ### Die Hardware-Bastelei
 
