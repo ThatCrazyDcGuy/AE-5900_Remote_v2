@@ -33,6 +33,8 @@ Flexible solutions provide better access. And that's exactly what this project s
 8. MW (multi chanel scan)
 9. Squelch // Autosquelch
 10. PTT kill switch activates after 30 seconds following connection loss.
+11. Own roger beeps. Just add them to folder beeps.
+12. Physically PTT key / Special key on phone or keyboard
 
 ![AE5900_Remote_v2](/pictures/webui260526_1.jpeg)
 
@@ -97,9 +99,7 @@ Remaining components:
 
 ![AE5900_Remote_v2](/pictures/allpartsv2.jpg)
 
-- I've drawn you a nice picture. It might look like it was drawn by a three-year-old, but any hobbyist and soldering iron owner should be able to understand it. Ignore the jack-to-transformer part.
-
-Use the 10nF // 100 Ohm circuit described above for the RX audio signal. A new schematic will follow.
+- I've drawn you a nice picture. It might look like it was drawn by a three-year-old, but any hobbyist and soldering iron owner should be able to understand it.
 
 ![AE5900_Remote_v2](/pictures/overview_v3.png)
 
