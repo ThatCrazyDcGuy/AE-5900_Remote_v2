@@ -75,7 +75,7 @@ Das Script ist derzeitig nur für die Region (EU) ausgelegt. Die anderen Regione
 
 Das ist eigentlich alles und wer nicht komplett ahnungslos ist, bekommt das schon hin.
 
-###Mindestanforderung für dieses Projekt:
+### Mindestanforderung für dieses Projekt:
 
 1. Die Fähigkeit zu lesen
 2. Die Fähigkeit zu verstehen
