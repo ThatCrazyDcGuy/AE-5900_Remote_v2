@@ -188,7 +188,21 @@
         <p>Scan Speed (ms): <input type="number" id="scanSpeedInput" value="{{ config.scan_speed * 1000 | int }}" style="width: 70px;" onchange="send('SETSPEED_' + this.value)"> </p>
         <p>FFT Gain RX: <input type="number" value="{{config.fft_rx_gain}}" onchange="send('SETGAIN_RX_' + this.value)" style="width:80px;"></p>
         <p>FFT Gain TX: <input type="number" value="{{config.fft_tx_gain}}" onchange="send('SETGAIN_TX_' + this.value)" style="width:80px;"></p>
-        <p>VOX Schaltung: <span id="voxState" style="font-weight:bold;">--</span></p>
+            <p>PTT Hotkey (z.B. F6, Space, p): 
+                <input type="text" id="pttHotkeyInput" value="{{ config.ptt_hotkey if config.ptt_hotkey else 'F6' }}" style="width:100px;" readonly>
+                <button onclick="changePTTHotkey()" style="padding: 2px 8px; font-size: 0.8em; background: #575757;">Taste aendern</button>
+            </p>
+
+            <!-- Rogerbeep Auswahl-Dropdown -->
+            <p>Rogerbeep Auswahl:
+                <select id="rogerbeepSelect" onchange="send('SET_BEEP?val=' + this.value)" style="width:100px;">
+                    <option value="None" {% if config.current_beep == 'None' %}selected{% endif %}>None (Aus)</option>
+                    {% for beep in beeps_list %}
+                    <option value="{{ beep }}" {% if config.current_beep == beep %}selected{% endif %}>{{ beep }}</option>
+                    {% endfor %}
+                </select>
+            </p>
+        <!-- <p>VOX Schaltung: <span id="voxState" style="font-weight:bold;">--</span></p> -->
 </div>
 
 <div style="border-top: 1px solid #444; margin-top: 15px; padding-top: 15px;">
@@ -263,6 +277,7 @@
     let lastData = new Array(32).fill(0);
     let currentBarColor = 'green';
     let isWebUILocked = false; // Einzigartig deklariert
+    let radioConfigGlobal = { ptt_hotkey: 'F6' };
     let webuiQueue = [];
     let isWebUIBusy = false;
     let clarTimer = null;
@@ -287,7 +302,7 @@
         socket.on('connect', () => {
             console.log("Socket.IO erfolgreich verbunden");
             const vInd = document.getElementById('versionIndicator');
-            if (vInd) vInd.textContent = "V-050626 i4/a4 WS CLR";
+            if (vInd) vInd.textContent = "V-090626 i2/a1 WS RB";
         });
 
         socket.on('audio', (data) => {
@@ -630,6 +645,18 @@ function updateUI(data) {
                 chDnBtn.disabled = false;
             }
         }
+        
+        // =========================================================================
+        // NEU: HIER SITZT DER HOTKEY-ZUSTAND PERFEKT INNERHALB VON updateUI!
+        // =========================================================================
+        if (data.PTT_HOTKEY !== undefined) {
+            radioConfigGlobal.ptt_hotkey = data.PTT_HOTKEY;
+            const inputField = document.getElementById('pttHotkeyInput');
+            if (inputField && document.activeElement !== inputField) {
+                inputField.value = data.PTT_HOTKEY;
+            }
+        }
+        
     }
 
     // ==================== HEKTIKSICHERE WARTESCHLANGE ====================
@@ -752,24 +779,70 @@ function updateUI(data) {
     }
 
     // ==================== ZUSATZFUNKTIONEN & EVENTS ====================
-    let f6KeyPressed = false;
+    // =========================================================================
+    // DYNAMISCHE HOTKEY-STEUERUNG (LAUSCHT AUF DEINE WUNSCH-TASTE)
+    // =========================================================================
+    let hotkeyKeyPressed = false;
 
     window.addEventListener('keydown', (e) => {
-        if (e.key === 'F6') {
+        // Holt die aktuell gespeicherte Taste aus der Konfiguration (Fallback: F6)
+        let savedHotkey = typeof radioConfigGlobal !== 'undefined' && radioConfigGlobal.ptt_hotkey ? radioConfigGlobal.ptt_hotkey : 'F6';
+        
+        // Wenn ein Eingabefeld (z.B. P1-Label) aktiv ist, blockieren wir den Hotkey, damit man tippen kann!
+        if (document.activeElement.tagName === 'INPUT' && document.activeElement.id !== 'pttHotkeyInput') return;
+
+        if (e.key === savedHotkey) {
             e.preventDefault(); 
-            if (!f6KeyPressed) {
-                f6KeyPressed = true;
-                console.log("Fußschalter (F6) gedrückt: PTT wird geschaltet!");
-                send('P'); 
+            if (!hotkeyKeyPressed) {
+                hotkeyKeyPressed = true;
+                console.log("PTT Hotkey (" + savedHotkey + ") gedrueckt: Schalte Funkgeraet!");
+                send('P'); // Sendet den normalen PTT-Impuls über die sichere Queue
             }
         }
     });
 
     window.addEventListener('keyup', (e) => {
-        if (e.key === 'F6') {
-            f6KeyPressed = false; 
+        let savedHotkey = typeof radioConfigGlobal !== 'undefined' && radioConfigGlobal.ptt_hotkey ? radioConfigGlobal.ptt_hotkey : 'F6';
+        if (e.key === savedHotkey) {
+            hotkeyKeyPressed = false; 
         }
     });
+
+    // HILFSFUNKTION: Taste interaktiv im Setup-Feld einlesen
+    function changePTTHotkey() {
+        const inputField = document.getElementById('pttHotkeyInput');
+        if (!inputField) return;
+
+        inputField.value = "DRUECKE TASTE...";
+        inputField.style.background = "#440000";
+
+        // Einmaliger Listener, der den naechsten Tastendruck abfaengt
+        const captureHotkey = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            let newKey = e.key;
+            // DAU-Schutz: Verhindere unbedienbare Tasten wie Escape oder Enter
+            if (newKey === "Escape" || newKey === "Enter" || newKey === "Tab") {
+                newKey = "F6";
+            }
+
+            inputField.value = newKey;
+            inputField.style.background = "#000";
+            
+            // Sofort ins globale Konfigurations-Objekt im Browser sichern
+            if (typeof radioConfigGlobal === 'undefined') radioConfigGlobal = {};
+            radioConfigGlobal.ptt_hotkey = newKey;
+
+            // Hart an die ae_5900_v2.py zur dauerhaften Speicherung senden!
+            send('SET_PTTHOTKEY?val=' + encodeURIComponent(newKey));
+
+            window.removeEventListener('keydown', captureHotkey, true);
+        };
+
+        window.addEventListener('keydown', captureHotkey, true);
+    }
+
 
     function changeVol(direction) {
         const cmd = direction === 'up' ? 'VOLUP' : 'VOLDOWN';
