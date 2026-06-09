@@ -209,18 +209,23 @@ class RadioInterface:
                         idx = raw_buffer.find(b'\x53')
                         if len(raw_buffer[idx:]) < 16: 
                             break 
-                        packet = raw_buffer[idx:idx+16]
+                        packet = list(raw_buffer[idx:idx+16]) # Als starre Liste einlesen!
                         
-                        # 1. VOX-STATUS DIREKT ERMITTELN (Index 13)
+                        # 1. SIGNAL-ERKENNUNG (S-Meter liegt an Byte-Index 1 und Index 2)
+                        # Wenn hier Werte > 0 stehen, empfaengt das Geraet ein Funksignal!
+                        smeter_active = (packet[1] > 0 or packet[2] > 0)
+
+                        # 2. VOX-ERKENNUNG (Das echte VOX-Sende-Register liegt an Byte-Index 13)
+                        # Wenn das Albrecht-Geraet per VOX moduliert, schickt es hier eine 1
                         vox_detected = (packet[13] == 0x01)
                         
-                        # 2. SIGNAL-ERKENNUNG (S-Meter an Index 1 und 2)
-                        # DAU-KORREKTUR: Ein Signal wird NUR als Empfang (RX) gewertet,
-                        # wenn wir NICHT gerade manuell oder per VOX auf Sendung stehen!
-                        if not self.is_tx and not vox_detected:
-                            self.is_rx = (packet[1] > 0 or packet[2] > 0)
+                        # --- DIE SAUBERE LOGISCHE KANALTRENNUNG ---
+                        if vox_detected:
+                            self.is_device_sending = True
+                            self.is_rx = False
                         else:
-                            self.is_rx = False # Unterdrückt den BUSY-Status beim Senden
+                            self.is_device_sending = False
+                            self.is_rx = smeter_active # BUSY/Grün wird nur bei echtem Empfang aktiv!
 
                         if vox_detected and not self.is_tx:
                             try:
@@ -235,7 +240,7 @@ class RadioInterface:
                                 with self.lock:
                                     self.ser.write(bytes.fromhex("4100000000000006"))
                                 print("VOX-VETO: Automatisches Senden unterdrueckt.")
-                                vox_detected = False
+                                self.is_device_sending = False
 
                         if self.force_rx and not getattr(self, 'is_vox_changing', False):
                             with self.lock:
@@ -246,7 +251,6 @@ class RadioInterface:
                             self.force_rx = False 
                             print("Manueller Abbruch ausgefuehrt.")
 
-                        self.is_device_sending = vox_detected
                         raw_buffer = raw_buffer[idx+16:]
                 except Exception as e:
                     print(f"Listen Loop Fehler: {e}")
