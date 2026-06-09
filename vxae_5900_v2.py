@@ -211,10 +211,10 @@ class RadioInterface:
                             break 
                         packet = raw_buffer[idx:idx+16]
                         
-                        # 1. SIGNAL-ERKENNUNG (S-Meter an Index 1 und 2)
+                        # REPARATUR: S-Meter liest explizit Index 1 und Index 2 des Arrays
                         self.is_rx = (packet[1] > 0 or packet[2] > 0)
 
-                        # 2. VOX-ERKENNUNG (VOX-Status-Byte an Index 13)
+                        # REPARATUR: VOX-Status liest explizit das Byte an Index 13
                         vox_detected = (packet[13] == 0x01)
                         
                         if vox_detected and not self.is_tx:
@@ -247,6 +247,7 @@ class RadioInterface:
                     print(f"Listen Loop Fehler: {e}")
                     pass
             time.sleep(0.02)
+
 
     def send_cmd(self, hex_press, hex_release):
         if not self.ser: return
