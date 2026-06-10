@@ -202,7 +202,7 @@
                     {% endfor %}
                 </select>
             </p>
-        <!-- <p>VOX Schaltung: <span id="voxState" style="font-weight:bold;">--</span></p> -->
+        <p>VOX Schaltung: <span id="voxState" style="font-weight:bold;">--</span></p>
 </div>
 
 <div style="border-top: 1px solid #444; margin-top: 15px; padding-top: 15px;">
@@ -302,7 +302,7 @@
         socket.on('connect', () => {
             console.log("Socket.IO erfolgreich verbunden");
             const vInd = document.getElementById('versionIndicator');
-            if (vInd) vInd.textContent = "V-090626 i2/a1 WS RB";
+            if (vInd) vInd.textContent = "V-110626 i1/a3 VX-RB";
         });
 
         socket.on('audio', (data) => {
@@ -382,7 +382,7 @@ function updateUI(data) {
     const muteDisplay = document.getElementById('muteState'); 
 
     // =========================================================================
-    // 2. PTT- & S-METER-FARBWECHSEL DES VISUALIZERS (LOGIK REPARIERT)
+    // 2. PTT- & S-METER-FARBWECHSEL DES VISUALIZERS (unveraendert)
     // =========================================================================
     if (btn && stat) {
         if (data.PTT === "ON") {
@@ -391,34 +391,27 @@ function updateUI(data) {
             btn.innerText = "TX ACTIVE (" + data.REMAINING + "s)";
             stat.innerText = "● TRANSMIT"; 
             stat.style.color = "red";
-        } 
-        // 1. WEICHE: Echtes EIGENES VOX-Senden (Sprech-Zustand) -> SAUBERES ORANGE!
-        else if (data.VOX_TX === true || data.VOX_TX === "true") {
+        } else if (data.VOX_TX) {
             currentBarColor = 'orange';
             btn.style.background = "#ff8800"; 
             btn.innerText = "VOX TRANSMITTING";
             stat.innerText = "● VOX ACTIVE"; 
             stat.style.color = "#ff8800";
-        } 
-        // 2. WEICHE: Echtes FREMDES Empfangssignal (Hör-Zustand) -> SAUBERES GRÜN!
-        else if (data.BUSY === true || data.BUSY === "true") {
+        } else if (data.BUSY) {
             currentBarColor = 'green';
             btn.style.background = "#4a0000"; 
             btn.innerText = "PTT TOGGLE";
             stat.innerText = "⚡ SIGNAL DETECTED"; 
             stat.style.color = "#00ff00";
-        } 
-        // 3. WEICHE: Standard-Ruhige-Frequenz (Leerlauf) -> GRAU / OFF!
-        else {
+        } else {
             currentBarColor = 'green';
             btn.style.background = "#4a0000"; 
             btn.innerText = "PTT TOGGLE";
             stat.innerText = "○ RX IDLE"; 
             stat.style.color = "#444";
         }
-        btn.classList.toggle('active', data.PTT === "ON" || data.VOX_TX === true);
+        btn.classList.toggle('active', data.PTT === "ON");
     }
-
     
     // 3. Scan & Multi-Watch Status-Anzeige
     if (sBtn) {
