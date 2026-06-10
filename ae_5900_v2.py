@@ -114,6 +114,7 @@ class RadioInterface:
         self.current_ch = self.config.get("last_ch", 1)
         self.mode_idx = self.config.get("last_mode", 2)
         self.key_input_start_time = 0
+        self.last_ptt_release_time = 0
 
         # --- HARDWARE-DETEKTIV: AUTOMATISCHE PORT-ERKENNUNG (FT232RL) ---
         detected_port = None
@@ -213,10 +214,15 @@ class RadioInterface:
                         # 1. SIGNAL-ERKENNUNG (S-Meter an Index 1 und 2)
                         self.is_rx = (packet[1] > 0 or packet[2] > 0)
 
-                        # 2. VOX-ERKENNUNG (Das echte VOX-Sende-Register liegt an Index 6!)
+                        # 2. VOX-ERKENNUNG (Mit 1.5s Sperre nach manuellem PTT-Release)
                         vox_detected = (packet[6] == 0x01)
                         
+                        # Wenn wir erst gerade manuell gesendet haben, blockieren wir Fehltrigger im RAM!
+                        if (time.time() - getattr(self, 'last_ptt_release_time', 0)) < 10.5:
+                            vox_detected = False
+
                         if vox_detected and not self.is_tx:
+
                             try:
                                 if os.path.exists(CONFIG_FILE):
                                     with open(CONFIG_FILE, 'r') as f:
@@ -350,15 +356,16 @@ def play_roger_beep():
             def run_paplay_beep():
                 print(f"ROGERBEEP: Spiele {chosen_beep} starr auf dem Mono-TX-Kanal ab...")
                 
-                # Wir übergeben paplay die Umgebungsvariable, sich direkt in den 
-                # Mono-Eingang (deine Sendeleitung) einzuklinken!
-                # 'mono-fallback' entspricht dem Namen deiner virtuellen Mono-Schnittstelle
+
                 env = os.environ.copy()
                 env['PULSE_SINK'] = 'mono-fallback' 
                 
                 # Falls 'mono-fallback' bei dir anders benannt ist, koennen wir auch 
                 # das ALSA-Gegenstueck erzwingen:
-                subprocess.run(["paplay", beep_path], env=env, check=False)
+                #subprocess.run(["paplay", beep_path], env=env, check=False)
+                subprocess.run(["paplay", "--latency-msec=1", beep_path], env=env, check=False)
+                #subprocess.run(["aplay", "--latency-msec=1", beep_path], env=env, check=False)
+                #subprocess.run(["ffplay -nodisp -autoexit ", beep_path], env=env, check=False)
                 print("ROGERBEEP: Erfolgreich moduliert und abgeschlossen.")
                 
             threading.Thread(target=run_paplay_beep, daemon=True).start()
@@ -459,6 +466,40 @@ def api_cmd(cmd):
 #            radio.ptt_start_time = time.time()
 #            radio.save_config()
 #            if not radio.is_tx: play_roger_beep()
+#
+#        elif cmd == 'P':
+#            was_transmitting = radio.is_tx
+#            radio.is_tx = not radio.is_tx
+#            radio.force_rx = False 
+#            
+#            if was_transmitting:
+#                print("PTT-RELEASE: Sende Rogerbeep aktiv ueber den Aether...")
+#                
+#                # SÄUBERUNG: Wir holen uns die Beep-Auswahl direkt in die Route
+#                chosen_beep = radio.config.get("current_beep", "None")
+#                
+#                if chosen_beep != "None":
+#                    beep_path = os.path.join(SCRIPT_DIR, "beeps", chosen_beep)
+#                    if os.path.exists(beep_path):
+#                        # Wir zwingen das Pulse/Pipewire-System auf den Mono-TX Kanal
+#                        env = os.environ.copy()
+#                        env['PULSE_SINK'] = 'mono-fallback'
+#                        
+#                        # SYNCHRONE BLOCKADE: Ohne Thread wartet Python hier eisern,
+#                        # bis paplay den Beep vollstaendig fertig gespielt hat!
+#                        subprocess.run(["paplay", beep_path], env=env, check=False)
+#                        print("PTT-RELEASE: Beep-Modulation abgeschlossen.")
+#                
+#                # Eine winzige Hardware-Gedenksekunde (50ms) vor dem physischen Relais-Abfall
+#                time.sleep(0.050)
+#            #code = "4101000000000006" if radio.is_tx else "4100000000000006"
+#            if radio.ser: 
+#                radio.ser.write(bytes.fromhex(code))
+#                
+#            radio.ptt_start_time = time.time()
+#            radio.save_config()
+####
+
         elif cmd == 'P':
             was_transmitting = radio.is_tx
             radio.is_tx = not radio.is_tx
@@ -467,30 +508,27 @@ def api_cmd(cmd):
             if was_transmitting:
                 print("PTT-RELEASE: Sende Rogerbeep aktiv ueber den Aether...")
                 
-                # SÄUBERUNG: Wir holen uns die Beep-Auswahl direkt in die Route
-                chosen_beep = radio.config.get("current_beep", "None")
+                # Wir merken uns JETZT den exakten Zeitpunkt des Loslassens!
+                radio.last_ptt_release_time = time.time()
                 
+                chosen_beep = radio.config.get("current_beep", "None")
                 if chosen_beep != "None":
                     beep_path = os.path.join(SCRIPT_DIR, "beeps", chosen_beep)
                     if os.path.exists(beep_path):
-                        # Wir zwingen das Pulse/Pipewire-System auf den Mono-TX Kanal
                         env = os.environ.copy()
                         env['PULSE_SINK'] = 'mono-fallback'
-                        
-                        # SYNCHRONE BLOCKADE: Ohne Thread wartet Python hier eisern,
-                        # bis paplay den Beep vollstaendig fertig gespielt hat!
                         subprocess.run(["paplay", beep_path], env=env, check=False)
                         print("PTT-RELEASE: Beep-Modulation abgeschlossen.")
-                
-                # Eine winzige Hardware-Gedenksekunde (50ms) vor dem physischen Relais-Abfall
                 time.sleep(0.050)
                 
             code = "4101000000000006" if radio.is_tx else "4100000000000006"
-            if radio.ser: 
-                radio.ser.write(bytes.fromhex(code))
-                
+            if radio.ser: radio.ser.write(bytes.fromhex(code))
             radio.ptt_start_time = time.time()
             radio.save_config()
+
+
+####            
+
 
         elif cmd == 'SSCAN':
             radio.sw_scan_active = not radio.sw_scan_active
@@ -686,7 +724,8 @@ def api_cmd(cmd):
         "MW_SCAN": getattr(radio, 'mw_active', False), 
         "KEY_BUF": radio.key_buffer,
         "PTT_HOTKEY": radio.config.get("ptt_hotkey", "F6"), 
-        "CURRENT_BEEP": radio.config.get("current_beep", "None")
+        "CURRENT_BEEP": radio.config.get("current_beep", "None"),
+        "SIMULATION": True if radio.ser is None else False
     })
 
 @app.route('/api/config/override', methods=['POST'])
@@ -706,21 +745,29 @@ def api_config_override():
 
 def ptt_heartbeat_watchdog(radio):
     global LAST_BROWSER_HEARTBEAT
-    print("PTT Heartbeat-Waechter (30 Sek.) aktiv.")
+    print("PTT Heartbeat-Waechter (30 Sek.) aktiv und synchronisiert.")
     while True:
         try:
             if radio.is_tx:
-                silent_duration = time.time() - LAST_BROWSER_HEARTBEAT
+                # Failsafe: Falls die Variable im RAM mal None wird, fangen wir es ab
+                heartbeat = LAST_BROWSER_HEARTBEAT if LAST_BROWSER_HEARTBEAT is not None else time.time()
+                silent_duration = time.time() - heartbeat
+                
                 if silent_duration >= 30.0:
                     print(f"PTT VERBINDUNGSABBRUCH! Trenne TX.")
                     with radio.lock:
-                        radio.is_tx = False; radio.save_config()
+                        radio.is_tx = False
+                        radio.save_config()
                         if radio.ser: radio.ser.write(bytes.fromhex("4100000000000006"))
                     play_roger_beep()
-            time.sleep(1.0)
+            
+            # Im Normalbetrieb schlaeft der Waechter knackige 0.5 Sekunden fuer maximale Praezision
+            time.sleep(0.5)
+            
         except Exception as e:
             print(f"Fehler im Heartbeat-Waechter: {e}")
-            time.sleep(2.0)
+            time.sleep(2.0) # CPU-Schutz bei echtem Systemabsturz
+
 
 threading.Thread(target=ptt_heartbeat_watchdog, args=(radio,), daemon=True).start()
 
@@ -756,5 +803,3 @@ threading.Thread(target=auto_patch_streams, daemon=True).start()
 if __name__ == '__main__':
     print("AE5900 Remote V2 mit WebSocket gestartet")
     socketio.run(app, host='0.0.0.0', port=5000, debug=False)
-
-
