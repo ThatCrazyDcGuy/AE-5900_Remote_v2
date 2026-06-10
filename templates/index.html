@@ -302,7 +302,7 @@
         socket.on('connect', () => {
             console.log("Socket.IO erfolgreich verbunden");
             const vInd = document.getElementById('versionIndicator');
-            if (vInd) vInd.textContent = "V-110626 i1/a3 VX-RB";
+            if (vInd) vInd.textContent = "V-110626 i4/a7 VX-RB-SM";
         });
 
         socket.on('audio', (data) => {
@@ -353,23 +353,41 @@ function updateUI(data) {
     if (!data) return;
 
     // =========================================================================
-    // 1. BASIS-DISPLAY-WERTE BESCHREIBEN (MIT KEYPAD- & PA-WEICHE)
+    // 1. BASIS-DISPLAY-WERTE BESCHREIBEN (MIT SIMULATIONS-WARNUNG)
     // =========================================================================
     const currentMode = data.MODE ? data.MODE.toUpperCase() : '';
     const ch = data.CH;
     const keyBuf = data.KEY_BUF || '';
+    const mhzDisp = document.getElementById('mhzDisp');
+    const chDisp = document.getElementById('chDisp');
     
-    if (currentMode === "PA") {
-        if (document.getElementById('chDisp')) document.getElementById('chDisp').innerText = "--";
-        if (document.getElementById('mhzDisp')) document.getElementById('mhzDisp').innerText = "PA AMPLIFIER";
+    if (data.SIMULATION === true) {
+        // HACKADAY-FAILSAFE: Hardware fehlt -> Schalte sofort auf Demo-Modus um!
+        if (chDisp) chDisp.innerText = "XX";
+        if (mhzDisp) {
+            mhzDisp.innerText = "SIMULATION / NO DEVICE";
+            mhzDisp.style.color = "#ff3333"; // Knallrot fuer den Trockenlauf
+        }
+    } else if (currentMode === "PA") {
+        if (chDisp) chDisp.innerText = "--";
+        if (mhzDisp) {
+            mhzDisp.innerText = "PA AMPLIFIER";
+            mhzDisp.style.color = "#00ff00"; // Standard Gruen
+        }
     } 
     else if (keyBuf.length === 1) {
-        if (document.getElementById('chDisp')) document.getElementById('chDisp').innerText = keyBuf + "-";
-        if (document.getElementById('mhzDisp')) document.getElementById('mhzDisp').innerText = "ENTER DIGIT 2...";
+        if (chDisp) chDisp.innerText = keyBuf + "-";
+        if (mhzDisp) {
+            mhzDisp.innerText = "ENTER DIGIT 2...";
+            mhzDisp.style.color = "#ffff00"; // Gelb waehrend der Eingabe
+        }
     }
     else {
-        if (document.getElementById('chDisp')) document.getElementById('chDisp').innerText = ch;
-        if (document.getElementById('mhzDisp')) document.getElementById('mhzDisp').innerText = (freqs[ch] || "---.---") + " MHz";
+        if (chDisp) chDisp.innerText = ch;
+        if (mhzDisp) {
+            mhzDisp.innerText = (freqs[ch] || "---.---") + " MHz";
+            mhzDisp.style.color = "#00ff00"; // Standard Gruen im Live-Betrieb
+        }
     }
 
     if (document.getElementById('modeName')) document.getElementById('modeName').innerText = data.MODE;
@@ -379,7 +397,8 @@ function updateUI(data) {
     const sBtn = document.getElementById('scanBtn');
     const voxDisplay = document.getElementById('voxState'); 
     const asqDisplay = document.getElementById('asqState'); 
-    const muteDisplay = document.getElementById('muteState'); 
+    const muteDisplay = document.getElementById('muteState');
+
 
     // =========================================================================
     // 2. PTT- & S-METER-FARBWECHSEL DES VISUALIZERS (unveraendert)
