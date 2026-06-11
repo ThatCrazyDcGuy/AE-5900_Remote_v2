@@ -311,20 +311,31 @@ def mw_scan_loop(radio):
                 time.sleep(0.2)
             if not radio.mw_active: break
 
+            # --- KANAL PHYSISCH ANSTEUERN ---
             print(f"MW schaltet auf Kanal: {ch}")
+            
+            # Kanal im globalen Radio-Objekt fuer das Web-UI setzen
             radio.current_ch = int(ch)
-            ziffer1 = ch
-            ziffer2 = ch
+            
+            # KORREKTUR: Saubere Spaltung in Zehner- und Einerstelle!
+            ziffer1 = ch[0]  # Erste Ziffer (z.B. bei "08" -> "0")
+            ziffer2 = ch[1]  # Zweite Ziffer (z.B. bei "08" -> "8")
+            
             key_codes = {'0':'01','1':'02','2':'03','3':'04','4':'05','5':'06','6':'07','7':'08','8':'09','9':'0A'}
             
+            # Erste Ziffer aus dem Keypad emulieren und senden
             if ziffer1 in key_codes:
                 radio.send_cmd(f"41000100{key_codes[ziffer1]}000006", f"41000000{key_codes[ziffer1]}000006")
-            time.sleep(0.120)
+            time.sleep(0.120) # Sicherheits-Pause fuer den Albrecht-Prozessor
+            
+            # Zweite Ziffer aus dem Keypad emulieren und senden
             if ziffer2 in key_codes:
                 radio.send_cmd(f"41000100{key_codes[ziffer2]}000006", f"41000000{key_codes[ziffer2]}000006")
             
+            # 1 Sekunde auf diesem Kanal lauschen (Taktzeit)
             for _ in range(10):
-                if not radio.mw_active or radio.is_rx: break
+                if not radio.mw_active or radio.is_rx:
+                    break
                 time.sleep(0.1)
     print("Multi-Watch (MW) beendet.")
 
