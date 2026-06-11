@@ -177,6 +177,21 @@ Check out OpenwebrxPlus: https://luarvique.github.io/ppa/ RTL-SDR Blog v4: https
 
 2. ....
 
+### Version Info & Changelog (always perform updates with 'git pull')
+
+Current: V-110626 i8/a9 VX-RB-SM-MW
+
+1. VOX function fixed
+2. Rogebeep function implemented
+3. Simulation mode added for testing without the box
+4. MultiWatch fixed
+
+Previous version: V-100626 i4/a2 VX-RB
+
+1. VOX function test run
+2. Rogebeep function test run
+
+
 ### Extras and Test Runs
 
 1. JS8Call works quite well with it. Of course, you have to play around with the settings a bit and enable VOX.
