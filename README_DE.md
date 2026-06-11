@@ -174,17 +174,18 @@ Ein guter WebSDR lässt sich einfach mit OpenWebRX, einem Raspberry Pi, einem RT
 
 2. ....
 
-### Versionsinfo & Changelog (updates immer mit 'git pull' ausführen)
+### Versionsinformationen & Änderungsübersicht (Aktualisierungen bitte immer mit „git pull“ durchführen)
 
-Aktuell: V-110626 i8/a9 VX-RB-SM-MW
-1. VOX Funktion gefixt
-2. Rogebeep Funktion eingebaut
-3. Simulationsmodus hinzugefügt, für den Testbetrieb ohne Box
-4. MultiWatch repariert
+Aktuell: V-110626 i9/a9 LNG
 
-Vorletzte Version: V-100626 i4/a2 VX-RB
-1. Testlauf VOX Funktion
-2. Testlauf Rogebeep Funktion
+1. Die Sprache des Handbuchs unter „Einrichtung & Synchronisierung“ ändert sich entsprechend der Browsersprache.
+
+Vorherige Version: V-110626 i8/a9 VX-RB-SM-MW
+
+1. VOX-Funktion korrigiert
+2. Rogebeep-Funktion implementiert
+3. Simulationsmodus für Tests ohne Box hinzugefügt
+4. MultiWatch-Fehler behoben
 
 ### Extras und Testläufe
 
