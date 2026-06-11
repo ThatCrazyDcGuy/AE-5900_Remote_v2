@@ -383,8 +383,38 @@ def play_roger_beep():
     except Exception as e:
         print(f"Rogerbeep Fehler: {e}")
 
+#@app.route('/')
+#def index(): return render_template('index.html', config=radio.config, beeps_list=radio.beeps_list)
+
 @app.route('/')
-def index(): return render_template('index.html', config=radio.config, beeps_list=radio.beeps_list)
+def index():
+    # 1. Wir holen uns die vom Browser bevorzugten Sprachen als Liste
+    browser_languages = request.accept_languages.values()
+    
+    # 2. Standard-Einstellung ist immer unser englisches Fallback
+    erkannte_sprache = 'en'
+    
+    # 3. Wir scannen die Liste: Spricht der Browser primär Deutsch, schalten wir auf 'de'
+    for lang_code in browser_languages:
+        lang_lower = lang_code.lower()
+        if lang_lower.startswith('de'):
+            erkannte_sprache = 'de'
+            break
+        elif lang_lower.startswith('en'):
+            erkannte_sprache = 'en'
+            break
+        elif lang_lower.startswith('fr'):
+            erkannte_sprache = 'fr'
+            break
+        elif lang_lower.startswith('pl'):
+            erkannte_sprache = 'pl'
+            break
+    print(f"SPRACHE: Browser-Erkennung ergab: '{erkannte_sprache}'")
+    
+    return render_template('index.html', 
+                           config=radio.config, 
+                           beeps_list=radio.beeps_list, 
+                           lang=erkannte_sprache)
 
 @app.route('/api/audio')
 def get_audio():
