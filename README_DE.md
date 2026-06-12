@@ -174,9 +174,13 @@ Ein guter WebSDR lässt sich einfach mit OpenWebRX, einem Raspberry Pi, einem RT
 
 2. ....
 
-### Versionsinformationen & Änderungsübersicht (Aktualisierungen bitte immer mit „git pull“ durchführen)
+### Versionsinformationen & Änderungsübersicht (Aktualisierungen immer mit „git pull“ durchführen)
 
-Aktuell: V-110626 i9/a9 LNG
+Aktuell: V-120626 i1/a1 LN-RB
+
+1. Roge-Piepton-Schalter hinzugefügt
+
+Vorherige Version: V-110626 i9/a9 LNG
 
 1. Die Sprache des Handbuchs unter „Einrichtung & Synchronisierung“ ändert sich entsprechend der Browsersprache.
 
