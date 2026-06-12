@@ -179,7 +179,11 @@ Check out OpenwebrxPlus: https://luarvique.github.io/ppa/ RTL-SDR Blog v4: https
 
 ### Version Info & Changelog (always perform updates with 'git pull')
 
-Current: V-110626 i9/a9 LNG
+Current: V-120626 i1/a1 LN-RB
+
+1. Roge beep switch added 
+
+Previous version: V-110626 i9/a9 LNG
 
 1. The language of the manual under Setup & Sync changes according to the browser language setting.
 
