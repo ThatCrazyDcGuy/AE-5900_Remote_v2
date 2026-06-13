@@ -181,7 +181,7 @@ Check out OpenwebrxPlus: https://luarvique.github.io/ppa/ RTL-SDR Blog v4: https
 
 Current: V-120626 i1/a1 LN-RB
 
-1. Roge beep switch added 
+1. Roger beep switch added 
 
 Previous version: V-110626 i9/a9 LNG
 
