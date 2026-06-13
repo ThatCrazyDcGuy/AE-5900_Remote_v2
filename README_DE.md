@@ -48,7 +48,7 @@ Flexible Lösungen verschaffen besseren Zugang. Und genau das soll dieses Projek
 
 - Diverse Funktionen werden hier vorgestellt. Über mehrere Endgeräte gleichzeitig bedienbar. Der aktuelle, hier gesehene Code wird noch bereinigt und dann veröffentlicht. Leider alles sehr leise.
 
-[![AE5900 Webinterface V2 TX ](https://img.youtube.com/vi/BA9iDk-M_aI/0.jpg)](https://www.youtube.com/watch?v=BA9iDk-M_aI)
+[![AE5900 Webinterface V2 TX ](https://img.youtube.com/vi/2GPGKDhqmEw/0.jpg)](https://www.youtube.com/watch?v=2GPGKDhqmEw)
 
 - Ein Foto vom neuesten Prototyp ohne Klinkenstecker. Audio und Steuerung über RJ45.
 
