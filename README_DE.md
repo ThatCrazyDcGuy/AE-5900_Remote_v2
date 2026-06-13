@@ -178,7 +178,7 @@ Ein guter WebSDR lässt sich einfach mit OpenWebRX, einem Raspberry Pi, einem RT
 
 Aktuell: V-120626 i1/a1 LN-RB
 
-1. Roge-Piepton-Schalter hinzugefügt
+1. Roger-Piepton-Schalter hinzugefügt
 
 Vorherige Version: V-110626 i9/a9 LNG
 
