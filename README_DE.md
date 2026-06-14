@@ -176,7 +176,11 @@ Ein guter WebSDR lässt sich einfach mit OpenWebRX, einem Raspberry Pi, einem RT
 
 ### Versionsinformationen & Änderungsübersicht (Aktualisierungen immer mit „git pull“ durchführen)
 
-Aktuell: V-120626 i1/a1 LN-RB
+Aktuell: V-140626 i2/a4 SQ_MT
+
+1. Fehlerbehebungen für Schaltflächen. Bei Fehlern bitte 140626ae_5900_v2.py verwenden.
+
+Vorherige Version: V-120626 i1/a1 LN-RB
 
 1. Roger-Piepton-Schalter hinzugefügt
 
