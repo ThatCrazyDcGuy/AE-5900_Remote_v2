@@ -179,7 +179,11 @@ Check out OpenwebrxPlus: https://luarvique.github.io/ppa/ RTL-SDR Blog v4: https
 
 ### Version Info & Changelog (always perform updates with 'git pull')
 
-Current: V-120626 i1/a1 LN-RB
+Current: V-140626 i2/a4 SQ_MT
+
+1. Button bugfixes if something fails use 140626ae_5900_v2.py
+
+Previous version: V-120626 i1/a1 LN-RB
 
 1. Roger beep switch added 
 
