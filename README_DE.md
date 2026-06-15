@@ -176,7 +176,7 @@ Ein guter WebSDR lässt sich einfach mit OpenWebRX, einem Raspberry Pi, einem RT
 
 ### Versionsinformationen & Änderungsübersicht (Aktualisierungen immer mit „git pull“ durchführen)
 
-Aktuell: V-140626 i2/a4 SQ_MT
+Current: V-150626 i4/a5 BTN
 
 1. Fehlerbehebungen für Schaltflächen. Bei Fehlern bitte 140626ae_5900_v2.py verwenden.
 
