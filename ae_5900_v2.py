@@ -221,7 +221,7 @@ class RadioInterface:
                         vox_detected = (packet[6] == 0x01)
                         
                         # Wenn wir erst gerade manuell gesendet haben, blockieren wir Fehltrigger im RAM!
-                        if (time.time() - getattr(self, 'last_ptt_release_time', 0)) < 10.5:
+                        if (time.time() - getattr(self, 'last_ptt_release_time', 0)) < 5.0:
                             vox_detected = False
 
                         if vox_detected and not self.is_tx:
@@ -344,22 +344,6 @@ def mw_scan_loop(radio):
 
 radio = RadioInterface()
 
-#def play_roger_beep():
-#    try:
-#        chosen_beep = radio.config.get("current_beep", "None")
-#        if chosen_beep == "None": return
-#        beep_path = os.path.join(SCRIPT_DIR, "beeps", chosen_beep)
-#        
-#        if os.path.exists(beep_path):
-#            def run_paplay_beep():
-#                print(f"ROGERBEEP: Spiele {chosen_beep} verzögerungsfrei via paplay ab...")
-#                # paplay streamt die WAV instantan in den Pulse/PipeWire-Dämon
-#                subprocess.run(["paplay", beep_path], check=False)
-#                print("ROGERBEEP: Erfolgreich moduliert und abgeschlossen.")
-#                
-#            threading.Thread(target=run_paplay_beep, daemon=True).start()
-#    except Exception as e:
-#        print(f"Rogerbeep Fehler: {e}")
 def play_roger_beep():
     try:
         chosen_beep = radio.config.get("current_beep", "None")
@@ -385,9 +369,6 @@ def play_roger_beep():
             threading.Thread(target=run_paplay_beep, daemon=True).start()
     except Exception as e:
         print(f"Rogerbeep Fehler: {e}")
-
-#@app.route('/')
-#def index(): return render_template('index.html', config=radio.config, beeps_list=radio.beeps_list)
 
 @app.route('/')
 def index():
@@ -632,7 +613,7 @@ def api_cmd(cmd):
 
                 threading.Thread(target=run_mute_macro_fixed, daemon=True).start()
 
-        # --- SONDERFALL 2: SQUELCH RESET (DREISTUFIG & AUTARK VOR DER SCHLEIFE!) ---
+        # --- SONDERFALL 2: SQUELCH RESET (80 EXPRESS-STUFEN IN 17 SEKUNDEN) ---
         elif cmd == 'SQUELCHMAXDOWN':
             radio.squelch_timeout_until = time.time() + 17.0
             print("TIMEOUT: Squelch-Reset aktiv. UI für 17s gesperrt.")
@@ -644,16 +625,19 @@ def api_cmd(cmd):
                     radio.ser.write(bytes.fromhex("4100010024000006"))
                     time.sleep(0.150)
                     radio.ser.write(bytes.fromhex("4100000024000006"))
-                    time.sleep(0.100)
+                    time.sleep(0.150)
 
-                # 2. 17 Sekunden lang stur nach unten tasten (0x27)
-                print("SQUELCH-RESET: Fahre 80 Stufen blind nach unten (17s)...")
-                for _ in range(17):
+                # 2. Hochfrequenz-Fahrt: 80 Klicks in 16 Sekunden durchhämmern (5 Klicks pro Sekunde)
+                print("SQUELCH-RESET: Hämmer 80 Stufen im Express-Takt nach unten...")
+                for _ in range(80):
                     if radio.ser:
+                        # Taste runter (60ms)
                         radio.ser.write(bytes.fromhex("4100010027000006"))
-                        time.sleep(0.400)
+                        time.sleep(0.060)
+                        # Taste loslassen (140ms)
                         radio.ser.write(bytes.fromhex("4100000027000006"))
-                        time.sleep(0.600)
+                        time.sleep(0.140)
+
                 # 3. Menü schliessen und bestätigen (0x24)
                 print("SQUELCH-RESET: Schliesse Menü und bestätige Nullpunkt...")
                 if radio.ser:
@@ -663,9 +647,44 @@ def api_cmd(cmd):
                 
                 radio.config["asq_enabled"] = False
                 radio.save_config()
-                print("SQUELCH-RESET: Fahrt erfolgreich beendet.")
+                print("SQUELCH-RESET: Fahrt erfolgreich beendet. SQL steht sicher auf 0.")
 
             threading.Thread(target=run_squelch_reset_fixed, daemon=True).start()
+
+#        # --- SONDERFALL 2: SQUELCH RESET (DREISTUFIG & AUTARK VOR DER SCHLEIFE!) ---
+#        elif cmd == 'SQUELCHMAXDOWN':
+#            radio.squelch_timeout_until = time.time() + 17.0
+#            print("TIMEOUT: Squelch-Reset aktiv. UI für 17s gesperrt.")
+#            
+#            def run_squelch_reset_fixed():
+#                print("SQUELCH-RESET: Starte exakte Hardware-Reset-Folge...")
+#                # 1. Menü öffnen (0x24)
+#                if radio.ser:
+#                    radio.ser.write(bytes.fromhex("4100010024000006"))
+#                    time.sleep(0.150)
+#                    radio.ser.write(bytes.fromhex("4100000024000006"))
+#                    time.sleep(0.100)
+#
+#                # 2. 17 Sekunden lang stur nach unten tasten (0x27)
+#                print("SQUELCH-RESET: Fahre 80 Stufen blind nach unten (17s)...")
+#                for _ in range(17):
+#                    if radio.ser:
+#                        radio.ser.write(bytes.fromhex("4100010027000006"))
+#                        time.sleep(0.400)
+#                        radio.ser.write(bytes.fromhex("4100000027000006"))
+#                        time.sleep(0.600)
+#                # 3. Menü schliessen und bestätigen (0x24)
+#                print("SQUELCH-RESET: Schliesse Menü und bestätige Nullpunkt...")
+#                if radio.ser:
+#                    radio.ser.write(bytes.fromhex("4100010024000006"))
+#                    time.sleep(0.150)
+#                    radio.ser.write(bytes.fromhex("4100000024000006"))
+#                
+#                radio.config["asq_enabled"] = False
+#                radio.save_config()
+#                print("SQUELCH-RESET: Fahrt erfolgreich beendet.")
+#
+#            threading.Thread(target=run_squelch_reset_fixed, daemon=True).start()
 
         # --- NUN DER REST DER SUPERKEY-MAKROS (Komplett ohne Dopplungen) ---
         elif cmd in superkey_codes:
@@ -717,17 +736,22 @@ def api_cmd(cmd):
                 elif cmd == "ASQ_ON_OFF":
                     current_mode = MODES[radio.mode_idx].upper()
                     if current_mode in ["AM", "FM"]:
+                        # KORREKTUR: Der Sperrstempel wird gesetzt
                         radio.asq_timeout_until = time.time() + 2.0
                         print("TIMEOUT: ASQ-Toggle aktiv. UI für 2s blockiert.")
                         
                         if radio.config.get("asq_enabled", False):
                             def delayed_asq_off(h_clean, dur_val):
+                                # Wir nutzen deine bewährte Sende-Funktion
                                 radio.send_cmd(f"41000100{h_clean}000006", "00")
                                 time.sleep(dur_val)
                                 radio.send_cmd(f"41000000{h_clean}000006", "00")
                                 time.sleep(0.5)
-                                radio.config["asq_enabled"] = False
-                                radio.save_config()
+                                
+                                # KORREKTUR: Wir holen den Lock, um den Timeout im RAM nicht zu überschreiben
+                                with radio.lock:
+                                    radio.config["asq_enabled"] = False
+                                    radio.save_config()
                             threading.Thread(target=delayed_asq_off, args=(hex_clean, duration), daemon=True).start()
                         else:
                             if radio.ser:
@@ -736,6 +760,7 @@ def api_cmd(cmd):
                                 radio.ser.write(bytes.fromhex("41000000" + hex_clean + "000006"))
                             radio.config["asq_enabled"] = True
                             radio.save_config()
+
 
                 # --- SCHLEIFEN-SONDERFALL 3: HARDWARE LOCK / UNLOCK ---
                 elif cmd == "LOCKDEV":
