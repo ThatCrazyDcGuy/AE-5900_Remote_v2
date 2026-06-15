@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AE-5900 Remote Pro</title>
     <style>
+		.click-blocked {
+            pointer-events: none !important;
+            cursor: default !important;
+        }
         body { 
             background: #1a1a1a; 
             color: #0f0; 
@@ -275,6 +279,9 @@
     let isWebUIBusy = false;
     let clarTimer = null;
     let currentClarOffset = 0;
+    let currentSqTimeout = 0;
+    let currentAsqTimeout = 0;
+    let currentMuteTimeout = 0;
 
     // ==================== CANVAS RESIZE ====================
     function resizeCanvas() {
@@ -295,7 +302,7 @@
         socket.on('connect', () => {
             console.log("Socket.IO erfolgreich verbunden");
             const vInd = document.getElementById('versionIndicator');
-            if (vInd) vInd.textContent = "V-140626 i2/a4 SQ_MT";
+            if (vInd) vInd.textContent = "V-150626 i4/a5 BTN";
         });
 
         socket.on('audio', (data) => {
@@ -364,7 +371,7 @@ function updateUI(data) {
     } else if (currentMode === "PA") {
         if (chDisp) chDisp.innerText = "--";
         if (mhzDisp) {
-            mhzDisp.innerText = "PA AMPLIFIER";
+            mhzDisp.innerText = "PA DEV. VOLUME";
             mhzDisp.style.color = "#00ff00"; // Standard Gruen
         }
     } 
@@ -432,7 +439,8 @@ function updateUI(data) {
             sBtn.style.boxShadow = "0 0 10px #00ffff";
             sBtn.innerText = "SCANN...";
         } else {
-            sBtn.style.background = "#333";
+            // KORREKTUR: Hintergrund komplett leeren, damit er wie die restlichen Tasten aussieht!
+            sBtn.style.background = ""; 
             sBtn.style.boxShadow = "none";
             sBtn.innerText = "S-SCAN";
         }
@@ -445,11 +453,13 @@ function updateUI(data) {
            mwBtn.style.boxShadow = "0 0 10px #00ffff";
            mwBtn.innerText = "MW...";
        } else {
-           mwBtn.style.background = "#333";
+           // KORREKTUR: Hintergrund komplett leeren für bündiges Ausgrauen im Timeout!
+           mwBtn.style.background = ""; 
            mwBtn.style.boxShadow = "none";
            mwBtn.innerText = "MW";
        }
     }
+
 
     // 4. Status-Labels fuer Setup-Bereich (VOX, ASQ, MUTE)
     if(voxDisplay) {
@@ -566,6 +576,10 @@ function updateUI(data) {
     // =========================================================================
     // 6. Synchronisation des globalen Lock-Zustands & NEUE TIMEOUTS
     // =========================================================================
+    currentSqTimeout = data.SQ_TIMEOUT || 0;
+    currentAsqTimeout = data.ASQ_TIMEOUT || 0;
+    currentMuteTimeout = data.MUTE_TIMEOUT || 0;
+
     if (data.LOCK_ENABLED !== undefined) {
         isWebUILocked = data.LOCK_ENABLED;
     }
@@ -588,31 +602,33 @@ function updateUI(data) {
         }
     }
 
+
     // =========================================================================
     // 7. GLOBALE LOCK-, PA-, SCAN- & TIMEOUT-AUSGRAUUNG FUER ALLE TASTEN
     // =========================================================================
-    const allButtons = document.querySelectorAll('.controls button, .keypad button, .keypad-wrapper button');
+    // REPARIERT: Wir fügen die Klassen für die Kanaltasten (.channel-selectors oder .ctrl-btn) 
+    // direkt in den Hauptstaubsauger ein, damit sie bei JEDER Sperre mitgezählt werden!
+    const allButtons = document.querySelectorAll('.ctrl-btn, .channel-selectors button, .controls button, .keypad button, .keypad-wrapper button, button[onclick]');
     const sqBtn = document.getElementById('sqResetBtn'); 
 
     // --- PRIORIÄT 1: HÄRTESTE SPERRE - DER SQUELCH RESET (17 SEKUNDEN COUTNDOWN) ---
     if (sqTimeout > 0) {
         allButtons.forEach(btn => {
             btn.disabled = true;
-            btn.style.opacity = "0.4"; 
+            btn.style.opacity = "0.4"; // Jede Taste ohne Ausnahme einfrieren und ausgrauen
         });
         
         if (sqBtn) {
             sqBtn.innerText = `RESET (${sqTimeout}s)`;
             sqBtn.style.color = "#ff3333"; 
-            sqBtn.style.opacity = "1";     
+            sqBtn.style.opacity = "1"; // Nur der Reset-Knopf bleibt lesbar    
         }
     }
     // --- PRIORITÄT 2: STILLE SPERRE - DER ASQ & MUTE TOGGLE (2 SEKUNDEN BLOCKADE) ---
-    // KORREKTUR: ASQ und Mute sauber in EINEM einzigen Kombi-Zweig abgefangen!
     else if (asqTimeout > 0 || muteTimeout > 0) {
         allButtons.forEach(btn => {
-            btn.disabled = true;
-            btn.style.opacity = ""; // Optisch voll da, aber unklickbar!
+            btn.disabled = true; 
+            btn.style.opacity = "0.4"; // Faslch verstanden! Ausgrauen ist doch die bessere Option.)
         });
         
         if (sqBtn) { 
@@ -620,12 +636,11 @@ function updateUI(data) {
             sqBtn.style.color = ""; 
         }
     }
-
     // --- PRIORITÄT 3: DAS PHYSISCHE HARDWARE-LOCK ---
     else if (isWebUILocked) {
         if (sqBtn) { sqBtn.innerText = "SET A/SQ 1/0"; sqBtn.style.color = ""; }
         allButtons.forEach(btn => {
-            btn.style.opacity = ""; // Reset der Deckkraft von eventuellen Vor-Timeouts
+            btn.style.opacity = ""; 
             const onclickAttr = btn.getAttribute('onclick') || '';
             if (!onclickAttr.includes('LOCKDEV')) {
                 btn.disabled = true;
@@ -634,8 +649,7 @@ function updateUI(data) {
             }
         });
     }
-    
-    // --- PRIORITÄT 4: DER PA-MODUS ---
+    // --- PRIORITÄT 4: DER PA-MODUS (HAUPEBENE REPARIERT!) ---
     else if (currentMode === "PA") {
         if (sqBtn) { sqBtn.innerText = "SET A/SQ 1/0"; sqBtn.style.color = ""; }
         allButtons.forEach(btn => {
@@ -659,7 +673,7 @@ function updateUI(data) {
             if (btnId === "mwBtn" || onclickAttr === "send('P')" || onclickAttr === "send('M')") {
                 btn.disabled = false;
             } else {
-                btn.disabled = true; // Sperrt Ziffernblock waehrend des MW-Scans korrekt!
+                btn.disabled = false; // (Wir lassen hier false. Jede Taste beendet MW, also ist Ausgrauen aller Tasten unnötig.)
             }
         });
     }
@@ -670,7 +684,6 @@ function updateUI(data) {
             btn.disabled = false;
             btn.style.opacity = "";
         });
-        // Sonderregel: ASQ-Button sperren, wenn nicht AM/FM aktiv ist
         if (asqBtn && data.MODE && (currentMode !== "AM" && currentMode !== "FM")) {
             asqBtn.disabled = true;
         }
@@ -714,8 +727,10 @@ function updateUI(data) {
 
         const chUpBtn = document.querySelector('button[onclick="send(\'U\')"]');
         const chDnBtn = document.getElementById('chDnBtn') || document.querySelector('button[onclick="send(\'D\')"]');
+        
         if (chUpBtn && chDnBtn && !isWebUILocked) {
-            if (clarTimer || (data.CLAR_STEP && data.CLAR_STEP !== "STEP")) {
+            // Wenn der Clarifier aktiv ist ODER irgendein Timeout (Squelch/ASQ/Mute) läuft -> SPERREN
+            if (clarTimer || (data.CLAR_STEP && data.CLAR_STEP !== "STEP") || sqTimeout > 0 || asqTimeout > 0 || muteTimeout > 0) {
                 chUpBtn.disabled = true;
                 chDnBtn.disabled = true;
             } else {
@@ -723,6 +738,7 @@ function updateUI(data) {
                 chDnBtn.disabled = false;
             }
         }
+
         
         // =========================================================================
         // NEU: HIER SITZT DER HOTKEY-ZUSTAND PERFEKT INNERHALB VON updateUI!
@@ -738,19 +754,60 @@ function updateUI(data) {
     }
 
     // ==================== HEKTIKSICHERE WARTESCHLANGE ====================
+
+function updateUIState() {
+    const allButtons = document.querySelectorAll('.ctrl-btn, .channel-selectors button, .controls button, .keypad button, .keypad-wrapper button, button[onclick]');
+    
+    // Wenn IRGENDEIN Timeout aktiv ist, frieren wir sofort alle Tasten ein!
+    if (currentSqTimeout > 0 || currentAsqTimeout > 0 || currentMuteTimeout > 0) {
+        allButtons.forEach(btn => {
+            btn.disabled = true;
+            // Nur beim harten Squelch-Reset ausgrauen, bei ASQ/Mute bleibt es hell
+            if (currentSqTimeout > 0) {
+                btn.style.opacity = "0.4";
+            } else {
+                btn.style.opacity = ""; 
+            }
+        });
+    }
+}
+
+    
     function send(cmd) { 
+        // 1. Physisches Hardware-Lock abfragen
         if (isWebUILocked && cmd !== 'LOCKDEV') {
             console.log("Klick blockiert: WebUI ist gesperrt!");
             return; 
         }
-        
-        if (isWebUIBusy) {
-            webuiQueue.push(cmd);
-            return;
-        }
-        
-        isWebUIBusy = true;
 
+        // --- 2. TIMEOUT-SPERRE: Blockiert Folge-Klicks während ein Timeout läuft ---
+        // KORREKTUR: Wenn ein Timeout aktiv ist, blockieren wir JEDEN Befehl,
+        // ABER wir lassen den Befehl, der das Timeout ausgelöst hat (ASQ, Mute, Squelch), 
+        // dieses eine Mal passieren, damit er zum Server hochfliegen kann!
+        if (cmd !== 'STATUS' && cmd !== 'ASQ_ON_OFF' && cmd !== 'MUTECOMBBTN' && cmd !== 'SQUELCHMAXDOWN') {
+            if (currentSqTimeout > 0 || currentAsqTimeout > 0 || currentMuteTimeout > 0) {
+                console.log(`Klick blockiert: Befehl '${cmd}' abgewiesen. Timeout läuft!`);
+                return; // Verhindert hektische Folge-Klicks, lässt den Hauptbefehl aber durch!
+            }
+        }
+
+        // --- 3. SOFORT-ZÜNDUNG FÜR DIE 2-SEKUNDEN SPERRE IM BROWSER ---
+        // Erst NACHDEM die Sperre für Fremdbefehle geprüft wurde, zünden wir das Timeout,
+        // damit der fetch() gleich unten garantiert und ohne Verzögerung losbricht!
+        if (cmd === 'ASQ_ON_OFF') {
+            currentAsqTimeout = 2; 
+            updateUIState();       
+        }
+        if (cmd === 'MUTECOMBBTN') {
+            currentMuteTimeout = 2; 
+            updateUIState();        
+        }
+        if (cmd === 'SQUELCHMAXDOWN') {
+            currentSqTimeout = 17;
+            updateUIState();
+        }
+
+        isWebUIBusy = true;
         fetch('/api/cmd/' + cmd)
             .then(r => r.json())
             .then(data => {
@@ -770,6 +827,7 @@ function updateUI(data) {
                 }
             });
     }
+
 
     // =========================================================================
     // ABSOLUT BOMBENSICHERE CLARIFIER-LOGIK (FINALES REPARIERTES TIMING)
