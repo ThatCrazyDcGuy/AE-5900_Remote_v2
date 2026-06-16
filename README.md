@@ -179,7 +179,12 @@ Check out OpenwebrxPlus: https://luarvique.github.io/ppa/ RTL-SDR Blog v4: https
 
 ### Version Info & Changelog (always perform updates with 'git pull')
 
-Current: V-150626 i4/a5 BTN
+Current: V-160626 i3/a7 SQ
+
+1. Some bugfixes in UI
+2. A/SQ level to display added. Please first use A/SQ Res. (will run about 25sec) then use the A/SQ +/- buttons.
+
+Previous version: V-150626 i4/a5 BTN
 
 1. Button bugfixes if something fails use 140626ae_5900_v2.py
 
