@@ -150,7 +150,7 @@ class RadioInterface:
     def load_config(self):
         default = {
             "ptt_timeout": 300, "last_ch": 1, "last_mode": 2, "skip_pa": False, "skip_cw": False,
-            "p1_label": "Not set", "p2_label": "Not set", "p3_label": "Not set", "p4_label": "Not set",
+            "p1_label": "(/)", "p2_label": "(/)", "p3_label": "(/)", "p4_label": "(/)",
             "scan_speed": 0.5, "fft_rx_gain": 25000, "fft_tx_gain": 55000,
             "vox_enabled": False, "mute_enabled": False, "asq_enabled": False, "asq_memory": False,
             "clar_step": "STEP", "clar_offsets": {str(ch).zfill(2): 0 for ch in range(1, 41)},
