@@ -59,18 +59,25 @@
         button { 
             background: #333; 
             color: white; 
-            border: none; 
+            border: 1px solid #333; 
             padding: 12px 5px; 
             font-size: 0.95em; 
             border-radius: 5px; 
             cursor: pointer; 
             -webkit-tap-highlight-color: transparent; 
             font-weight: bold; 
+            box-sizing: border-box;
+            
+            /* --- NEU: DER UNVERRÜCKBARE OPTIK-SCHUTZRIEGEL --- */
+            min-height: 45px;        /* Garantiert eine absolut starre Einheits-Höhe */
+            white-space: nowrap;     /* Verhindert jeden Zeilenumbruch bei Textänderungen */
+            overflow: hidden;        /* Schneidet überstehende Pixel unsichtbar ab */
         }
         button:disabled { 
             background: #1a1a1a; 
             color: #444; 
-            border: 1px dashed #333; 
+            /* KORREKTUR: Bleibt exakt 1px gross, verändert die Button-Höhe nicht mehr! */
+            border: 1px dashed #222; 
             cursor: not-allowed; 
         }
         .btn-ptt { 
@@ -305,7 +312,7 @@
         socket.on('connect', () => {
             console.log("Socket.IO erfolgreich verbunden");
             const vInd = document.getElementById('versionIndicator');
-            if (vInd) vInd.textContent = "V-160626 i3/a7 SQ";
+            if (vInd) vInd.textContent = "V-170626 i4/a1 FLK";
         });
 
         socket.on('audio', (data) => {
