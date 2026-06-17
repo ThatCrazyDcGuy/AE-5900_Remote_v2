@@ -179,18 +179,19 @@ Check out OpenwebrxPlus: https://luarvique.github.io/ppa/ RTL-SDR Blog v4: https
 
 ### Version Info & Changelog (always perform updates with 'git pull')
 
-Current: V-160626 i3/a7 SQ
+Current: V-170626 i4/a1 FLK
 
-1. Some bugfixes in UI
+1. Some bugfixes in UI.
 2. A/SQ level to display added. Please first use A/SQ Res. (will run about 25sec) then use the A/SQ +/- buttons.
+3. Ugly movement of buttons fixed.
 
 Previous version: V-150626 i4/a5 BTN
 
-1. Button bugfixes if something fails use 140626ae_5900_v2.py
+1. Button bugfixes.
 
 Previous version: V-120626 i1/a1 LN-RB
 
-1. Roger beep switch added 
+1. Roger beep switch added.
 
 Previous version: V-110626 i9/a9 LNG
 
@@ -198,10 +199,10 @@ Previous version: V-110626 i9/a9 LNG
 
 Previous version: V-110626 i8/a9 VX-RB-SM-MW
 
-1. VOX function fixed
-2. Rogebeep function implemented
-3. Simulation mode added for testing without the box
-4. MultiWatch fixed
+1. VOX function fixed.
+2. Rogebeep function implemented.
+3. Simulation mode added for testing without the box.
+4. MultiWatch fixed.
 
 
 ### Extras and Test Runs
