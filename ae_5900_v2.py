@@ -817,27 +817,74 @@ def api_cmd(cmd):
             def run_voice_play():
                 play_path = os.path.join(SCRIPT_DIR, "ARC", "qso_rx.wav")
                 if os.path.exists(play_path):
-                    print("PAPAGEI: Taste PTT und spiele Signal-Report ab...")
+                    print("PAPAGEI: Taste PTT und spiele Signal-Report mit intelligentem Mumble-Holzhammer ab...")
+                    
+                    mumble_client_id = None
+                    mumble_sink_input_ids = []
+                    
+                    try:
+                        # --- SCHRITT 1: DIE CLIENT-ID VON MUMBLE DYNAMISCH ERMITTELN ---
+                        res_clients = subprocess.run(["pactl", "list", "short", "clients"], capture_output=True, text=True).stdout
+                        for line in res_clients.split('\n'):
+                            if "mumble" in line.lower():
+                                parts = line.split()
+                                # REPARATUR: Wir prüfen das ERSTE ELEMENT der Liste auf eine Zahl!
+                                if parts and parts[0].isdigit():
+                                    mumble_client_id = parts[0] # Extrahiert die reine ID (z.B. "106")
+                                    print(f"[HOLZHAMMER-RPLAY] Mumble-Client-ID lokalisiert: {mumble_client_id}")
+                                    break
+                        
+                        # --- SCHRITT 2: DEN DAZUGEHÖRIGEN SINK-INPUT ISOLIEREN ---
+                        if mumble_client_id:
+                            res_sinks = subprocess.run(["pactl", "list", "short", "sink-inputs"], capture_output=True, text=True).stdout
+                            for line in res_sinks.split('\n'):
+                                parts = line.split()
+                                if len(parts) >= 3:
+                                    # Spalte 3 (Index 2) hält die Client-ID. Wir vergleichen sie!
+                                    if parts[2] == mumble_client_id:
+                                        mumble_sink_input_ids.append(parts[0]) # Speichert die Sink-Input-ID (z.B. "107")
+                            
+                        # --- SCHRITT 3: RADIKALER MUTE VOR DEM SENDEN ---
+                        for stream_id in mumble_sink_input_ids:
+                            subprocess.run(["pactl", "set-sink-input-mute", stream_id, "1"], check=False)
+                        print(f"[HOLZHAMMER-RPLAY] {len(mumble_sink_input_ids)} Mumble-Sink-Inputs (IDs: {mumble_sink_input_ids}) stummgeschaltet.")
+                    except Exception as e:
+                        print(f"Holzhammer-RPLAY Mute fehlgeschlagen: {e}")
+                    
+                    # --- SENDER SCHARF SCHALTEN (PTT via CAT) ---
                     with radio.lock:
                         radio.is_tx = True
                         radio.ptt_start_time = time.time()
                         if radio.ser: radio.ser.write(bytes.fromhex("4101000000000006"))
                     
+                    # --- SIGNAL-REPORT VOM PAPAGEI ABSPIELEN ---
                     env = os.environ.copy()
                     env['PULSE_SINK'] = 'mono-fallback'
                     subprocess.run(["paplay", "--latency-msec=1", play_path], env=env, check=False)
                     
+                    # --- ROGERBEEP ANKOPPELN ---
                     chosen_beep = radio.config.get("current_beep", "None")
                     if chosen_beep != "None" and radio.config.get("roger_beep_enabled", True):
                         beep_path = os.path.join(SCRIPT_DIR, "beeps", chosen_beep)
                         if os.path.exists(beep_path):
                             subprocess.run(["paplay", "--latency-msec=1", beep_path], env=env, check=False)
                     
+                    # --- SENDER ZURÜCK AUF EMPFANG (RX via CAT) ---
                     with radio.lock:
                         radio.is_tx = False
                         if radio.ser: radio.ser.write(bytes.fromhex("4100000000000006"))
+                    
+                    # --- SCHRITT 4: UNMUTE ---
+                    try:
+                        for stream_id in mumble_sink_input_ids:
+                            subprocess.run(["pactl", "set-sink-input-mute", stream_id, "0"], check=False)
+                        print("[HOLZHAMMER-RPLAY] Mumble-Sink-Inputs wieder geoeffnet.")
+                    except Exception as e:
+                        print(f"Holzhammer-RPLAY Unmute fehlgeschlagen: {e}")
+                        
                     print("PAPAGEI: Wiedergabe beendet.")
             threading.Thread(target=run_voice_play, daemon=True).start()
+
 
         elif cmd == 'CQ_REC':
             if getattr(radio, 'is_recording_live', False):
@@ -882,27 +929,74 @@ def api_cmd(cmd):
             def run_cq_call():
                 play_path = os.path.join(SCRIPT_DIR, "ARC", "cq_loop.wav")
                 if os.path.exists(play_path):
-                    print("PAPAGEI: Sende CQ-Ruf automatisiert...")
+                    print("PAPAGEI: Starte CQ-Ruf mit intelligentem Mumble-Holzhammer...")
+                    
+                    mumble_client_id = None
+                    mumble_sink_input_ids = []
+                    
+                    try:
+                        # --- SCHRITT 1: DIE CLIENT-ID VON MUMBLE FINDEN ---
+                        res_clients = subprocess.run(["pactl", "list", "short", "clients"], capture_output=True, text=True).stdout
+                        for line in res_clients.split('\n'):
+                            if "mumble" in line.lower():
+                                parts = line.split()
+                                if parts and parts[0].isdigit():
+                                    mumble_client_id = parts[0] # Findet z.B. "106"
+                                    print(f"[HOLZHAMMER] Mumble-Client-ID lokalisiert: {mumble_client_id}")
+                                    break
+                        
+                        # --- SCHRITT 2: DEN DAZUGEHÖRIGEN SINK-INPUT FINDEN ---
+                        if mumble_client_id:
+                            res_sinks = subprocess.run(["pactl", "list", "short", "sink-inputs"], capture_output=True, text=True).stdout
+                            for line in res_sinks.split('\n'):
+                                parts = line.split()
+                                # Ein regulärer PipeWire Sink-Input hat mindestens 5 Spalten (ID, Sink, Client, ...)
+                                if len(parts) >= 5:
+                                    # Spalte 3 (Index 2) ist die Client-ID im Sink-Input
+                                    if parts[2] == mumble_client_id:
+                                        mumble_sink_input_ids.append(parts[0]) # Speichert die "107"
+                            
+                        # --- SCHRITT 3: RADIKALER MUTE ---
+                        for stream_id in mumble_sink_input_ids:
+                            subprocess.run(["pactl", "set-sink-input-mute", stream_id, "1"], check=False)
+                        print(f"[HOLZHAMMER] {len(mumble_sink_input_ids)} Mumble-Sink-Inputs (IDs: {mumble_sink_input_ids}) stummgeschaltet.")
+                    except Exception as e:
+                        print(f"Holzhammer-Mute fehlgeschlagen: {e}")
+                    
+                    # --- SENDER SCHARF SCHALTEN (PTT via CAT) ---
                     with radio.lock:
                         radio.is_tx = True
                         radio.ptt_start_time = time.time()
                         if radio.ser: radio.ser.write(bytes.fromhex("4101000000000006"))
                     
+                    # --- CQ-KONSERVE ABSPIELEN ---
                     env = os.environ.copy()
-                    env['PULSE_SINK'] = 'mono-fallback'
+                    env['PULSE_SINK'] = 'mono-fallback' 
                     subprocess.run(["paplay", "--latency-msec=1", play_path], env=env, check=False)
                     
+                    # --- ROGERBEEP ANKOPPELN ---
                     chosen_beep = radio.config.get("current_beep", "None")
                     if chosen_beep != "None" and radio.config.get("roger_beep_enabled", True):
                         beep_path = os.path.join(SCRIPT_DIR, "beeps", chosen_beep)
                         if os.path.exists(beep_path):
                             subprocess.run(["paplay", "--latency-msec=1", beep_path], env=env, check=False)
                     
+                    # --- SENDER ZURÜCK AUF EMPFANG (RX via CAT) ---
                     with radio.lock:
                         radio.is_tx = False
                         if radio.ser: radio.ser.write(bytes.fromhex("4100000000000006"))
+                    
+                    # --- SCHRITT 4: UNMUTE ---
+                    try:
+                        for stream_id in mumble_sink_input_ids:
+                            subprocess.run(["pactl", "set-sink-input-mute", stream_id, "0"], check=False)
+                        print("[HOLZHAMMER] Mumble-Sink-Inputs wieder geoeffnet.")
+                    except Exception as e:
+                        print(f"Holzhammer-Unmute fehlgeschlagen: {e}")
+                        
                     print("PAPAGEI: CQ-Ruf abgeschlossen.")
             threading.Thread(target=run_cq_call, daemon=True).start()
+
 
         # =========================================================================
         # CUSTOM MODUL: TERMINAL BEFEHLE FÜR ANTENNENSWITCH, REBOOTS ETC.
