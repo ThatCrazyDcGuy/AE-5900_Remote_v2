@@ -36,7 +36,7 @@ Flexible solutions provide better access. And that's exactly what this project s
 11. Own roger beeps. Just add them to folder beeps.
 12. Physically PTT key / Special key on phone or keyboard
 
-![AE5900_Remote_v2](/pictures/webui260526_1.jpeg)
+![AE5900_Remote_v2](/pictures/webui_last.jpg)
 
 - Here's a short clip. I'm transmitting with a handheld to my home station and listening to myself on my smartphone. (Screenshot of the smartphone)
 
