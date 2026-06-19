@@ -384,7 +384,7 @@
         socket.on('connect', () => {
             console.log("Socket.IO erfolgreich verbunden");
             const vInd = document.getElementById('versionIndicator');
-            if (vInd) vInd.textContent = "V-180626 i5 a13 CQRP";
+            if (vInd) vInd.textContent = "V-190626 i2 a5 CQRP";
         });
 
         socket.on('audio', (data) => {
@@ -559,6 +559,23 @@ function updateUI(data) {
            mwBtn.style.boxShadow = "none";
            mwBtn.innerText = "MW";
        }
+    }
+    // --- SPERRSCHUTZ FÜR DIE VOICE-BUTTONS WÄHREND DER URSPRUNGS-AUSSENDUNG ---
+    const voiceButtons = [document.getElementById('btn-rec'), document.getElementById('btn-rplay'), document.getElementById('btn-cqrec'), document.getElementById('btn-cqcall')];
+    if (data.PTT === "ON" && data.ACTIVE_P_BLOCK === "voice") {
+        voiceButtons.forEach(btn => {
+            if (btn) {
+                btn.classList.add('click-blocked');
+                btn.style.opacity = "0.3";
+            }
+        });
+    } else if (data.AUDIO_RECORDING !== true) {
+        voiceButtons.forEach(btn => {
+            if (btn) {
+                btn.classList.remove('click-blocked');
+                btn.style.opacity = "";
+            }
+        });
     }
 
 
