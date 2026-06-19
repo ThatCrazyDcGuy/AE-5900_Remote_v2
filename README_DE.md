@@ -36,7 +36,7 @@ Flexible Lösungen verschaffen besseren Zugang. Und genau das soll dieses Projek
 11. Eigene Rogerbeeps erstellen. Einfach zu den Bestätigungstönen im Ordner hinzufügen.
 12. Physische PTT-Taste/Sondertaste am Telefon oder an der Tastatur verwenden.
 
-![AE5900_Remote_v2](/pictures/webui260526_1.jpeg)
+![AE5900_Remote_v2](/pictures/webui_last.jpg)
 
 - Hier ein kurzer Clip. Ich sende hier mit einem Handfunkgerät an meine Heimstation und höre mich auf dem Smartphone. (Bildschirmaufnahme des Smartphones)
 
