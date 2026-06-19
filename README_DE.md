@@ -177,11 +177,11 @@ Ein guter WebSDR lässt sich einfach mit OpenWebRX, einem Raspberry Pi, einem RT
 ### Versionsinformationen & Änderungsübersicht (Aktualisierungen immer mit „git pull“ durchführen)
 
 
-Aktuell: V-180626 i5/a13 CQRP
+Aktuell: V-190626 i2/a5 CQRP
 
 1. Neue Terminaltasten können unter „Einstellungen & Synchronisierung“ ausgewählt und bearbeitet werden.
-
 2. Mit den Tasten können QSOs aufgezeichnet und wiedergegeben sowie CQ-Rufzeichen aufgezeichnet und wiederholt werden. Diese Funktion kann unter „Einstellungen & Synchronisierung“ aktiviert werden.
+3. Fehlerbehbungen
 
 Vorherige Version: V-170626 i4/a1 FLK
 
