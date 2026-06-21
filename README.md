@@ -179,7 +179,12 @@ Check out OpenwebrxPlus: https://luarvique.github.io/ppa/ RTL-SDR Blog v4: https
 
 ### Version Info & Changelog (always perform updates with 'git pull')
 
-Current: V-190626 i2/a5 CQRP
+Current: V-210626 i6/a9 BPLC
+
+1. ALL country codes added. Greetings to my testers in Poland and Great Britain.
+2. Again, some Bugfixes for FW 1.12 users.
+
+Previous version: V-190626 i2/a5 CQRP
 
 1. New terminal keys can be selected and edited in Setup & Sync.
 2. Keys can be used to record and play back QSOs, as well as to record and repeat CQ calls. This function can be selected in Setup & Sync.
