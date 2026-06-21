@@ -71,7 +71,7 @@ Flexible solutions provide better access. And that's exactly what this project s
 13. On the host computer, you may need to make adjustments in the volume control (pavucontrol). Typical adjustments would be: Menu item "Configuration" default sound card your network-connected sound card.
 14. On the host computer in Mumble, PulseAudio and Standard/Default can now be used for input and output. Audio input: Transmission should be set to continuous, quality to about 44kb/s.
 
-The script is currently only designed for the EU region. Other regions will follow, as will VFO mode.
+The script is currently designed for ALL region. VFO mode will follow.
 
 That's basically it, and anyone who's not completely clueless should be able to figure it out.
 
