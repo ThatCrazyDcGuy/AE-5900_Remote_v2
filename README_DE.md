@@ -35,6 +35,7 @@ Flexible Lösungen verschaffen besseren Zugang. Und genau das soll dieses Projek
 10. Der PTT-Kill-Schalter wird 30 Sekunden nach Verbindungsverlust aktiviert.
 11. Eigene Rogerbeeps erstellen. Einfach zu den Bestätigungstönen im Ordner hinzufügen.
 12. Physische PTT-Taste/Sondertaste am Telefon oder an der Tastatur verwenden.
+13. Ländercodes müssen im WebUI und am Gerät eingestellt werden.
 
 ![AE5900_Remote_v2](/pictures/webui_last.jpg)
 
