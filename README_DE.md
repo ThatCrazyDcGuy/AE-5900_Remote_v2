@@ -50,7 +50,7 @@ Flexible Lösungen verschaffen besseren Zugang. Und genau das soll dieses Projek
 
 [![AE5900 Webinterface V2 TX ](https://img.youtube.com/vi/2GPGKDhqmEw/0.jpg)](https://www.youtube.com/watch?v=2GPGKDhqmEw)
 
-- Ein Foto vom neuesten Prototyp ohne Klinkenstecker. Audio und Steuerung über RJ45.
+- Ein Foto vom nesten Prototyp ohne Klinkenstecker. Audio und Sterung über RJ45.
 
 ![AE5900_Remote_v2](/pictures/v218mar2.jpeg)
 
@@ -71,7 +71,7 @@ Flexible Lösungen verschaffen besseren Zugang. Und genau das soll dieses Projek
 13. Auf dem Hostrechner solltest du im Lautstärkeregler (pavucontrol) gegebenenfalls Anpassungen machen. Typische Anpassungen wären hier: Menupunkt "Konfiguration" Standard Soundkarte deine im Netzwerk angebundene Soundkarte.
 14. Auf dem Hostrechner in Mumble kann nun im In & Output PulseAudio und Standard/Default verwendet werden. Audioeingabe: Die Übertragung sollte auf kontinuierlich gesetzt sein, die Qualität auf etwa 44kb/s.
 
-Das Script ist derzeitig nur für die Region (EU) ausgelegt. Die anderen Regionen folgen noch, so wie auch der VFO Mode.
+Das Script ist für alle Regionen ausgelegt. VFO Mode folgt noch.
 
 Das ist eigentlich alles und wer nicht komplett ahnungslos ist, bekommt das schon hin.
 
@@ -176,8 +176,12 @@ Ein guter WebSDR lässt sich einfach mit OpenWebRX, einem Raspberry Pi, einem RT
 
 ### Versionsinformationen & Änderungsübersicht (Aktualisierungen immer mit „git pull“ durchführen)
 
+Aktuell: V-210626 i6/a9 BPLC
 
-Aktuell: V-190626 i2/a5 CQRP
+1. Alle Ländercodes hinzugefügt. Grüße an meine Tester in Polen und Großbritannien.
+2. Erneut einige Fehlerbehebungen für FW 1.12-Nutzer.
+
+Vorherige Version: V-190626 i2/a5 CQRP
 
 1. Neue Terminaltasten können unter „Einstellungen & Synchronisierung“ ausgewählt und bearbeitet werden.
 2. Mit den Tasten können QSOs aufgezeichnet und wiedergegeben sowie CQ-Rufzeichen aufgezeichnet und wiederholt werden. Diese Funktion kann unter „Einstellungen & Synchronisierung“ aktiviert werden.
