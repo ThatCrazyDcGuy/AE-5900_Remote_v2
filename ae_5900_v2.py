@@ -3,6 +3,7 @@ from flask_socketio import SocketIO, emit
 import serial
 import serial.tools.list_ports
 import threading
+import struct
 import time
 import json
 import os
@@ -117,6 +118,7 @@ class RadioInterface:
         self.squelch_timeout_until = 0.0
         self.asq_timeout_until = 0.0
         self.mute_timeout_until = 0.0
+        self.start_digimode_gateway()
 
         detected_port = None
         try:
@@ -242,7 +244,7 @@ class RadioInterface:
                             except Exception as e:
                                 print(f"Fehler beim Live-Config-Read: {e}")
 
-                            if not self.config.get("vox_enabled", False) and not getattr(self, 'is_vox_changing', False):
+                            if not self.config.get("vox_enabled", False) and not getattr(self, 'is_vox_changing', False) and not getattr(self, 'digi_tx', False):
                                 with self.lock:
                                     self.ser.write(bytes.fromhex("4100000000000006"))
                                 print("VOX-VETO: Automatisches Senden unterdrueckt.")
@@ -263,6 +265,55 @@ class RadioInterface:
                     print(f"Listen Loop Fehler: {e}")
                     pass
             time.sleep(0.02)
+            
+    def start_digimode_gateway(self):
+        """Lauscht im Hintergrund auf Digimode-Software auf Port 2442 & 2237"""
+        def udp_listener():
+            import socket, struct
+            
+            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            # Wir lauschen auf 0.0.0.0, damit WSJT-X vom PC über Tailscale ankommen darf!
+            sock.bind(("0.0.0.0", 2442)) 
+            
+            print("[DIGI] UDP-Gateway aktiv. Warte auf PC-Signale...")
+            self.digi_tx = False
+            
+            while True:
+                try:
+                    data, addr = sock.recvfrom(2048)
+                    if len(data) > 12 and data[0:4] == b'\xad\xbc\xcb\xda':
+                        msg_type = struct.unpack(">I", data[8:12])[0]
+                        
+                        if msg_type == 1: # Statuspaket von JS8/WSJT-X
+                            id_len = struct.unpack(">I", data[12:16])[0]
+                            idx = 16 + id_len
+                            
+                            is_software_tx = False
+                            if len(data) > idx + 8:
+                                is_software_tx = (data[idx] == 1 or data[idx] == 2)
+                            if b'Transmitting' in data:
+                                is_software_tx = True
+                                
+                            if is_software_tx:
+                                if not self.digi_tx:
+                                    print("[DIGI] ---> Software sendet! Halte PTT (VOX-Schutz aktiv)")
+                                    self.digi_tx = True
+                                    self.is_tx = True
+                                    with self.lock:
+                                        self.ser.write(bytes.fromhex("4101000000000006"))
+                            else:
+                                if self.digi_tx:
+                                    print("[DIGI] <--- Software stoppt! Löse PTT")
+                                    with self.lock:
+                                        self.ser.write(bytes.fromhex("4100000000000006"))
+                                    self.digi_tx = False
+                                    self.is_tx = False
+                                    self.last_ptt_release_time = time.time()
+                except Exception:
+                    time.sleep(1)
+
+        import threading
+        threading.Thread(target=udp_listener, daemon=True).start()
 
     def send_cmd(self, hex_press, hex_release):
         if not self.ser: return
@@ -443,7 +494,6 @@ def api_cmd(cmd):
     key_codes = {'0':'01','1':'02','2':'03','3':'04','4':'05','5':'06','6':'07','7':'08','8':'09','9':'0A'}
     p_codes = {'P1':'1A', 'P2':'1B', 'P3':'1C', 'P4':'1D'}
     
-    # KORREKTUR: Das vergessene Wörterbuch ist wieder an Bord!
     superkey_codes = {
         'FUNC_KEY':'0x31', 'ACTION':'0x1E', 'LOCKDEV':'0x1E:2', 'CLARUP':'0x26', 'CLARHZ':'0x1E', 'CLARDN':'0x27',
         'VOX_TOGGLE':'28', 'VOX_SETTING':'0x28:2', 'EMG_TOGGLE':'0x25', 'DEVBUTTONUP':'0x10', 'DEVBUTTONDOWN':'0x11',
@@ -477,12 +527,8 @@ def api_cmd(cmd):
                     radio.ser.write(bytes.fromhex(f"41000100{hex_cmd}000006"))
                     time.sleep(0.08)
                     radio.ser.write(bytes.fromhex(f"41000000{hex_cmd}000006"))
-                
-                # FLASK-ZÜNDER: Wir müssen ein gültiges Status-JSON zurückgeben!
-                # Wir rufen einfach deine existierende Status-Funktion auf, damit das UI weiterlebt
+               
                 return jsonify(get_current_status_dict())
-
-            # --- AB HIER FOLGT DEINE NORMALE KANAL-LOGIK FÜR DIE ANDEREN MODI ---
             max_ch = 40
             if band == "DE": max_ch = 80
             elif band == "IN": max_ch = 27
@@ -592,6 +638,33 @@ def api_cmd(cmd):
                 radio.ser.write(bytes.fromhex(code))
             radio.ptt_start_time = time.time()
             radio.save_config()
+        # === UNIVERSAL DIGIMODE TRIGGER FOR JS8CALL ===
+        # Use: curl -s http://127.0.0.1:5000/api/cmd/TX?state=%1
+        elif cmd == 'TX':
+            from flask import request
+            raw_query = request.query_string.decode('utf-8', errors='ignore')
+            
+            is_on = "on" in raw_query or "ON" in raw_query or "1" in raw_query
+            
+            if is_on:
+                if not getattr(radio, 'digi_tx', False):
+                    print("[DIGI API] ---> PTT FESTGEHALTEN (JS8Call sendet, VOX geschützt)")
+                    radio.digi_tx = True
+                    radio.is_tx = True
+                    radio.force_rx = False
+                    if radio.ser:
+                        radio.ser.write(bytes.fromhex("4101000000000006"))
+                    radio.ptt_start_time = time.time()
+                return "TX ON OK"
+            else:
+                if getattr(radio, 'digi_tx', False):
+                    print("[DIGI API] <--- PTT LOSGELASSEN (JS8Call fertig)")
+                    if radio.ser:
+                        radio.ser.write(bytes.fromhex("4100000000000006"))
+                    radio.digi_tx = False
+                    radio.is_tx = False
+                    radio.last_ptt_release_time = time.time()
+                return "TX OFF OK"
         elif cmd == 'TOGGLE_RB':
             radio.config["roger_beep_enabled"] = not radio.config.get("roger_beep_enabled", True)
             print(f"ROGERBEEP-SCHALTER: Neuer Status ist {radio.config['roger_beep_enabled']}")
