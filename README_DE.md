@@ -177,7 +177,17 @@ Ein guter WebSDR lässt sich einfach mit OpenWebRX, einem Raspberry Pi, einem RT
 
 ### Versionsinformationen & Änderungsübersicht (Aktualisierungen immer mit „git pull“ durchführen)
 
-Aktuell: V-210626 i6/a9 BPLC
+Aktuell: V-240626 i1/a4 JS8
+
+1. Neuimplementierung der JS8-Aufrufsteuerung
+ Verwenden Sie `curl -s http://127.0.0.1:5000/api/cmd/TX?state=%1` als Auslöser in Radio / Rigoptions (schaltet automatisch ein/aus).
+ In anderen Digitalmodi verwenden Sie `curl -s http://127.0.0.1:5000/api/cmd/TX?state=%1` für TX.
+                 Für RX verwenden Sie `curl -s http://127.0.0.1:5000/api/cmd/TX?state=%0`.
+Alternativ können Sie ein Ein-/Ausschaltskript mit diesen Befehlen erstellen.
+
+2. VOX-Bugfix
+
+Vorherige Version: V-210626 i6/a9 BPLC
 
 1. Alle Ländercodes hinzugefügt. Grüße an meine Tester in Polen und Großbritannien.
 2. Erneut einige Fehlerbehebungen für FW 1.12-Nutzer.
