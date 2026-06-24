@@ -32,7 +32,7 @@ mumble = None
 def audio_receiver_loop():
     """ Holt 48kHz, dampft auf 16kHz fuer mobile Netze runter und streamt zum Browser """
     global mumble
-    GAIN_FACTOR = 0.8 
+    GAIN_FACTOR = 1.0 
     
     while True:
         if mumble and mumble.is_alive():

@@ -35,7 +35,7 @@ def audio_receiver_loop():
     
     # --- LAUTSTAERKE-REDUZIERUNG ---
     # 1.0 = Original, 0.5 = stark reduziert. etc.
-    GAIN_FACTOR = 0.8 
+    GAIN_FACTOR = 1.0 
     
     while True:
         if mumble and mumble.is_alive():
