@@ -180,10 +180,10 @@ Ein guter WebSDR lässt sich einfach mit OpenWebRX, einem Raspberry Pi, einem RT
 Aktuell: V-240626 i1/a4 JS8
 
 1. Neuimplementierung der JS8-Aufrufsteuerung
- Verwenden Sie `curl -s http://127.0.0.1:5000/api/cmd/TX?state=%1` als Auslöser in Radio / Rigoptions (schaltet automatisch ein/aus).
- In anderen Digitalmodi verwenden Sie `curl -s http://127.0.0.1:5000/api/cmd/TX?state=%1` für TX.
-                 Für RX verwenden Sie `curl -s http://127.0.0.1:5000/api/cmd/TX?state=%0`.
-Alternativ können Sie ein Ein-/Ausschaltskript mit diesen Befehlen erstellen.
+ Verwende `curl -s http://127.0.0.1:5000/api/cmd/TX?state=%1` als Auslöser in Radio / Rigoptions (schaltet automatisch ein/aus).
+ In anderen Digitalmodi verwende  `curl -s http://127.0.0.1:5000/api/cmd/TX?state=%1` für TX.
+                 Für RX verwende `curl -s http://127.0.0.1:5000/api/cmd/TX?state=%0`.
+Alternativ kann ein Ein-/Ausschaltskript mit diesen Befehlen erstellt werden.
 
 2. VOX-Bugfix
 
