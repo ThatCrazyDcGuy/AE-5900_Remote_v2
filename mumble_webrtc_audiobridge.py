@@ -19,6 +19,7 @@ if not hasattr(RequestContext, "session") or not hasattr(RequestContext.session,
 
 app = Flask(__name__)
 
+# AUS VERSION 2: Nur echte, schnelle WebSockets erlauben – das killt den Payload-Log-Stau!
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet', transports=['websocket'])
 
 # --- CONFIG FOR MUMBLE ---
@@ -65,7 +66,7 @@ def index():
     <!DOCTYPE html>
     <html>
     <head>
-        <title>Mumble WEBRTC Audio Bridge (16kHz)</title>
+        <title>AE5900 Remote - Audio Bridge</title>
         <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
         <style>
             body { background: #111; color: #fff; font-family: sans-serif; text-align: center; padding-top: 50px; }
@@ -75,13 +76,14 @@ def index():
         </style>
     </head>
     <body>
-        <h1>Albrecht AE 5900 - Mumble Audio Tab (16kHz Mobile-Edition)</h1>
+        <h1>Albrecht AE 5900 - Mumble Audio Tab</h1>
         <hr style="width: 300px; border-color: #333;">
         <br>
         <button id="audioBtn" class="btn off" onclick="toggleAudio()">AUDIO RECV: OFF</button>
         <div id="status">Warte auf Verbindung...</div>
 
         <script>
+            // AUS VERSION 2: Browser starr auf WebSocket pinnen
             const socket = io({ transports: ['websocket'], upgrade: false });
             let audioContext = null;
             let isAudioOn = false;
@@ -127,8 +129,8 @@ def index():
             function toggleAudio() {
                 const btn = document.getElementById('audioBtn');
                 if (!isAudioOn) {
-                    // TX wieder auf die stabile native Rate der Soundkarte setzen
-                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    // AUS VERSION 1: Feste 48000Hz Basis erzwingen, damit die Abspiel-Mathematik der 16k-Puffer exakt aufgeht!
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 48000 });
                     nextStartTime = 0; 
                     isAudioOn = true;
                     btn.innerText = "AUDIO RECV: ON";
@@ -140,13 +142,14 @@ def index():
                             noiseSuppression: false,
                             autoGainControl: false,
                             channelCount: 1,
-                            sampleRate: 48000 // Native Rate für glasklare Erfassung
+                            sampleRate: 48000
                         }
                     }).then(stream => {
-                        document.getElementById('status').innerText = "Audio aktiv (Sende @ 48kHz / Empfange @ 16kHz)";
+                        document.getElementById('status').innerText = "Audio aktiv (Sende & Empfange)";
                         
                         const sourceMic = audioContext.createMediaStreamSource(stream);
-                        const processor = audioContext.createScriptProcessor(1024, 1, 1);
+                        // AUS VERSION 1: Stabiler 2048er Puffer für flüssiges 48kHz TX-Audio ohne Latenzstau
+                        const processor = audioContext.createScriptProcessor(2048, 1, 1);
                         
                         sourceMic.connect(processor);
                         processor.connect(audioContext.destination);
@@ -161,7 +164,6 @@ def index():
                                 int16Buffer[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
                             }
                             
-                            // Binaere Rohdaten via schnellem WebSocket abfeuern
                             socket.emit('audio_in', int16Buffer.buffer);
                         };
                         
@@ -205,7 +207,15 @@ def handle_audio_in(pcm_data):
             return
             
         try:
-            # Reicht die vollen 48kHz Rohdaten blockweise direkt weiter
+
+            
+            queue_size = mumble.sound_output.get_buffer_size() # Holt die aktuelle Puffergröße
+            
+
+            if queue_size > 5:
+
+                return "BUFFER_THROTTLE"
+                
             mumble.sound_output.add_sound(bytes(pcm_data))
         except Exception as e:
             print(f"[MIC ERROR] Fehler beim Senden an Mumble: {e}")
