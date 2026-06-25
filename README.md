@@ -183,7 +183,8 @@ Check out OpenwebrxPlus: https://luarvique.github.io/ppa/ RTL-SDR Blog v4: https
 
 Current: V-240626 i1/a4 JS8
 
-1. Reimplementation of JS8call control
+1. Reimplementation of JS8call control.
+   
  As trigger in JS8call in Radio / Rigoptions (will switch on/off automatically) use:
 
 ```bash
@@ -195,14 +196,14 @@ curl -s http://127.0.0.1:5000/api/cmd/TX?state=%1"
 ````
  For RX:
  
-    ```bash
+   ```bash
     curl -s http://127.0.0.1:5000/api/cmd/TX?state=%0"
-    ````
+   ````
 
 Replace 127.0.0.1 with your ip.
 You can also build a on/off script with these commands.
 
-2. VOX Bugfix
+2. VOX bugfixes
 
 Previous version: V-210626 i6/a9 BPLC
 
