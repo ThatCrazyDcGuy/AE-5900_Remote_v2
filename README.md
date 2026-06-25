@@ -184,9 +184,10 @@ Check out OpenwebrxPlus: https://luarvique.github.io/ppa/ RTL-SDR Blog v4: https
 Current: V-240626 i1/a4 JS8
 
 1. Reimplementation of JS8call control
-  Use curl -s http://127.0.0.1:5000/api/cmd/TX?state=%1 as trigger in Radio / Rigoptions (will switch on/off automatically)
-  In other digimodes Use curl -s http://127.0.0.1:5000/api/cmd/TX?state=%1 for TX
-                         curl -s http://127.0.0.1:5000/api/cmd/TX?state=%0 for RX
+  Use "curl -s http://127.0.0.1:5000/api/cmd/TX?state=%1" as trigger in Radio / Rigoptions (will switch on/off automatically)
+  In other digimodes Use "curl -s http://127.0.0.1:5000/api/cmd/TX?state=%1" for TX
+                         "curl -s http://127.0.0.1:5000/api/cmd/TX?state=%0" for RX
+                         Replace 127.0.0.1 with your ip.
   Or build a on/off script with these commands.
 2. VOX Bugfix
 
