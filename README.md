@@ -188,7 +188,7 @@ Current: V-240626 i1/a4 JS8
  As trigger in JS8call in Radio / Rigoptions (will switch on/off automatically) use:
 
 ```bash
-curl -s http://127.0.0.1:5000/api/cmd/TX?state=%1"
+curl -s http://127.0.0.1:5000/api/cmd/TX?state=%1
 ````
  In other digimodes use for TX:
   ```bash
@@ -197,7 +197,7 @@ curl -s http://127.0.0.1:5000/api/cmd/TX?state=%1"
  For RX:
  
    ```bash
-    curl -s http://127.0.0.1:5000/api/cmd/TX?state=%0"
+    curl -s http://127.0.0.1:5000/api/cmd/TX?state=%0
    ````
 
 Replace 127.0.0.1 with your ip.
