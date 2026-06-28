@@ -181,7 +181,11 @@ Check out OpenwebrxPlus: https://luarvique.github.io/ppa/ RTL-SDR Blog v4: https
 ### Version Info & Changelog (always perform updates with 'git pull')
 
 
-Current: V-240626 i1/a4 JS8
+Current: V-280626 i1/a1 BF
+
+1. Bugfixes für V-240626
+
+Previous version: V-240626 i1/a4 JS8
 
 1. Reimplementation of JS8call control.
    
