@@ -177,7 +177,11 @@ Ein guter WebSDR lässt sich einfach mit OpenWebRX, einem Raspberry Pi, einem RT
 
 ### Versionsinformationen & Änderungsübersicht (Aktualisierungen immer mit „git pull“ durchführen)
 
-Aktuell: V-240626 i1/a4 JS8
+Aktuell: V-280626 i1/a1 BF
+
+1. Fehlerbehebungen der V-240626
+
+Vorherige Version: V-240626 i1/a4 JS8
 
 1. Neuimplementierung der JS8call-Steuerung.
 
