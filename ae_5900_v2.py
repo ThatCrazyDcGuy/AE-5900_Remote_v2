@@ -401,6 +401,7 @@ def mw_scan_loop(radio):
     print("Multi-Watch (MW) beendet.")
 
 radio = RadioInterface()
+LAST_BROWSER_HEARTBEAT = time.time()
 
 def play_roger_beep():
     try:
@@ -482,9 +483,13 @@ def rig_ptt_control(state):
 
 @app.route('/api/cmd/<cmd>')
 def api_cmd(cmd):
-    global MODES, LAST_BROWSER_HEARTBEAT  # HIER GANZ OBEN HINGESETZT
+    global MODES, LAST_BROWSER_HEARTBEAT
     LAST_BROWSER_HEARTBEAT = time.time()
-    if cmd not in ['STATUS', 'MW_TOGGLE', 'SSCAN'] and not cmd.startswith('SETSPEED'):
+    
+    # Sicherstellen, dass 'val' sicher ausgelesen wird, BEVOR der Thread-Lock greift
+    val = request.args.get('val')
+
+    if cmd not in ['STATUS', 'MW_TOGGLE', 'SSCAN'] and not cmd.startswith('SETSPEED_'):
         radio.stop_sw_scan()
         if hasattr(radio, 'mw_active') and radio.mw_active: 
             radio.mw_active = False 
@@ -641,7 +646,6 @@ def api_cmd(cmd):
         # === UNIVERSAL DIGIMODE TRIGGER FOR JS8CALL ===
         # Use: curl -s http://127.0.0.1:5000/api/cmd/TX?state=%1
         elif cmd == 'TX':
-            from flask import request
             raw_query = request.query_string.decode('utf-8', errors='ignore')
             
             is_on = "on" in raw_query or "ON" in raw_query or "1" in raw_query
@@ -1257,7 +1261,6 @@ def api_cmd(cmd):
 
         # --- CONFIG- & INTERNE ROUTEN (ABSOLUT BÜNDIG & STRUCT-SAVE) ---
         elif cmd.startswith('SET_'):
-            val = request.args.get('val')
 
             if cmd == "SET_CURRENT_BAND":
                 radio.config["current_band"] = val
