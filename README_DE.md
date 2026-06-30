@@ -258,5 +258,23 @@ Ich bin kein Programmierer, aber ich kann Texte lesen, verstehen, umsetzen und i
 Ich übernehme keine Verantwortung für eure Basteleien. Bei meinem lieben Betatester und bei mir funktionieren Soft - so wie Hardware einwandfrei.
 Das Audio bekam in QSO's durchweg gutes Feedback.
 
----
+### Danke, Leute:
+
+Ein besonderer Dank geht an alle verweisenden Seiten, die ich in letzter Zeit entdeckt habe:
+
+- [blog.adafruit.com](https://blog.adafruit.com/2026/06/28/a-remote-web-rig-control-system-for-the-albrecht-ae-5900-radio-hamsunday/?__cf_chl_f_tk=ZeEFXVEeo3pQ0MyeQUiZ6NV9VGvb3nG0cls587OkBxI-1782807606-1.0.1.1-vs2hueUsJCEhc7sezrSgWTLAEHHWuS3q5fcnDK67Xqo)
+- [korben.info](https://korben.info/il-a-transforme-sa-radio-cb-en-station-pilotable-depuis-un-navigateur-web.html)
+- [hackaday.com](https://hackaday.com/2026/06/03/web-based-control-for-a-cb-radio/)
+- [daily.dev](https://daily.dev/posts/web-based-control-for-a-cb-radio-hvgarjfyn)
+- [radiowalkietalkie.com](https://www.radiowalkietalkie.com/news/cb-radio-web-remote-control-solution-85555228.html)
+- [bingo01](https://bingo01.de/)
+- [simonthewizard.com](https://simonthewizard.com/)
+
+Wo die Leute darüber sprechen:
+
+- [cb-lounge.de](https://forum.cb-lounge.de/)
+- [funkbasis.de](https://www.funkbasis.de/)
+- [cbfunk.ch](https://cbfunk.ch/)
+- [bfunker.online](https://cbfunker.online/)
+- [worldwidedx.com](https://www.worldwidedx.com/threads/web-control-of-cb-radio.271268/#post-872377)
 
