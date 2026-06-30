@@ -177,7 +177,11 @@ Ein guter WebSDR lässt sich einfach mit OpenWebRX, einem Raspberry Pi, einem RT
 
 ### Versionsinformationen & Änderungsübersicht (Aktualisierungen immer mit „git pull“ durchführen)
 
-Aktuell: V-280626 i1/a1 BF
+Aktuell: V-300626 i4/a1 DSP
+
+1. Automatische Anpassung der Anzeigegröße zwischen Smartphone und Computer.
+
+Vorherige Version: V-280626 i1/a1 BF
 
 1. Fehlerbehebungen der V-240626
 
