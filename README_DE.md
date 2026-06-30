@@ -275,6 +275,6 @@ Wo die Leute darüber sprechen:
 - [cb-lounge.de](https://forum.cb-lounge.de/)
 - [funkbasis.de](https://www.funkbasis.de/)
 - [cbfunk.ch](https://cbfunk.ch/)
-- [bfunker.online](https://cbfunker.online/)
+- [cbfunker.online](https://cbfunker.online/)
 - [worldwidedx.com](https://www.worldwidedx.com/threads/web-control-of-cb-radio.271268/#post-872377)
 
