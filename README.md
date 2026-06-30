@@ -180,8 +180,11 @@ Check out OpenwebrxPlus: https://luarvique.github.io/ppa/ RTL-SDR Blog v4: https
 
 ### Version Info & Changelog (always perform updates with 'git pull')
 
+Current: V-300626 i4/a1 DSP
 
-Current: V-280626 i1/a1 BF
+1. Automatic adjustment to the display size between smartphone and computer.
+
+Previous version: V-280626 i1/a1 BF
 
 1. Bugfixes für V-240626
 
