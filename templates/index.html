@@ -227,24 +227,24 @@
             <!-- =========================================================================
                  NEU: AUSWAHL DES DYNAMISCHEN TASTEN-BLOCKS
                  ========================================================================= -->
-               <p>Tasten-Modul (P1-P4): 
+               <p>Modular keys in the 4th row: 
                    <!-- KORREKTUR: Wir nutzen die standardisierte setCfg-Funktion und laden danach die Seite neu -->
                    <select onchange="fetch('/api/cmd/SET_ACTIVE_P_BLOCK?val=' + this.value).then(() => { setTimeout(() => location.reload(), 150); })" style="background: #333; color: white; border: 1px solid #555; padding: 3px; border-radius: 3px;">
-                       <option value="standard" {% if config.active_p_block == 'standard' %}selected{% endif %}>Albrecht Standard (P1-P4)</option>
+                       <option value="standard" {% if config.active_p_block == 'standard' %}selected{% endif %}>AMM-500 default (P1-P4)</option>
                        <option value="voice" {% if config.active_p_block == 'voice' %}selected{% endif %}>QSO (REC/PLAY) CQ (REC/PLAY)</option>
                        <option value="custom" {% if config.active_p_block == 'custom' %}selected{% endif %}>Custom terminal commands</option>
                    </select>
                </p>
 
-<p>Länder-Band (Norm): 
+<p>Multinorm bands: 
     <select onchange="fetch('/api/cmd/SET_CURRENT_BAND?val=' + this.value).then(() => { setTimeout(() => location.reload(), 150); })" style="background: #333; color: white; border: 1px solid #555; padding: 3px; border-radius: 3px;">
         <option value="EU" {% if config.current_band == 'EU' %}selected{% endif %}>EU (40 CH AM/FM/SSB)</option>
         <option value="DE" {% if config.current_band == 'DE' %}selected{% endif %}>DE (80 CH FM / 40 CH AM/SSB)</option>
         <option value="UK" {% if config.current_band == 'UK' %}selected{% endif %}>UK (40 CH EU / 40 CH UK-FM)</option>
         <option value="PL" {% if config.current_band == 'PL' %}selected{% endif %}>PL (40 CH -5kHz AM/FM / 40 CH EU SSB)</option>
         <option value="IN" {% if config.current_band == 'IN' %}selected{% endif %}>IN (27 CH AM/FM/SSB)</option>
-        <option value="EC" {% if config.current_band == 'EC' %}selected{% endif %}>EC (40 CH nur FM)</option>
-        <option value="HF" {% if config.current_band == 'HF' %}selected{% endif %}>HF (VFO Amateurfunk - Platzhalter)</option>
+        <option value="EC" {% if config.current_band == 'EC' %}selected{% endif %}>EC (40 CH FM)</option>
+        <!--<option value="HF" {% if config.current_band == 'HF' %}selected{% endif %}>HF (VFO HAM - Placecolder)</option>-->
     </select>
 </p>
 
@@ -285,14 +285,14 @@
             <p>Scan Speed (ms): <input type="number" id="scanSpeedInput" value="{{ config.scan_speed * 1000 | int }}" style="width: 70px;" onchange="send('SETSPEED_' + this.value)"> </p>
             <p>FFT Gain RX: <input type="number" value="{{config.fft_rx_gain}}" onchange="send('SETGAIN_RX_' + this.value)" style="width:80px;"></p>
             <p>FFT Gain TX: <input type="number" value="{{config.fft_tx_gain}}" onchange="send('SETGAIN_TX_' + this.value)" style="width:80px;"></p>
-            <p>PTT Hotkey (z.B. F6, Space, p): 
+            <p>PTT Hotkey (e.g. F6, Space, p): 
                 <input type="text" id="pttHotkeyInput" value="{{ config.ptt_hotkey if config.ptt_hotkey else 'F6' }}" style="width:100px;" readonly>
-                <button onclick="changePTTHotkey()" style="padding: 2px 8px; font-size: 0.8em; background: #575757;">Taste aendern</button>
+                <button onclick="changePTTHotkey()" style="padding: 2px 8px; font-size: 0.8em; background: #575757;">Change button</button>
             </p>
 
 
             <!-- Rogerbeep Auswahl-Dropdown -->
-            <p>Rogerbeep Auswahl:
+            <p>Rogerbeep:
                 <select id="rogerbeepSelect" onchange="send('SET_BEEP?val=' + this.value)" style="width:100px;">
                     <option value="None" {% if config.current_beep == 'None' %}selected{% endif %}>None (Aus)</option>
                     {% for beep in beeps_list %}
@@ -300,42 +300,43 @@
                     {% endfor %}
                 </select>
             </p>
-        <p>VOX Schaltung: <span id="voxState" style="font-weight:bold;">--</span></p>
+        <!--<p>VOX Schaltung: <span id="voxState" style="font-weight:bold;">--</span></p>-->
 </div>
 
 <div style="border-top: 1px solid #444; margin-top: 15px; padding-top: 15px;">
-    <strong style="color: #0f0;">🔧 Status-Korrektur (VFO-Sync Override):</strong>
-    <p style="font-size: 0.85em; color: #888; margin-top: 5px;">Hake an, was asynchron läuft. Der Zustand wird automatisch ins Gegenteil umgekehrt.</p>
+    <strong style="color: #0f0;">🔧 Status correction override:</strong>
+    <p style="font-size: 0.85em; color: #888; margin-top: 5px;">Select the checkbox for all asynchronously running processes. The status will be automatically reversed. This is helpful if problems occur, such as when ASQ is disabled but ASQ shows enabled in display.
+In short: Just a visual correction.</p>
     
     <table style="width: 100%; color: #aaa; font-size: 0.95em; margin-bottom: 10px;">
         <tr>
-            <td>VOX-Status umkehren:</td>
+            <td>VOX - Reverse status:</td>
             <td style="text-align: right;"><input type="checkbox" id="tog_vox"></td>
         </tr>
         <tr>
-            <td>MUTE-Status umkehren:</td>
+            <td>MUTE - Reverse status:</td>
             <td style="text-align: right;"><input type="checkbox" id="tog_mute"></td>
         </tr>
         <tr>
-            <td>ASQ-Status umkehren:</td>
+            <td>ASQ - Reverse status:</td>
             <td style="text-align: right;"><input type="checkbox" id="tog_asq"></td>
         </tr>
         <tr>
-            <td>LOCK-Status umkehren:</td>
+            <td>LOCK - Reverse status:</td>
             <td style="text-align: right;"><input type="checkbox" id="tog_lock"></td>
         </tr>
     </table>
-    <button onclick="submitConfigOverride()" style="width: 100%; background: #4a4a00; color: #fff; padding: 8px; font-weight: bold;">HÄKCHEN INVERTIEEREN & CORRIGIEREN</button>
+    <button onclick="submitConfigOverride()" style="width: 100%; background: #4a4a00; color: #fff; padding: 8px; font-weight: bold;">REVERSE & CORRECT CHECKBOXES</button>
 </div>
 
 
 
-<div style="border-top: 1px solid #333; padding-top: 10px; margin-top: 10px;">
+<!--<div style="border-top: 1px solid #333; padding-top: 10px; margin-top: 10px;">
     <p>MIC Volume: <span id="volDisp">--</span>%</p>
     <div style="display: flex; gap: 10px;">
         <button onclick="changeVol('down')" style="flex: 1;">Vol -</button>
         <button onclick="changeVol('up')" style="flex: 1;">Vol +</button>
-    </div>
+    </div>-->
 </div>
 <div class="anleitung-box" style="background: #111; border: 1px solid #333; padding: 10px; margin-top: 10px; font-size: 0.9em; line-height: 1.4;">
     {% if lang == 'de' %}
@@ -425,7 +426,7 @@
         socket.on('connect', () => {
             console.log("Socket.IO erfolgreich verbunden");
             const vInd = document.getElementById('versionIndicator');
-            if (vInd) vInd.textContent = "V-280626 i1 a1 BF";
+            if (vInd) vInd.textContent = "V-300626 i1 a1 BF";
         });
 
         socket.on('audio', (data) => {
