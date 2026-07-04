@@ -15,7 +15,6 @@ Consider this with your conscience. I'm not your mother!
 ### Main Goal of the Project:
 
 Development of a sophisticated LAN/web remote control for the Albrecht AE-5900.
-While it's not comparable to rigctl or hamlib, it works.
 Ultimately, the purpose is also to revive CB radio and make it more attractive.
 Flexible solutions provide better access. And that's exactly what this project should enable.
 
