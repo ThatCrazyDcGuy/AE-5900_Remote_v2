@@ -39,17 +39,9 @@ Flexible solutions provide better access. And that's exactly what this project s
 
 ![AE5900_Remote_v2](/pictures/webui_last.jpg)
 
-- Here's a short clip. I'm transmitting with a handheld to my home station and listening to myself on my smartphone. (Screenshot of the smartphone)
+- Various features are demonstrated here. Operable via multiple devices simultaneously. Also rigctl and hamlib is implemented. The code shown here will be cleaned up and then published.
 
-[![AE5900 Webinterface V2 RX ](https://img.youtube.com/vi/vvg-HywBKIc/0.jpg)](https://www.youtube.com/shorts/vvg-HywBKIc)
-
-- Another short clip. I'm transmitting with the AE5900. (Screenshot of the smartphone)
-
-[![AE5900 Webinterface V2 TX ](https://img.youtube.com/vi/znx0lKvbVLs/0.jpg)](https://www.youtube.com/shorts/znx0lKvbVLs)
-
-- Various features are demonstrated here. Operable via multiple devices simultaneously. The code shown here will be cleaned up and then published. Unfortunately, everything is very quiet.
-
-[![AE5900 Webinterface V2 TX ](https://img.youtube.com/vi/2GPGKDhqmEw/0.jpg)](https://www.youtube.com/watch?v=2GPGKDhqmEw)
+[![AE5900 Webinterface V2 ](https://img.youtube.com/vi/Icj-ElM95ao/0.jpg)](https://www.youtube.com/watch?v=Icj-ElM95ao)
 
 - A photo of the newest prototype without jack conector. All audio & control over RJ45.
 
