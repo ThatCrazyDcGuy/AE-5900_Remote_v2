@@ -15,7 +15,6 @@ Klärt das mit eurem Gewissen. Ich bin nicht eure Mutti!
 ### Hauptziel des Projekts:
 
 Entwicklung einer LAN/Web-Fernsteuerung für das Albrecht AE-5900.
-Es ist zwar nicht mit rigctl oder hamlib vergleichbar, aber es funktioniert.
 Sinn und Zweck ist schlussendlich auch, das Thema Funk wieder zu beleben und attraktiver zu machen.
 Flexible Lösungen verschaffen besseren Zugang. Und genau das soll dieses Projekt ermöglichen.
 
