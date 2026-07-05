@@ -141,7 +141,6 @@ sudo chmod +x install.sh
 ./install.sh
 #If you want to use tailscale:
 #Copy the created TailscaleLink into your browser and follow the instructions
-sudo tailscale up
 reboot
 ````
 
@@ -174,10 +173,11 @@ Check out OpenwebrxPlus: https://luarvique.github.io/ppa/ RTL-SDR Blog v4: https
 
 Current: V-050426 i1/a9 RIGC
 
-1. hamctl/rigctl functions added
+1. hamctl/rigctl functions added.
    install dependencies (sudo apt install libhamlib-utils)
 
-2. Openwebrx TX-Button is available in openwebrx_ptt_code.txt // copy/paste ready
+2. Openwebrx TX-Button is available in openwebrx_ptt_code.txt // copy/paste ready.
+3. New install.sh added.
 
 Previous version: V-300626 i4/a1 DSPx
 
