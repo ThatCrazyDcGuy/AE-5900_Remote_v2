@@ -35,6 +35,7 @@ Flexible solutions provide better access. And that's exactly what this project s
 11. Own roger beeps. Just add them to folder beeps.
 12. Physically PTT key / Special key on phone or keyboard
 13. Country codes must be set in the web interface and on the device.
+14. Hamlib/Rigctl kompatibel (flrig, fldigi, rigctl, grig, openwebrx, js8call & wsjt-cb)
 
 ![AE5900_Remote_v2](/pictures/webui_last.jpg)
 
