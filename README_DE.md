@@ -170,10 +170,11 @@ Ein guter WebSDR lässt sich einfach mit OpenWebRX, einem Raspberry Pi, einem RT
 
 Aktuell: V-050426 i1/a9 RIGC
 
-1. hamctl/rigctl-Funktionen hinzugefügt
+1. hamctl/rigctl-Funktionen hinzugefügt.
 Abhängigkeiten installieren (sudo apt install libhamlib-utils)
 
-2. Openwebrx TX-Button ist in openwebrx_ptt_code.txt verfügbar // zum Kopieren/Einfügen bereit
+2. Openwebrx TX-Button ist in openwebrx_ptt_code.txt verfügbar // zum Kopieren/Einfügen bereit.
+3. install.sh angepasst.
 
 Vorherige Version: V-300626 i4/a1 DSPx
 
