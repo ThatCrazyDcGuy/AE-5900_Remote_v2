@@ -30,6 +30,47 @@ CONFIG_FILE = os.path.join(SCRIPT_DIR, "config.json")
 PORT = '/dev/ttyUSB0'
 MODES = ["PA", "CW", "FM", "AM", "USB", "LSB"]
 
+# --- EU CB-FUNK FREQUENZMATRIZEN FUER DEN HAMLIB SYNC // Rest noch hinzufügen nach BETATEST ---
+BASE_EU = {"01":"26.965","02":"26.975","03":"26.985","04":"27.005","05":"27.015","06":"27.025","07":"27.035","08":"27.055","09":"27.065","10":"27.075","11":"27.085","12":"27.105","13":"27.115","14":"27.125","15":"27.135","16":"27.155","17":"27.165","18":"27.175","19":"27.185","20":"27.205","21":"27.215","22":"27.225","23":"27.255","24":"27.235","25":"27.245","26":"27.265","27":"27.275","28":"27.285","29":"27.295","30":"27.305","31":"27.315","32":"27.325","33":"27.335","34":"27.345","35":"27.355","36":"27.365","37":"27.375","38":"27.385","39":"27.395","40":"27.405"}
+
+##BASE_DE = dict(BASE_EU)
+#BASE_DE = {"01":"26.965","02":"26.975","03":"26.985","04":"27.005","05":"27.015","06":"27.025","07":"27.035","08":"27.055","09":"27.065","10":"27.075","11":"27.085","12":"27.105","13":"27.115","14":"27.125","15":"27.135","16":"27.155","17":"27.165","18":"27.175","19":"27.185","20":"27.205","21":"27.215","22":"27.225","23":"27.255","24":"27.235","25":"27.245","26":"27.265","27":"27.275","28":"27.285","29":"27.295","30":"27.305","31":"27.315","32":"27.325","33":"27.335","34":"27.345","35":"27.355","36":"27.365","37":"27.375","38":"27.385","39":"27.395","40":"27.405","41":"26.565","42":"26.575","43":"26.585","44":"26.595","45":"26.605","46":"26.615","47":"26.625","48":"26.635","49":"26.645","50":"26.655","51":"26.665","52":"26.675","53":"26.685","54":"26.695","55":"26.705","56":"26.715","57":"26.725","58":"26.735","59":"26.745","60":"26.755","61":"26.765","62":"26.775","63":"26.785","64":"26.795","65":"26.805","66":"26.815","67":"26.825","68":"26.835","69":"26.845","70":"26.855","71":"26.865","72":"26.875","73":"26.885","74":"26.895","75":"26.905","76":"26.915","77":"26.925","78":"26.935","79":"26.945","80":"26.955"}
+#deFM = [f"{26.565 + i * 0.010:.3f}" for i in range(40)]
+#deFM = ["26.565","26.575","26.585","26.595","26.605","26.615","26.625","26.635","26.645","26.655","26.665","26.675","26.685","26.695","26.705","26.715","26.725","26.735","26.745","26.755","26.765","26.775","26.785","26.795","26.805","26.815","26.825","26.835","26.845","26.855","26.865","26.875","26.885","26.895","26.905","26.915","26.925","26.935","26.945","26.955"]
+#deFM = ["41":"26.565","42":"26.575","43":"26.585","44":"26.595","45":"26.605","46":"26.615","47":"26.625","48":"26.635","49":"26.645","50":"26.655","51":"26.665","52":"26.675","53":"26.685","54":"26.695","55":"26.705","56":"26.715","57":"26.725","58":"26.735","59":"26.745","60":"26.755","61":"26.765","62":"26.775","63":"26.785","64":"26.795","65":"26.805","66":"26.815","67":"26.825","68":"26.835","69":"26.845","70":"26.855","71":"26.865","72":"26.875","73":"26.885","74":"26.895","75":"26.905","76":"26.915","77":"26.925","78":"26.935","79":"26.945","80":"26.955"]
+#for idx, freq in enumerate(deFM):
+#    BASE_DE[str(41 + idx)] = freq
+
+
+BASE_DE = dict(BASE_EU)
+
+deFM = [f"{26.565 + i * 0.010:.3f}" for i in range(40)]
+
+for idx, freq in enumerate(deFM):
+    BASE_DE[str(41 + idx)] = freq
+
+BASE_PL_NULL = {}
+for ch, f_str in BASE_EU.items():
+    BASE_PL_NULL[ch] = f"{float(f_str) - 0.005:.3f}"
+
+
+#Kanäle 01-40 für den Modus 'UK'
+BASE_UK = {}
+for i in range(1, 41):
+    uk_freq = 27.60125 + (i - 1) * 0.010
+    BASE_UK[str(i).zfill(2)] = f"{uk_freq:.5f}"
+
+
+#BASE_UK = dict(BASE_EU) # 1-40 ist normales EU-Raster
+#for i in range(1, 41):
+#    # Die UK-Frequenzen starten bei 27.60125 MHz und steigen im 10-kHz-Schritt
+#    uk_freq = 27.60125 + (i - 1) * 0.010
+#    BASE_UK[str(40 + i)] = f"{uk_freq:.5f}"
+
+bandMatrices = {"EU": BASE_EU, "DE": BASE_DE, "UK": BASE_UK, "PL": BASE_PL_NULL, "IN": BASE_EU, "EC": BASE_EU}
+
+
+
 # --- AUDIO CONFIG ---
 CHUNK = 512
 stream_rx = None
@@ -119,6 +160,9 @@ class RadioInterface:
         self.asq_timeout_until = 0.0
         self.mute_timeout_until = 0.0
         self.start_digimode_gateway()
+        
+        threading.Thread(target=self.hamlib_emulator_task, daemon=True).start()
+        threading.Thread(target=self.sync_radio_to_hamlib_loop, daemon=True).start()
 
         detected_port = None
         try:
@@ -156,11 +200,11 @@ class RadioInterface:
             "ptt_hotkey": "F6", "current_beep": "None", "roger_beep_enabled": True, "max_sq_steps": 80, 
             "max_asq_steps": 9, "current_sq_level": 0, "current_asq_level": 1, "full_sync_active": False,
             
-            # --- UNSERE NEUEN VARIABLEN FÜR DIE LÄNDERCODES ---
+
             "current_band": "EU",
             "backup_mode_idx": 2,
             
-            # --- BEREINIGT: SPEICHER FÜR DIE DYNAMISCHE TASTEN-UMSCHALTUNG ---
+
             "active_p_block": "standard",
             "cust_lbl_1": "CUST 1",
             "cust_lbl_2": "CUST 2",
@@ -204,6 +248,314 @@ class RadioInterface:
                 f.flush()
                 os.fsync(f.fileno())
         except Exception as e: print(f"Schreibfehler: {e}")
+
+    # =========================================================================
+    # PROXY & SYNC ENGINE 
+    # =========================================================================
+    def hamlib_emulator_task(self):
+        try:
+            import subprocess
+            subprocess.Popen([
+                "rigctld", "-m", "1", "-t", "4533", "-T", "127.0.0.1"
+            ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            print("[HAMLIB] Offizielles Hintergrund-Rig auf Port 4533 gezündet.")
+        except Exception as e: 
+            print(f"Hintergrund-Rig Fehler: {e}")
+
+        server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        try:
+            server.bind(("0.0.0.0", 4532))
+            server.listen(5)
+            print("=== SPERRFREIER COMBINED CAT PROXY ON PORT 4532 ===")
+        except Exception as e: 
+            return
+
+        while True:
+            try:
+                client_sock, addr = server.accept()
+                threading.Thread(target=self.handle_hamlib_client, args=(client_sock,), daemon=True).start()
+            except: 
+                break
+
+    def forward_to_real_hamlib(self, command):
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.connect(("127.0.0.1", 4533))
+            s.sendall(command.encode('utf-8'))
+            response = s.recv(4096)
+            s.close()
+            return response
+        except: 
+            return b"RPRT -1\n"
+
+    def sync_radio_to_hamlib_loop(self):
+        """Pusht jede Änderung am Funkgerät/WebUI direkt in den Wasserfall"""
+        last_ch = None
+        last_mode = None
+        while True:
+            try:
+                c_band = self.config.get("current_band", "EU")
+                matrix = bandMatrices.get(c_band, BASE_EU)
+                ch_str = str(self.current_ch).zfill(2)
+                
+                mhz = matrix.get(ch_str, "26.965")
+                hz_val = int(float(mhz) * 1_000_000)
+                
+                c_mode = MODES[self.mode_idx].upper()
+                h_mode = "FM" if c_mode in ["FM", "PA"] else ("AM" if c_mode == "AM" else c_mode)
+                
+                if self.current_ch != last_ch or self.mode_idx != last_mode:
+                    self.forward_to_real_hamlib(f"F {hz_val}\n")
+                    pb = "2400" if "SB" in h_mode else "0"
+                    self.forward_to_real_hamlib(f"M {h_mode} {pb}\n")
+                    last_ch = self.current_ch
+                    last_mode = self.mode_idx
+            except Exception as e:
+                print(f"[HAMLIB SYNC ERROR] {e}")
+            time.sleep(0.5)
+
+    def handle_hamlib_client(self, client_socket):
+        client_socket.settimeout(None)
+        buffer = ""
+        while True:
+            try:
+                data = client_socket.recv(1024).decode('utf-8', errors='ignore')
+                if not data: 
+                    break
+                buffer += data
+                
+                while "\n" in buffer:
+                    line, buffer = buffer.split("\n", 1)
+                    cmd = line.strip()
+                    if not cmd: 
+                        continue
+                    
+                    clean_cmd = cmd.lstrip('+').strip()
+                    print(f"[CAT-PROXY RX] Empfange Befehl: '{clean_cmd}'")
+                    
+                    handled = False
+                    
+                    # === 1. FREQUENZ ABFRAGEN (f) MULTINORM ===
+                    if clean_cmd == 'f' or clean_cmd.startswith('get_freq'):
+                        c_band = self.config.get("current_band", "EU")
+                        c_mode = MODES[self.mode_idx].upper()
+                        
+                        # Dynamische Matrix-Weiche je nach Betriebsart
+                        if c_band == "PL" and c_mode in ["USB", "LSB"]:
+                            matrix = BASE_EU  # Polen nutzt bei SSB das EU-Raster
+                        elif c_band == "UK" and c_mode == "UK":
+                            matrix = BASE_UK  # UK nutzt im UK-Modus das Inlandsraster
+                        else:
+                            matrix = bandMatrices.get(c_band, BASE_EU)
+                            
+                        ch_str = str(self.current_ch).zfill(2)
+                        mhz = matrix.get(ch_str, "26.965")
+                        hz_val = int(round(float(mhz) * 1_000_000))
+                        
+                        resp = f"\\get_freq\n{hz_val}\n" if '\\' in line else f"{hz_val}\n"
+                        client_socket.sendall(resp.encode('utf-8'))
+                        handled = True
+
+                    # === 2. MODULATION ABFRAGEN (m) ===
+                    elif clean_cmd == 'm' or clean_cmd.startswith('get_mode'):
+                        c_mode = MODES[self.mode_idx].upper()
+                        h_mode = "FM" if c_mode in ["FM", "PA"] else ("AM" if c_mode == "AM" else c_mode)
+                        pb = "2400" if "SB" in h_mode else ("8000" if h_mode == "AM" else "15000")
+                        
+                        resp = f"\\get_mode\n{h_mode}\n{pb}\n" if '\\' in line else f"{h_mode}\n{pb}\n"
+                        client_socket.sendall(resp.encode('utf-8'))
+                        handled = True
+
+                    # === 3. MODULATION SETZEN (M) WITH STEP-COMPENSATION ===
+                    elif clean_cmd.startswith('M') or clean_cmd.startswith('\\set_mode'):
+                        parts = clean_cmd.split()
+                        if len(parts) > 1:
+                            target_mode = parts[1].upper()
+                            
+                            if target_mode == "WFM":
+                                resp = "\\set_mode\nRPRT 0\n" if '\\' in line else "RPRT 0\n"
+                                client_socket.sendall(resp.encode('utf-8'))
+                                handled = True
+                                continue
+                                
+                            if target_mode == "NFM": 
+                                target_mode = "FM"
+                            
+                            if target_mode in MODES:
+                                new_mode_idx = MODES.index(target_mode)
+                                if self.mode_idx != new_mode_idx:
+                                    # HARDWARE-BERECHNUNG: Wie viele Schritte liegen zwischen Alt und Neu?
+                                    old_idx = self.mode_idx
+                                    steps = (new_mode_idx - old_idx) % len(MODES)
+                                    
+                                    print(f"[CAT-PROXY] Modus-Wechsel von {MODES[old_idx]} zu {target_mode} erfordert {steps} Klicks.")
+                                    
+                                    # RAM aktualisieren und sichern
+                                    self.mode_idx = new_mode_idx
+                                    self.save_config()
+                                    
+                                    # Hintergrund-Rig syncen
+                                    self.forward_to_real_hamlib(line + "\n")
+                                    
+                                    # Physische Klick-Kette an Albrecht senden
+                                    if self.ser and steps > 0:
+                                        with self.lock:
+                                            for s in range(steps):
+                                                # Taste drücken
+                                                self.ser.write(bytes.fromhex("410001000D000006"))
+                                                time.sleep(0.09)
+                                                # Taste loslassen
+                                                self.ser.write(bytes.fromhex("410000000D000006"))
+                                                # Pause für den Albrecht-Prozessor zwischen den Klicks
+                                                time.sleep(0.12)
+                                    
+                                    try:
+                                        socketio.emit('status', get_current_status_dict())
+                                    except:
+                                        pass
+                        
+                        resp = "\\set_mode\nRPRT 0\n" if '\\' in line else "RPRT 0\n"
+                        client_socket.sendall(resp.encode('utf-8'))
+                        handled = True
+
+                    # === 4. DIGIMODE-PTT SETZEN (T) ===
+                    elif clean_cmd.startswith('T') or clean_cmd.startswith('\\set_ptt'):
+                        parts = clean_cmd.split()
+                        state = parts[1] if len(parts) > 1 else '0'
+                        
+                        if state == '1' or state == 'ON':
+                            if not self.is_tx:
+                                print("[CAT-PROXY PTT] ---> TX ON (Digimode)")
+                                self.is_tx = True
+                                self.force_rx = False
+                                if self.ser:
+                                    with self.lock:
+                                        self.ser.write(bytes.fromhex("4101000000000006"))
+                                self.ptt_start_time = time.time()
+                                try:
+                                    socketio.emit('status', get_current_status_dict())
+                                except:
+                                    pass
+                        else:
+                            if self.is_tx:
+                                print("[CAT-PROXY PTT] <--- TX OFF (Digimode)")
+                                if self.ser:
+                                    with self.lock:
+                                        self.ser.write(bytes.fromhex("4100000000000006"))
+                                self.is_tx = False
+                                self.last_ptt_release_time = time.time()
+                                try:
+                                    socketio.emit('status', get_current_status_dict())
+                                except:
+                                    pass
+                                if 'play_roger_beep' in locals() or 'play_roger_beep' in globals():
+                                    play_roger_beep()
+                                    
+                        self.forward_to_real_hamlib(line + "\n")
+                        resp = "\\set_ptt\nRPRT 0\n" if '\\' in line else "RPRT 0\n"
+                        client_socket.sendall(resp.encode('utf-8'))
+                        handled = True
+
+                    # === 5. DIGIMODE-PTT ABFRAGEN (t) ===
+                    elif clean_cmd == 't' or clean_cmd.startswith('get_ptt'):
+                        ptt_val = "1" if self.is_tx else "0"
+                        resp = f"\\get_ptt\n{ptt_val}\n" if '\\' in line else f"{ptt_val}\n"
+                        client_socket.sendall(resp.encode('utf-8'))
+                        handled = True
+
+                    # === 6. GEGENRICHTUNG: WATERFALL STEUERT FUNKGERÄT (F) MULTINORM ===
+                    elif clean_cmd.startswith('F') or clean_cmd.startswith('\\set_freq'):
+                        parts = clean_cmd.split()
+                        if len(parts) > 1:
+                            raw_freq = parts[1].split('.')[0]
+                            freq_digits = ''.join([c for c in raw_freq if c.isdigit()])
+                            
+                            if freq_digits:
+                                target_hz = int(freq_digits)
+                                target_hz_rounded = (target_hz // 1000) * 1000
+                                
+                                c_band = self.config.get("current_band", "EU")
+                                
+                                # --- INTELLIGENTE UK-BAND AUTO-WEICHE ---
+                                if c_band == "UK":
+                                    if target_hz_rounded >= 27601000:
+                                        # Wir sind im britischen Frequenzbereich -> Matrix wechseln & Mode UK erzwingen
+                                        matrix = BASE_UK
+                                        target_mode = "UK"
+                                    else:
+                                        # Wir sind im EU-Frequenzbereich -> Matrix wechseln & Mode FM erzwingen
+                                        matrix = BASE_EU
+                                        target_mode = "FM"
+                                        
+                                    if target_mode in MODES:
+                                        new_mode_idx = MODES.index(target_mode)
+                                        if self.mode_idx != new_mode_idx:
+                                            old_idx = self.mode_idx
+                                            steps = (new_mode_idx - old_idx) % len(MODES)
+                                            print(f"[UK-AUTO-MODE] Wechsle Modus von {MODES[old_idx]} zu {target_mode} ({steps} Klicks)")
+                                            self.mode_idx = new_mode_idx
+                                            
+                                            if self.ser and steps > 0:
+                                                with self.lock:
+                                                    for _ in range(steps):
+                                                        self.ser.write(bytes.fromhex("410001000D000006"))
+                                                        time.sleep(0.09)
+                                                        self.ser.write(bytes.fromhex("410000000D000006"))
+                                                        time.sleep(0.12)
+                                else:
+                                    # Standard-Verhalten für alle anderen Bänder
+                                    c_mode = MODES[self.mode_idx].upper()
+                                    if c_band == "PL" and c_mode in ["USB", "LSB"]:
+                                        matrix = BASE_EU
+                                    else:
+                                        matrix = bandMatrices.get(c_band, BASE_EU)
+                                
+                                # CB-Kanal aus der gewählten Matrix suchen
+                                for ch_num, freq_str in matrix.items():
+                                    matrix_hz = int(round(float(freq_str) * 1_000_000))
+                                    matrix_hz_rounded = (matrix_hz // 1000) * 1000
+                                    
+                                    if matrix_hz_rounded == target_hz_rounded:
+                                        target_ch = int(ch_num)
+                                        
+                                        if self.current_ch != target_ch:
+                                            print(f"[CAT-PROXY MULTINORM] Match! Band: {c_band} -> Ch {target_ch}")
+                                            self.current_ch = target_ch
+                                            self.save_config()
+                                            
+                                            self.forward_to_real_hamlib(f"F {target_hz}\n")
+                                            
+                                            if self.ser:
+                                                ch_repr = str(target_ch).zfill(2)
+                                                key_codes = {'0':'01','1':'02','2':'03','3':'04','4':'05','5':'06','6':'07','7':'08','8':'09','9':'0A'}
+                                                with self.lock:
+                                                    for digit in ch_repr:
+                                                        if digit in key_codes:
+                                                            self.ser.write(bytes.fromhex(f"41000100{key_codes[digit]}000006"))
+                                                            time.sleep(0.06)
+                                                            self.ser.write(bytes.fromhex(f"41000000{key_codes[digit]}000006"))
+                                                            time.sleep(0.06)
+                                            
+                                            try:
+                                                socketio.emit('status', get_current_status_dict())
+                                            except:
+                                                pass
+                                        break
+                        
+                        resp = "\\set_freq\nRPRT 0\n" if '\\' in line else "RPRT 0\n"
+                        client_socket.sendall(resp.encode('utf-8'))
+                        handled = True
+                    
+                    # === 7. FALLBACK AN DAS HINTERGRUND-RIG ===
+                    if not handled:
+                        response = self.forward_to_real_hamlib(line + "\n")
+                        client_socket.sendall(response)
+            except Exception as e:
+                print(f"[CAT-PROXY ERROR] Fehler im Verbindungs-Thread: {e}")
+                break
+        client_socket.close()
+        
 
     def heartbeat_task(self):
         while self.ser:
@@ -272,7 +624,6 @@ class RadioInterface:
             import socket, struct
             
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            # Wir lauschen auf 0.0.0.0, damit WSJT-X vom PC über Tailscale ankommen darf!
             sock.bind(("0.0.0.0", 2442)) 
             
             print("[DIGI] UDP-Gateway aktiv. Warte auf PC-Signale...")
@@ -465,6 +816,7 @@ def get_audio():
             return jsonify((fft_clean / gain).tolist())
     except: return jsonify([0] * 32)
 
+
 @app.route('/api/rig/ptt/<int:state>')
 def rig_ptt_control(state):
     try:
@@ -478,8 +830,18 @@ def rig_ptt_control(state):
             if radio.ser:
                 with radio.lock: radio.ser.write(bytes.fromhex("4100000000000006"))
             play_roger_beep()
-        return f"PTT_STATE: {radio.is_tx}\n"
-    except Exception as e: return f"ERROR: {str(e)}\n", 500
+            
+        # CORS-FIX: Rohe HTTP-Response mit Wildcard-Origin-Header bauen
+        from flask import make_response
+        response = make_response(f"PTT_STATE: {radio.is_tx}\n")
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        return response
+        
+    except Exception as e: 
+        from flask import make_response
+        response = make_response(f"ERROR: {str(e)}\n", 500)
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        return response
 
 @app.route('/api/cmd/<cmd>')
 def api_cmd(cmd):
@@ -532,8 +894,10 @@ def api_cmd(cmd):
                     radio.ser.write(bytes.fromhex(f"41000100{hex_cmd}000006"))
                     time.sleep(0.08)
                     radio.ser.write(bytes.fromhex(f"41000000{hex_cmd}000006"))
-               
+                
                 return jsonify(get_current_status_dict())
+
+            # --- NORMALE KANAL-UMSCHALTUNG (WENN NICHT IM PA-MODUS) ---
             max_ch = 40
             if band == "DE": max_ch = 80
             elif band == "IN": max_ch = 27
@@ -550,26 +914,27 @@ def api_cmd(cmd):
                 alter_modus = MODES[radio.mode_idx].upper()
                 
                 if alter_kanal <= 40 and radio.current_ch > 40:
-                    # BATTLES-PROOF: Sichert jeden Modus (inkl. FM) vor dem Sprung nach oben
                     radio.config["backup_mode_idx"] = radio.mode_idx
                     radio.save_config()
-                    
                     if alter_modus != "FM":
                         radio.mode_idx = MODES.index("FM")
                         print(f"[BAND DE] Kanal > 40 betreten: Erzwinge FM (Merke {alter_modus})")
                     else:
-                        print(f"[BAND DE] Kanal > 40 betreten: War bereits auf FM (Im Gedaechtnis gesichert)")
+                        print(f"[BAND DE] Kanal > 40 betreten: War bereits auf FM")
                         
                 elif (alter_kanal > 40 and radio.current_ch <= 40) or (alter_kanal == 80 and radio.current_ch == 1):
                     radio.mode_idx = radio.config.get("backup_mode_idx", 2)
                     print(f"[BAND DE] Zurueck auf Kanal 1-40: Stelle Modus {MODES[radio.mode_idx]} wieder her")
 
-            # --- DER VERMISSTE HARDWARE-ZÜNDER (Wieder da!) ---
+            # --- HARDWARE-ZÜNDER (Sorgt für das physische Umschalten) ---
             if radio.ser:
                 hex_cmd = "10" if cmd == 'U' else "11"
                 radio.ser.write(bytes.fromhex(f"41000100{hex_cmd}000006"))
                 time.sleep(0.08)
                 radio.ser.write(bytes.fromhex(f"41000000{hex_cmd}000006"))
+
+            # FIX: Sofort in die config.json hämmern, wenn am WebUI gedreht wird!
+            radio.save_config()
 
         elif cmd == 'M':
             band = radio.config.get("current_band", "EU")
@@ -711,8 +1076,36 @@ def api_cmd(cmd):
                 radio.key_buffer += digit
                 if len(radio.key_buffer) == 2:
                     val = int(radio.key_buffer)
-                    if 1 <= val <= 40: 
+                    
+                    band = radio.config.get("current_band", "EU")
+                    max_allowed_ch = 80 if band == "DE" else 40
+                    
+                    if 1 <= val <= max_allowed_ch: 
+                        alter_kanal = radio.current_ch
                         radio.current_ch = val
+                        
+                        # --- DEUTSCHLAND LOGIK FÜR DIREKTE ZIFFERN-EINGABE ---
+                        if band == "DE":
+                            alter_modus = MODES[radio.mode_idx].upper()
+                            
+                            # Fall A: Von Kanal 1-40 direkt auf einen Kanal > 40 springen
+                            if alter_kanal <= 40 and radio.current_ch > 40:
+                                radio.config["backup_mode_idx"] = radio.mode_idx
+                                radio.save_config()
+                                if alter_modus != "FM":
+                                    radio.mode_idx = MODES.index("FM")
+                                    print(f"[KEYPAD DE] Kanal > 40 direkt betreten: Erzwinge FM (Merke {alter_modus})")
+                            
+                            # Fall B: Von einem Kanal > 40 zurück auf einen Kanal <= 40 springen
+                            elif alter_kanal > 40 and radio.current_ch <= 40:
+                                radio.mode_idx = radio.config.get("backup_mode_idx", 2)
+                                print(f"[KEYPAD DE] Zurück auf Kanal 1-40: Stelle Modus {MODES[radio.mode_idx]} wieder her")
+                        
+                        radio.save_config()
+                        print(f"[KEYPAD] Kanal {val} erfolgreich eingetippt und Schutzlogik ausgeführt.")
+                    else:
+                        print(f"[KEYPAD ERROR] Kanal {val} für Band {band} blockiert (Max: {max_allowed_ch})")
+                        
                     radio.key_buffer = ""
         elif cmd in p_codes:
             label_key = f"{cmd.lower()}_label"
@@ -728,7 +1121,6 @@ def api_cmd(cmd):
                         radio.config["vox_enabled"] = False
                         radio.force_rx = True 
                         radio.save_config()
-                        # REPARATUR: Diese Zeilen gehoeren bündig IN den Thread!
                         time.sleep(2.5)
                         os.system(f"amixer set Master {old_vol}%")
                         radio.audio_mute = False
@@ -746,10 +1138,13 @@ def api_cmd(cmd):
                     radio.ser.write(bytes.fromhex(f"41000100{p_codes[cmd]}000006"))
                     time.sleep(0.08)
                     radio.ser.write(bytes.fromhex(f"41000000{p_codes[cmd]}000006"))
+            
+       
+            
 
                     
         # =========================================================================
-        # 1. HARDWARE-INTELLIGENTER PEGEL-TRACKER (DREIFACH-MAKRO AKTIVIERТ)
+        # 1. HARDWARE-PEGEL-TRACKER (DREIFACH-MAKRO)
         # =========================================================================
         elif cmd == "SQUELCHUP":
             if not radio.config.get("full_sync_active", False):
@@ -759,7 +1154,7 @@ def api_cmd(cmd):
                     radio.config["current_sq_level"] = min(radio.config.get("max_sq_steps", 80), radio.config.get("current_sq_level", 0) + 1)
                 radio.save_config()
             
-            # KORREKTUR: Das vollständige Dreier-Makro für SQUELCHUP ('0x24, 0x26, 0x24')
+            # Dreier-Makro für SQUELCHUP ('0x24, 0x26, 0x24')
             if radio.ser:
                 # 1. SQL-Menü öffnen (0x24)
                 radio.ser.write(bytes.fromhex("4100010024000006"))
@@ -784,7 +1179,7 @@ def api_cmd(cmd):
                     radio.config["current_sq_level"] = max(0, radio.config.get("current_sq_level", 0) - 1)
                 radio.save_config()
                 
-            # KORREKTUR: Das vollständige Dreier-Makro für SQUELCHDOWN ('0x24, 0x27, 0x24')
+            # Dreier-Makro für SQUELCHDOWN ('0x24, 0x27, 0x24')
             if radio.ser:
                 # 1. SQL-Menü öffnen (0x24)
                 radio.ser.write(bytes.fromhex("4100010024000006"))
@@ -802,7 +1197,7 @@ def api_cmd(cmd):
                 radio.ser.write(bytes.fromhex("4100000024000006"))
 
         # =========================================================================
-        # 2. DER ULTIMATIVE REPARIERTE SUPER-SYNC THREAD (MASTER-REZEPT)
+        # 2. SUPER-SYNC THREAD 
         # =========================================================================
         elif cmd == 'FULL_ASQ_SQ_SYNC':
             radio.squelch_timeout_until = time.time() + 25.0
@@ -837,7 +1232,7 @@ def api_cmd(cmd):
                     radio.ser.write(bytes.fromhex("4100000024000006"))
                     time.sleep(0.5)
 
-                # 4. MANUELLEN SQUELCH AUF NULL JAGEN (Deine 80 Express-Klicks)
+                # 4. MANUELLEN SQUELCH AUF NULL JAGEN (80 Express-Klicks/25 Sekunden)
                 print("SUPER-SYNC: Jage manuellen Squelch im Express-Takt auf 0...")
                 if radio.ser:
                     radio.ser.write(bytes.fromhex("4100010024000006")) # Menü auf
@@ -927,16 +1322,14 @@ def api_cmd(cmd):
             threading.Thread(target=run_super_sync_process, daemon=True).start()
 
         # =========================================================================
-        # PARAGEI-MODUL: COUTEST VOICE KEYER & SIGNAL REPORT (BÜNDIG GEITTET)
+        # PARAGEI-MODUL: VOICE KEYER & SIGNAL REPORT 
         # =========================================================================
         elif cmd == 'VOICE_REC':
-            # 1. Wenn wir schon aufnehmen, stoppen wir es sofort im RAM und im System
             if getattr(radio, 'is_recording_live', False):
                 print("PAPAGEI: Partner-Aufnahme vorzeitig gestoppt.")
                 radio.is_recording_live = False
                 subprocess.run(["pkill", "-x", "arecord"], check=False)
             else:
-                # 2. Startet die Aufnahme und zündet sofort die RAM-Flagge fürs UI
                 print("PAPAGEI: Nehme QSO-Partner vom Albrecht-Empfang auf...")
                 radio.is_recording_live = True
                 rec_path = os.path.join(SCRIPT_DIR, "ARC", "qso_rx.wav")
@@ -960,7 +1353,6 @@ def api_cmd(cmd):
                         for line in res_clients.split('\n'):
                             if "mumble" in line.lower():
                                 parts = line.split()
-                                # REPARATUR: Wir prüfen das ERSTE ELEMENT der Liste auf eine Zahl!
                                 if parts and parts[0].isdigit():
                                     mumble_client_id = parts[0] # Extrahiert die reine ID (z.B. "106")
                                     print(f"[HOLZHAMMER-RPLAY] Mumble-Client-ID lokalisiert: {mumble_client_id}")
@@ -1259,7 +1651,7 @@ def api_cmd(cmd):
                         radio.ser.write(bytes.fromhex("41000000" + hex_clean + "000006"))
                     time.sleep(0.050)
 
-        # --- CONFIG- & INTERNE ROUTEN (ABSOLUT BÜNDIG & STRUCT-SAVE) ---
+        # --- CONFIG- & INTERNE ROUTEN ---
         elif cmd.startswith('SET_'):
 
             if cmd == "SET_CURRENT_BAND":
@@ -1268,7 +1660,7 @@ def api_cmd(cmd):
                 # --- DYNAMISCHE STRUKTURIERUNG DER HARDWARE-MODI ---
                 #global MODES
                 if val == "UK":
-                    # Exakte Albrecht-Reihenfolge für das U-Band:
+                    # Albrecht-Reihenfolge für das U-Band:
                     MODES = ["PA", "CW", "FM", "UK", "AM", "USB", "LSB"]
                     print("[HARDWARE] Modus-Reihenfolge auf UK-Norm umgestellt.")
                 else:
@@ -1342,8 +1734,9 @@ def api_cmd(cmd):
                 radio.ser.write(bytes.fromhex("4100000000000006"))
             if 'play_roger_beep' in locals() or 'play_roger_beep' in globals():
                 play_roger_beep()
+                
 
-    # --- STATUS RÜCKGABE (GANZ UNTEN IN DER ROUTE, AUSSERHALB LOCK!) ---
+    # --- STATUS RÜCKGABE ---
     if len(radio.key_buffer) == 1 and (time.time() - getattr(radio, 'key_input_start_time', 0) >= 10.0):
         radio.key_buffer = ""
         print("KEYPAD-TIMEOUT: Puffer geloescht.")
@@ -1406,13 +1799,11 @@ def api_config_override():
             current_ch_str = str(radio.current_ch).zfill(2)
             rem = int(radio.config["ptt_timeout"] - (time.time() - radio.ptt_start_time)) if radio.is_tx else radio.config["ptt_timeout"]
             
-            # KORREKTUR: Timeouts auch hier für die Rückgabe berechnen!
             now = time.time()
             sq_remains = max(0, int(radio.squelch_timeout_until - now))
             asq_remains = max(0, int(radio.asq_timeout_until - now))
             mute_remains = max(0, int(radio.mute_timeout_until - now))
             
-            # KORREKTUR: Das JSON-Paket komplett synchron mit den neuen Variablen beladen!
             return jsonify({
                 "CH": current_ch_str, 
                 "MODE": MODES[radio.mode_idx], 
@@ -1543,12 +1934,14 @@ def get_current_status_dict():
 
 threading.Thread(target=auto_patch_streams, daemon=True).start()
 
+
+
 if __name__ == '__main__':
     # Modus-Reihenfolge beim Starten basierend auf dem gespeicherten Band korrigieren
     startup_band = radio.config.get("current_band", "EU")
     if startup_band == "UK":
         MODES = ["PA", "CW", "FM", "UK", "AM", "USB", "LSB"]
         print("[STARTUP] UK-Modus-Matrix erfolgreich geladen.")
-        
+
     print("AE5900 Remote V2 mit WebSocket gestartet")
     socketio.run(app, host='0.0.0.0', port=5000, debug=False)
