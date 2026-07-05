@@ -171,7 +171,14 @@ Check out OpenwebrxPlus: https://luarvique.github.io/ppa/ RTL-SDR Blog v4: https
 
 ### Version Info & Changelog (always perform updates with 'git pull')
 
-Current: V-300626 i4/a1 DSP
+Current: V-050426 i1/a9 RIGC
+
+1. hamctl/rigctl functions added
+   install dependencies (sudo apt install libhamlib-utils)
+
+2. Openwebrx TX-Button is available in openwebrx_ptt_code.txt // copy/paste ready
+
+Previous version: V-300626 i4/a1 DSPx
 
 1. Automatic adjustment to the display size between smartphone and computer.
 
