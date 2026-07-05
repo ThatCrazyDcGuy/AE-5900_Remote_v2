@@ -141,7 +141,6 @@ sudo chmod +x install.sh
 ./install.sh
 #Wer tailscale nutzen möchte:
 #Kopiere den erstellten TailscaleLink in deinen Browser und folge der Anleitung
-sudo tailscale up
 reboot
 ```
 #### Meine Audioeinstellungen für den Host/Server
