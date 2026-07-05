@@ -160,9 +160,6 @@ They serve merely as an example here.
 
 #### Hamlib / Rigctl / Openwebrx setup
 
-All of the following settings relate to the host / server.
-My audio settings don't necessarily have to be yours.
-They serve merely as an example here.
 
 - settings/general in Photo description edit (hostname/ip) and add:
 
