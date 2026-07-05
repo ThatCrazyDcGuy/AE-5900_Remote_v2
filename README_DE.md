@@ -168,7 +168,14 @@ Ein guter WebSDR lässt sich einfach mit OpenWebRX, einem Raspberry Pi, einem RT
 
 ### Versionsinformationen & Änderungsübersicht (Aktualisierungen immer mit „git pull“ durchführen)
 
-Aktuell: V-300626 i4/a1 DSP
+Aktuell: V-050426 i1/a9 RIGC
+
+1. hamctl/rigctl-Funktionen hinzugefügt
+Abhängigkeiten installieren (sudo apt install libhamlib-utils)
+
+2. Openwebrx TX-Button ist in openwebrx_ptt_code.txt verfügbar // zum Kopieren/Einfügen bereit
+
+Vorherige Version: V-300626 i4/a1 DSPx
 
 1. Automatische Anpassung der Anzeigegröße zwischen Smartphone und Computer.
 
