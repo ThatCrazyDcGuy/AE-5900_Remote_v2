@@ -4,7 +4,7 @@ Wechsle Sprache zu DE: [🇩🇪 Deutsch](https://github.com/ThatCrazyDcGuy/AE59
 
 ## ENGLISH VERSION OF README
 
-A LAN/Web Rig Control System for the Albrecht AE-5900 radio, simulating the AMM-500 microphone. This allows the AE5900 to be operated via a web browser in a webinterface.
+A LAN/Web Remote Rig Control System for the Albrecht AE-5900 radio, simulating the AMM-500 microphone. This allows the AE5900 to be operated via a web browser in a webinterface.
 =======================================================
 
 ### The Foreword:
