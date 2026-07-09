@@ -257,7 +257,13 @@ Check out OpenwebrxPlus: https://luarvique.github.io/ppa/ RTL-SDR Blog v4: https
 
 ### Version Info & Changelog (always perform updates with 'git pull')
 
-Current: V-050426 i1/a9 RIGC
+Current: V-090726 i3/a6 B-VFO
+
+1. VFO Mode added.
+2. Video tutorials added
+3. Some bugfixes in UI
+
+Previous version: V-050426 i1/a9 RIGC
 
 1. hamctl/rigctl functions added.
    install dependencies (sudo apt install libhamlib-utils)
