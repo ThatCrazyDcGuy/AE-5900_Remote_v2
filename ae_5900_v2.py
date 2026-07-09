@@ -32,23 +32,11 @@ MODES = ["PA", "CW", "FM", "AM", "USB", "LSB"]
 
 # --- EU CB-FUNK FREQUENZMATRIZEN FUER DEN HAMLIB SYNC // Rest noch hinzufügen nach BETATEST ---
 BASE_EU = {"01":"26.965","02":"26.975","03":"26.985","04":"27.005","05":"27.015","06":"27.025","07":"27.035","08":"27.055","09":"27.065","10":"27.075","11":"27.085","12":"27.105","13":"27.115","14":"27.125","15":"27.135","16":"27.155","17":"27.165","18":"27.175","19":"27.185","20":"27.205","21":"27.215","22":"27.225","23":"27.255","24":"27.235","25":"27.245","26":"27.265","27":"27.275","28":"27.285","29":"27.295","30":"27.305","31":"27.315","32":"27.325","33":"27.335","34":"27.345","35":"27.355","36":"27.365","37":"27.375","38":"27.385","39":"27.395","40":"27.405"}
-
-##BASE_DE = dict(BASE_EU)
-#BASE_DE = {"01":"26.965","02":"26.975","03":"26.985","04":"27.005","05":"27.015","06":"27.025","07":"27.035","08":"27.055","09":"27.065","10":"27.075","11":"27.085","12":"27.105","13":"27.115","14":"27.125","15":"27.135","16":"27.155","17":"27.165","18":"27.175","19":"27.185","20":"27.205","21":"27.215","22":"27.225","23":"27.255","24":"27.235","25":"27.245","26":"27.265","27":"27.275","28":"27.285","29":"27.295","30":"27.305","31":"27.315","32":"27.325","33":"27.335","34":"27.345","35":"27.355","36":"27.365","37":"27.375","38":"27.385","39":"27.395","40":"27.405","41":"26.565","42":"26.575","43":"26.585","44":"26.595","45":"26.605","46":"26.615","47":"26.625","48":"26.635","49":"26.645","50":"26.655","51":"26.665","52":"26.675","53":"26.685","54":"26.695","55":"26.705","56":"26.715","57":"26.725","58":"26.735","59":"26.745","60":"26.755","61":"26.765","62":"26.775","63":"26.785","64":"26.795","65":"26.805","66":"26.815","67":"26.825","68":"26.835","69":"26.845","70":"26.855","71":"26.865","72":"26.875","73":"26.885","74":"26.895","75":"26.905","76":"26.915","77":"26.925","78":"26.935","79":"26.945","80":"26.955"}
-#deFM = [f"{26.565 + i * 0.010:.3f}" for i in range(40)]
-#deFM = ["26.565","26.575","26.585","26.595","26.605","26.615","26.625","26.635","26.645","26.655","26.665","26.675","26.685","26.695","26.705","26.715","26.725","26.735","26.745","26.755","26.765","26.775","26.785","26.795","26.805","26.815","26.825","26.835","26.845","26.855","26.865","26.875","26.885","26.895","26.905","26.915","26.925","26.935","26.945","26.955"]
-#deFM = ["41":"26.565","42":"26.575","43":"26.585","44":"26.595","45":"26.605","46":"26.615","47":"26.625","48":"26.635","49":"26.645","50":"26.655","51":"26.665","52":"26.675","53":"26.685","54":"26.695","55":"26.705","56":"26.715","57":"26.725","58":"26.735","59":"26.745","60":"26.755","61":"26.765","62":"26.775","63":"26.785","64":"26.795","65":"26.805","66":"26.815","67":"26.825","68":"26.835","69":"26.845","70":"26.855","71":"26.865","72":"26.875","73":"26.885","74":"26.895","75":"26.905","76":"26.915","77":"26.925","78":"26.935","79":"26.945","80":"26.955"]
-#for idx, freq in enumerate(deFM):
-#    BASE_DE[str(41 + idx)] = freq
-
-
 BASE_DE = dict(BASE_EU)
-
-deFM = [f"{26.565 + i * 0.010:.3f}" for i in range(40)]
-
-for idx, freq in enumerate(deFM):
+deFM_korrekt = ["26.565","26.575","26.585","26.595","26.605","26.615","26.625","26.635","26.645","26.655","26.665","26.675","26.685","26.695","26.705","26.715","26.725","26.735","26.745","26.755","26.765","26.775","26.785","26.795","26.805","26.815","26.825","26.835","26.845","26.855","26.865","26.875","26.885","26.895","26.905","26.915","26.925","26.935","26.945","26.955"]
+for idx, freq in enumerate(deFM_korrekt):
     BASE_DE[str(41 + idx)] = freq
-
+    
 BASE_PL_NULL = {}
 for ch, f_str in BASE_EU.items():
     BASE_PL_NULL[ch] = f"{float(f_str) - 0.005:.3f}"
@@ -67,7 +55,11 @@ for i in range(1, 41):
 #    uk_freq = 27.60125 + (i - 1) * 0.010
 #    BASE_UK[str(40 + i)] = f"{uk_freq:.5f}"
 
-bandMatrices = {"EU": BASE_EU, "DE": BASE_DE, "UK": BASE_UK, "PL": BASE_PL_NULL, "IN": BASE_EU, "EC": BASE_EU}
+bandMatrices = {"EU": BASE_EU, "DE": BASE_DE, "UK": BASE_UK, "PL": BASE_PL_NULL, "IN": BASE_EU, "EC": BASE_EU, "VFO": BASE_EU}
+
+
+# === NEU: GLOBALER CODES-SCHLÜSSEL FÜR ALLE THREADS UND EMULATIONEN ===
+key_codes = {'0':'01', '1':'02', '2':'03', '3':'04', '4':'05', '5':'06', '6':'07', '7':'08', '8':'09', '9':'0A'}
 
 
 
@@ -161,6 +153,10 @@ class RadioInterface:
         self.mute_timeout_until = 0.0
         self.start_digimode_gateway()
         
+        # --- NEU: SPEICHER FÜR DEN AKTUELLEN VFO-ZUSTAND ---
+        self.vfo_freq = self.config.get("vfo_freq", 27555000)
+        self.vfo_step = self.config.get("vfo_step", 1000)
+        
         threading.Thread(target=self.hamlib_emulator_task, daemon=True).start()
         threading.Thread(target=self.sync_radio_to_hamlib_loop, daemon=True).start()
 
@@ -199,6 +195,10 @@ class RadioInterface:
             "clar_step": "STEP", "clar_offsets": {str(ch).zfill(2): 0 for ch in range(1, 41)},
             "ptt_hotkey": "F6", "current_beep": "None", "roger_beep_enabled": True, "max_sq_steps": 80, 
             "max_asq_steps": 9, "current_sq_level": 0, "current_asq_level": 1, "full_sync_active": False,
+            
+            # --- NEU: VFO DEFAULTS FÜR DEN HARDWARE-SYNC ---
+            "vfo_freq": 27555000,      # Default Startfrequenz in Hz (27.555 MHz)
+            "vfo_step": 1000,          # Default Schrittweite (1 kHz)
             
 
             "current_band": "EU",
@@ -295,22 +295,24 @@ class RadioInterface:
         last_mode = None
         while True:
             try:
-                c_band = self.config.get("current_band", "EU")
-                matrix = bandMatrices.get(c_band, BASE_EU)
-                ch_str = str(self.current_ch).zfill(2)
-                
-                mhz = matrix.get(ch_str, "26.965")
-                hz_val = int(float(mhz) * 1_000_000)
-                
-                c_mode = MODES[self.mode_idx].upper()
-                h_mode = "FM" if c_mode in ["FM", "PA"] else ("AM" if c_mode == "AM" else c_mode)
-                
-                if self.current_ch != last_ch or self.mode_idx != last_mode:
-                    self.forward_to_real_hamlib(f"F {hz_val}\n")
-                    pb = "2400" if "SB" in h_mode else "0"
-                    self.forward_to_real_hamlib(f"M {h_mode} {pb}\n")
-                    last_ch = self.current_ch
-                    last_mode = self.mode_idx
+                # NEU: Wir sichern den Zugriff ab, damit sich API-Schreiben und Hamlib-Sync nicht blockieren
+                with self.lock:
+                    c_band = self.config.get("current_band", "EU")
+                    matrix = bandMatrices.get(c_band, BASE_EU)
+                    ch_str = str(self.current_ch).zfill(2)
+                    
+                    mhz = matrix.get(ch_str, "26.965")
+                    hz_val = int(float(mhz) * 1_000_000)
+                    
+                    c_mode = MODES[self.mode_idx].upper()
+                    h_mode = "FM" if c_mode in ["FM", "PA"] else ("AM" if c_mode == "AM" else c_mode)
+                    
+                    if self.current_ch != last_ch or self.mode_idx != last_mode:
+                        self.forward_to_real_hamlib(f"F {hz_val}\n")
+                        pb = "2400" if "SB" in h_mode else "0"
+                        self.forward_to_real_hamlib(f"M {h_mode} {pb}\n")
+                        last_ch = self.current_ch
+                        last_mode = self.mode_idx
             except Exception as e:
                 print(f"[HAMLIB SYNC ERROR] {e}")
             time.sleep(0.5)
@@ -336,22 +338,25 @@ class RadioInterface:
                     
                     handled = False
                     
-                    # === 1. FREQUENZ ABFRAGEN (f) MULTINORM ===
+                    # === 1. FREQUENZ ABFRAGEN (f) MULTINORM & VFO ===
                     if clean_cmd == 'f' or clean_cmd.startswith('get_freq'):
                         c_band = self.config.get("current_band", "EU")
-                        c_mode = MODES[self.mode_idx].upper()
                         
-                        # Dynamische Matrix-Weiche je nach Betriebsart
-                        if c_band == "PL" and c_mode in ["USB", "LSB"]:
-                            matrix = BASE_EU  # Polen nutzt bei SSB das EU-Raster
-                        elif c_band == "UK" and c_mode == "UK":
-                            matrix = BASE_UK  # UK nutzt im UK-Modus das Inlandsraster
+                        # --- NEU: WENN IM VFO-MODUS, GEBE DIE EXAKTE FREQUENZ AUS DEM RAM ZURÜCK ---
+                        if c_band == "VFO":
+                            hz_val = self.vfo_freq
                         else:
-                            matrix = bandMatrices.get(c_band, BASE_EU)
-                            
-                        ch_str = str(self.current_ch).zfill(2)
-                        mhz = matrix.get(ch_str, "26.965")
-                        hz_val = int(round(float(mhz) * 1_000_000))
+                            c_mode = MODES[self.mode_idx].upper()
+                            if c_band == "PL" and c_mode in ["USB", "LSB"]:
+                                matrix = BASE_EU
+                            elif c_band == "UK" and c_mode == "UK":
+                                matrix = BASE_UK
+                            else:
+                                matrix = bandMatrices.get(c_band, BASE_EU)
+                                
+                            ch_str = str(self.current_ch).zfill(2)
+                            mhz = matrix.get(ch_str, "26.965")
+                            hz_val = int(round(float(mhz) * 1_000_000))
                         
                         resp = f"\\get_freq\n{hz_val}\n" if '\\' in line else f"{hz_val}\n"
                         client_socket.sendall(resp.encode('utf-8'))
@@ -464,7 +469,7 @@ class RadioInterface:
                         client_socket.sendall(resp.encode('utf-8'))
                         handled = True
 
-                    # === 6. GEGENRICHTUNG: WATERFALL STEUERT FUNKGERÄT (F) MULTINORM ===
+                    # === 6. WATERFALL STEUERT FUNKGERÄT (F) MULTINORM & VFO ===
                     elif clean_cmd.startswith('F') or clean_cmd.startswith('\\set_freq'):
                         parts = clean_cmd.split()
                         if len(parts) > 1:
@@ -473,75 +478,99 @@ class RadioInterface:
                             
                             if freq_digits:
                                 target_hz = int(freq_digits)
-                                target_hz_rounded = (target_hz // 1000) * 1000
-                                
                                 c_band = self.config.get("current_band", "EU")
                                 
-                                # --- INTELLIGENTE UK-BAND AUTO-WEICHE ---
-                                if c_band == "UK":
-                                    if target_hz_rounded >= 27601000:
-                                        # Wir sind im britischen Frequenzbereich -> Matrix wechseln & Mode UK erzwingen
-                                        matrix = BASE_UK
-                                        target_mode = "UK"
-                                    else:
-                                        # Wir sind im EU-Frequenzbereich -> Matrix wechseln & Mode FM erzwingen
-                                        matrix = BASE_EU
-                                        target_mode = "FM"
+                                # --- NEU: EXAKTE FREQUENZSTEUERUNG IM VFO-BAND ---
+                                if c_band == "VFO":
+                                    # Sicherheitsgrenzen der Albrecht einhalten
+                                    if 24715000 <= target_hz <= 30105000:
+                                        self.vfo_freq = target_hz
+                                        self.config["vfo_freq"] = target_hz
                                         
-                                    if target_mode in MODES:
-                                        new_mode_idx = MODES.index(target_mode)
-                                        if self.mode_idx != new_mode_idx:
-                                            old_idx = self.mode_idx
-                                            steps = (new_mode_idx - old_idx) % len(MODES)
-                                            print(f"[UK-AUTO-MODE] Wechsle Modus von {MODES[old_idx]} zu {target_mode} ({steps} Klicks)")
-                                            self.mode_idx = new_mode_idx
+                                        # Trotzdem prüfen, ob wir zufällig einen CB-Kanal treffen (für die UI)
+                                        freq_mhz_str = f"{target_hz / 1_000_000:.3f}"
+                                        match_found = False
+                                        for ch_num, f_str in BASE_EU.items():
+                                            if f_str == freq_mhz_str:
+                                                self.current_ch = int(ch_num)
+                                                match_found = True
+                                                break
+                                        if not match_found:
+                                            self.current_ch = 0
                                             
-                                            if self.ser and steps > 0:
-                                                with self.lock:
-                                                    for _ in range(steps):
-                                                        self.ser.write(bytes.fromhex("410001000D000006"))
-                                                        time.sleep(0.09)
-                                                        self.ser.write(bytes.fromhex("410000000D000006"))
-                                                        time.sleep(0.12)
-                                else:
-                                    # Standard-Verhalten für alle anderen Bänder
-                                    c_mode = MODES[self.mode_idx].upper()
-                                    if c_band == "PL" and c_mode in ["USB", "LSB"]:
-                                        matrix = BASE_EU
-                                    else:
-                                        matrix = bandMatrices.get(c_band, BASE_EU)
+                                        self.save_config()
+                                        self.forward_to_real_hamlib(f"F {target_hz}\n")
+                                        
+                                        # Jage die 7-stellige Frequenzkette direkt an die serielle Leitung!
+                                        if self.ser:
+                                            hardware_vfo_string = str(int(target_hz / 10)).zfill(7)
+                                            print(f"[HAMLIB VFO] Wasserfall setzt Frequenz: {target_hz} Hz -> Sende Kette '{hardware_vfo_string}'")
+                                            with self.lock:
+                                                for char in hardware_vfo_string:
+                                                    if char in key_codes:
+                                                        self.ser.write(bytes.fromhex(f"41000100{key_codes[char]}000006"))
+                                                        time.sleep(0.10) # <-- STELLSCHRAUBE 1: Drück-Dauer (Press)
+                                                        self.ser.write(bytes.fromhex(f"41000000{key_codes[char]}000006"))
+                                                        time.sleep(0.10) # <-- STELLSCHRAUBE 2: Pause bis zur nächsten Ziffer (Release)
+                                        
+                                        try: socketio.emit('status', get_current_status_dict())
+                                        except: pass
                                 
-                                # CB-Kanal aus der gewählten Matrix suchen
-                                for ch_num, freq_str in matrix.items():
-                                    matrix_hz = int(round(float(freq_str) * 1_000_000))
-                                    matrix_hz_rounded = (matrix_hz // 1000) * 1000
+                                # --- NEU: Absolut präziser String-Vergleich verhindert mathematische Hänger ---
+                                else:
+                                    # Wir wandeln die vom SDR/Hamlib kommende Frequenz sauber in ein MHz-String-Format um (z.B. 26655000 Hz -> "26.655")
+                                    target_mhz_str = f"{target_hz / 1_000_000:.3f}"
                                     
-                                    if matrix_hz_rounded == target_hz_rounded:
-                                        target_ch = int(ch_num)
-                                        
-                                        if self.current_ch != target_ch:
-                                            print(f"[CAT-PROXY MULTINORM] Match! Band: {c_band} -> Ch {target_ch}")
-                                            self.current_ch = target_ch
-                                            self.save_config()
+                                    if c_band == "UK":
+                                        target_hz_rounded = (target_hz // 1000) * 1000
+                                        if target_hz_rounded >= 27601000:
+                                            matrix = BASE_UK
+                                            target_mode = "UK"
+                                        else:
+                                            matrix = BASE_EU
+                                            target_mode = "FM"
                                             
-                                            self.forward_to_real_hamlib(f"F {target_hz}\n")
-                                            
-                                            if self.ser:
-                                                ch_repr = str(target_ch).zfill(2)
-                                                key_codes = {'0':'01','1':'02','2':'03','3':'04','4':'05','5':'06','6':'07','7':'08','8':'09','9':'0A'}
-                                                with self.lock:
-                                                    for digit in ch_repr:
-                                                        if digit in key_codes:
-                                                            self.ser.write(bytes.fromhex(f"41000100{key_codes[digit]}000006"))
-                                                            time.sleep(0.06)
-                                                            self.ser.write(bytes.fromhex(f"41000000{key_codes[digit]}000006"))
-                                                            time.sleep(0.06)
-                                            
-                                            try:
-                                                socketio.emit('status', get_current_status_dict())
-                                            except:
-                                                pass
-                                        break
+                                        if target_mode in MODES:
+                                            new_mode_idx = MODES.index(target_mode)
+                                            if self.mode_idx != new_mode_idx:
+                                                old_idx = self.mode_idx
+                                                steps = (new_mode_idx - old_idx) % len(MODES)
+                                                self.mode_idx = new_mode_idx
+                                                if self.ser and steps > 0:
+                                                    with self.lock:
+                                                        for _ in range(steps):
+                                                            self.ser.write(bytes.fromhex("410001000D000006"))
+                                                            time.sleep(0.09)
+                                                            self.ser.write(bytes.fromhex("410000000D000006"))
+                                                            time.sleep(0.12)
+                                    else:
+                                        c_mode = MODES[self.mode_idx].upper()
+                                        if c_band == "PL" and c_mode in ["USB", "LSB"]:
+                                            matrix = BASE_EU
+                                        else:
+                                            matrix = bandMatrices.get(c_band, BASE_EU)
+                                
+                                    # Jetzt prüfen wir die Matrix ohne jegliche Rundungs-Verluste durch direkten Text-Vergleich!
+                                    for ch_num, freq_str in matrix.items():
+                                        # Vergleiche direkt z.B. "26.655" == "26.655"
+                                        if freq_str == target_mhz_str:
+                                            target_ch = int(ch_num)
+                                            if self.current_ch != target_ch:
+                                                self.current_ch = target_ch
+                                                self.save_config()
+                                                self.forward_to_real_hamlib(f"F {target_hz}\n")
+                                                if self.ser:
+                                                    ch_repr = str(target_ch).zfill(2)
+                                                    with self.lock:
+                                                        for digit in ch_repr:
+                                                            if digit in key_codes:
+                                                                self.ser.write(bytes.fromhex(f"41000100{key_codes[digit]}000006"))
+                                                                time.sleep(0.10)
+                                                                self.ser.write(bytes.fromhex(f"41000000{key_codes[digit]}000006"))
+                                                                time.sleep(0.10)
+                                                try: socketio.emit('status', get_current_status_dict())
+                                                except: pass
+                                            break
                         
                         resp = "\\set_freq\nRPRT 0\n" if '\\' in line else "RPRT 0\n"
                         client_socket.sendall(resp.encode('utf-8'))
@@ -733,7 +762,7 @@ def mw_scan_loop(radio):
             ziffer1 = ch[0]  # Erste Ziffer (z.B. bei "08" -> "0")
             ziffer2 = ch[1]  # Zweite Ziffer (z.B. bei "08" -> "8")
             
-            key_codes = {'0':'01','1':'02','2':'03','3':'04','4':'05','5':'06','6':'07','7':'08','8':'09','9':'0A'}
+            #key_codes = {'0':'01','1':'02','2':'03','3':'04','4':'05','5':'06','6':'07','7':'08','8':'09','9':'0A'}
             
             # Erste Ziffer aus dem Keypad emulieren und senden
             if ziffer1 in key_codes:
@@ -858,7 +887,6 @@ def api_cmd(cmd):
     if cmd == 'SSCAN' and hasattr(radio, 'mw_active') and radio.mw_active: 
         radio.mw_active = False
 
-    key_codes = {'0':'01','1':'02','2':'03','3':'04','4':'05','5':'06','6':'07','7':'08','8':'09','9':'0A'}
     p_codes = {'P1':'1A', 'P2':'1B', 'P3':'1C', 'P4':'1D'}
     
     superkey_codes = {
@@ -885,19 +913,52 @@ def api_cmd(cmd):
             band = radio.config.get("current_band", "EU")
             current_hardware_mode = MODES[radio.mode_idx].upper()
 
-            # --- HARDWARE-PROFI-WEICHE: CH UP/DOWN sendet im PA-Modus die Lautstärke-Hex-Codes ---
+            # --- 1. SONDERFALL: PA-MODUS ---
             if current_hardware_mode == "PA":
                 print(f"[PA-MODUS] Sende physische Lautstaerke-CAT-Befehle an die Hardware...")
                 if radio.ser:
-                    # Nutzt deine vorgegebenen Keycodes (26 für UP / 27 für DOWN)
                     hex_cmd = "26" if cmd == 'U' else "27"
                     radio.ser.write(bytes.fromhex(f"41000100{hex_cmd}000006"))
                     time.sleep(0.08)
                     radio.ser.write(bytes.fromhex(f"41000000{hex_cmd}000006"))
-                
                 return jsonify(get_current_status_dict())
 
-            # --- NORMALE KANAL-UMSCHALTUNG (WENN NICHT IM PA-MODUS) ---
+            # --- 2. SONDERFALL: REINER VFO MODUS ---
+            if band == "VFO":
+                step_size = radio.config.get("vfo_step", 1000)
+                
+                # Frequenz mathematisch hoch- oder runterzählen
+                if cmd == 'U':
+                    radio.vfo_freq = min(30105000, radio.vfo_freq + step_size)
+                else:
+                    radio.vfo_freq = max(24715000, radio.vfo_freq - step_size)
+                
+                radio.config["vfo_freq"] = radio.vfo_freq
+
+                # Prüfen, ob die neue Frequenz zufällig exakt auf einem CB-Kanal liegt
+                freq_mhz_str = f"{radio.vfo_freq / 1_000_000:.3f}"
+                match_found = False
+                for ch_num, f_str in BASE_EU.items():
+                    if f_str == freq_mhz_str:
+                        radio.current_ch = int(ch_num)
+                        match_found = True
+                        break
+                if not match_found:
+                    radio.current_ch = 0
+
+                # === SENDELOGIK FÜR DIE UP/DN EMULATION AN DAS GERÄT  ===
+                if radio.ser:
+                    # Emuliert das physische Klicken am Mikrofon/Tastenfeld für das Funkgerät
+                    hex_cmd = "10" if cmd == 'U' else "11"
+                    radio.ser.write(bytes.fromhex(f"41000100{hex_cmd}000006"))
+                    time.sleep(0.08)
+                    radio.ser.write(bytes.fromhex(f"41000000{hex_cmd}000006"))
+
+                radio.save_config()
+                print(f"[VFO NAVIGATION] Frequenz per {cmd}-Taste auf {radio.vfo_freq} Hz geändert.")
+                return jsonify(get_current_status_dict())
+
+            # --- 3. NORMALE CB-KANAL-UMSCHALTUNG (WENN NICHT IM VFO-MODUS) ---
             max_ch = 40
             if band == "DE": max_ch = 80
             elif band == "IN": max_ch = 27
@@ -909,31 +970,35 @@ def api_cmd(cmd):
             else:
                 radio.current_ch = max_ch if radio.current_ch == 1 else radio.current_ch - 1
 
-            # --- DEUTSCHLAND LOGIK (Kanal 41-80) ---
+            # Deutschland Logik (Kanal 41-80)
+            # Deutschland Logik (Kanal 41-80) - Korrigierter Grenzwächter
             if band == "DE":
                 alter_modus = MODES[radio.mode_idx].upper()
-                
+                # Fall A: Wir überschreiten die Grenze nach oben (Kanal 1-40 -> 41-80)
                 if alter_kanal <= 40 and radio.current_ch > 40:
                     radio.config["backup_mode_idx"] = radio.mode_idx
                     radio.save_config()
                     if alter_modus != "FM":
                         radio.mode_idx = MODES.index("FM")
-                        print(f"[BAND DE] Kanal > 40 betreten: Erzwinge FM (Merke {alter_modus})")
-                    else:
-                        print(f"[BAND DE] Kanal > 40 betreten: War bereits auf FM")
-                        
-                elif (alter_kanal > 40 and radio.current_ch <= 40) or (alter_kanal == 80 and radio.current_ch == 1):
+                        print(f"[TUNER DE] Grenzübergang > 40: Erzwinge FM.")
+                # Fall B: Wir kommen von den oberen Kanälen zurück in den regulären Bereich (41-80 -> 1-40)
+                elif alter_kanal > 40 and radio.current_ch <= 40:
                     radio.mode_idx = radio.config.get("backup_mode_idx", 2)
-                    print(f"[BAND DE] Zurueck auf Kanal 1-40: Stelle Modus {MODES[radio.mode_idx]} wieder her")
+                    print(f"[TUNER DE] Grenzübergang <= 40: Modus wiederhergestellt.")
 
-            # --- HARDWARE-ZÜNDER (Sorgt für das physische Umschalten) ---
             if radio.ser:
                 hex_cmd = "10" if cmd == 'U' else "11"
                 radio.ser.write(bytes.fromhex(f"41000100{hex_cmd}000006"))
                 time.sleep(0.08)
                 radio.ser.write(bytes.fromhex(f"41000000{hex_cmd}000006"))
 
-            # FIX: Sofort in die config.json hämmern, wenn am WebUI gedreht wird!
+            # Synchronisiere CB-Frequenz in den VFO-Speicher
+            matrix = bandMatrices.get(band, BASE_EU)
+            ch_str = str(radio.current_ch).zfill(2)
+            if ch_str in matrix:
+                radio.vfo_freq = int(float(matrix[ch_str]) * 1_000_000)
+                radio.config["vfo_freq"] = radio.vfo_freq
+
             radio.save_config()
 
         elif cmd == 'M':
@@ -1065,48 +1130,118 @@ def api_cmd(cmd):
         elif cmd.startswith('K'):
             digit = cmd[1:]
             if digit in key_codes:
-                if radio.ser:
-                    radio.ser.write(bytes.fromhex(f"41000100{key_codes[digit]}000006"))
-                    time.sleep(0.08)
-                    radio.ser.write(bytes.fromhex(f"41000000{key_codes[digit]}000006"))
-                else: 
-                    print(f"SIMULATION: Keypad {digit} emuliert.")
-                if len(radio.key_buffer) == 0: 
+                # --- NEU: DER 9er-TÜRSTEHER ---
+                # Wenn der Puffer leer ist und eine '9' gedrückt wird, brechen wir sofort ab!
+                if len(radio.key_buffer) == 0 and digit == '9':
+                    print("[KEYPAD VETO] Erste Ziffer '9' ist unlogisch (kein Kanal/Frequenz startet mit 9). Ignoriert.")
+                    return jsonify(get_current_status_dict())
+
+                band = radio.config.get("current_band", "EU")
+                
+                # --- A: KLASSISCHER CB-FUNK-MODUS (ALLES AUSSER VFO) ---
+                if band != "VFO":
+                    # Wenn der User hektisch tippt und der Puffer noch voll war, leeren
+                    if len(radio.key_buffer) >= 2:
+                        radio.key_buffer = ""
+
+                    # MANDATORISCHER PASS-THROUGH: 
+                    # Sende JEDE Ziffer (auch die 9!) SOFORT an das echte Funkgerät!
+                    if radio.ser:
+                        print(f"[HARDWARE PASS-THROUGH] Sende Ziffer '{digit}' direkt an Albrecht...")
+                        radio.ser.write(bytes.fromhex(f"41000100{key_codes[digit]}000006"))
+                        time.sleep(0.10)
+                        radio.ser.write(bytes.fromhex(f"41000000{key_codes[digit]}000006"))
+                    else: 
+                        print(f"SIMULATION: Keypad {digit} emuliert.")
+                    
+                    if len(radio.key_buffer) == 0: 
+                        radio.key_input_start_time = time.time()
+                    
+                    radio.key_buffer += digit
                     radio.key_input_start_time = time.time()
-                radio.key_buffer += digit
-                if len(radio.key_buffer) == 2:
-                    val = int(radio.key_buffer)
-                    
-                    band = radio.config.get("current_band", "EU")
-                    max_allowed_ch = 80 if band == "DE" else 40
-                    
-                    if 1 <= val <= max_allowed_ch: 
-                        alter_kanal = radio.current_ch
-                        radio.current_ch = val
+
+                    # Erst wenn 2 Ziffern im RAM sind, entscheidet das WebUI über SEINEN eigenen Zustand
+                    if len(radio.key_buffer) == 2:
+                        val = int(radio.key_buffer)
+                        max_allowed_ch = 80 if band == "DE" else (27 if band == "IN" else 40)
                         
-                        # --- DEUTSCHLAND LOGIK FÜR DIREKTE ZIFFERN-EINGABE ---
-                        if band == "DE":
-                            alter_modus = MODES[radio.mode_idx].upper()
+                        if 1 <= val <= max_allowed_ch: 
+                            alter_kanal = radio.current_ch
+                            radio.current_ch = val
                             
-                            # Fall A: Von Kanal 1-40 direkt auf einen Kanal > 40 springen
-                            if alter_kanal <= 40 and radio.current_ch > 40:
-                                radio.config["backup_mode_idx"] = radio.mode_idx
+                            if band == "DE":
+                                alter_modus = MODES[radio.mode_idx].upper()
+                                if alter_kanal <= 40 and radio.current_ch > 40:
+                                    radio.config["backup_mode_idx"] = radio.mode_idx
+                                    radio.save_config()
+                                    if alter_modus != "FM":
+                                        radio.mode_idx = MODES.index("FM")
+                                elif alter_kanal > 40 and radio.current_ch <= 40:
+                                    radio.mode_idx = radio.config.get("backup_mode_idx", 2)
+                            
+                            matrix = bandMatrices.get(band, BASE_EU)
+                            ch_str = str(radio.current_ch).zfill(2)
+                            if ch_str in matrix:
+                                radio.vfo_freq = int(float(matrix[ch_str]) * 1_000_000)
+                                radio.config["vfo_freq"] = radio.vfo_freq
+
+                            radio.save_config()
+                            print(f"[CB-MODE] Kanal {val} erfolgreich geschaltet.")
+                        else:
+                            # HIER WIRD DIE 90 ODER 99 ABGEFANGEN!
+                            # Das WebUI schaltet nicht um, aber die Albrecht hat beide Ziffern bekommen,
+                            # bricht ebenfalls ab und beide Systeme bleiben synchron auf dem alten Kanal!
+                            print(f"[CB-MODE SYNCHRON-FORK] {val} für Band {band} blockiert. Beide Systeme verwerfen.")
+                        
+                        radio.key_buffer = "" # Puffer leeren
+
+                # --- B: REINER VFO-MODUS (FREQUENZEINGABE) ---
+                else:
+                    print(f"[VFO KEYPAD BUFFER] Ziffer '{digit}' stumm im RAM gepuffert.")
+                    if len(radio.key_buffer) == 0: 
+                        radio.key_input_start_time = time.time()
+                    
+                    if len(radio.key_buffer) >= 7:
+                        radio.key_buffer = ""
+                        
+                    radio.key_buffer += digit
+                    radio.key_input_start_time = time.time()
+
+                    if len(radio.key_buffer) == 7:
+                        try:
+                            target_vfo_hz = int(radio.key_buffer) * 10
+                            if 24715000 <= target_vfo_hz <= 30105000:
+                                radio.vfo_freq = target_vfo_hz
+                                radio.config["vfo_freq"] = target_vfo_hz
+                                
+                                freq_mhz_str = f"{target_vfo_hz / 1_000_000:.3f}"
+                                match_found = False
+                                for ch_num, f_str in BASE_EU.items():
+                                    if f_str == freq_mhz_str:
+                                        radio.current_ch = int(ch_num)
+                                        match_found = True
+                                        break
+                                if not match_found:
+                                    radio.current_ch = 0
+                                
                                 radio.save_config()
-                                if alter_modus != "FM":
-                                    radio.mode_idx = MODES.index("FM")
-                                    print(f"[KEYPAD DE] Kanal > 40 direkt betreten: Erzwinge FM (Merke {alter_modus})")
-                            
-                            # Fall B: Von einem Kanal > 40 zurück auf einen Kanal <= 40 springen
-                            elif alter_kanal > 40 and radio.current_ch <= 40:
-                                radio.mode_idx = radio.config.get("backup_mode_idx", 2)
-                                print(f"[KEYPAD DE] Zurück auf Kanal 1-40: Stelle Modus {MODES[radio.mode_idx]} wieder her")
+                                print(f"[VFO COMPLETION] Frequenz im RAM gesetzt: {target_vfo_hz} Hz")
+                                
+                                if radio.ser:
+                                    print("[VFO HARDWARE] Feuere 7-Ziffern-Kette an das Funkgerät...")
+                                    for char in radio.key_buffer:
+                                        if char in key_codes:
+                                            radio.ser.write(bytes.fromhex(f"41000100{key_codes[char]}000006"))
+                                            time.sleep(0.10)
+                                            radio.ser.write(bytes.fromhex(f"41000000{key_codes[char]}000006"))
+                                            time.sleep(0.10)
+                                            
+                            else:
+                                print("[KEYPAD VFO ERROR] Frequenz außerhalb der Hardwaregrenzen!")
+                        except ValueError:
+                            print("[KEYPAD VFO ERROR] Ungültiges Format.")
                         
-                        radio.save_config()
-                        print(f"[KEYPAD] Kanal {val} erfolgreich eingetippt und Schutzlogik ausgeführt.")
-                    else:
-                        print(f"[KEYPAD ERROR] Kanal {val} für Band {band} blockiert (Max: {max_allowed_ch})")
-                        
-                    radio.key_buffer = ""
+                        radio.key_buffer = ""
         elif cmd in p_codes:
             label_key = f"{cmd.lower()}_label"
             current_label = radio.config.get(label_key, "").upper()
@@ -1653,39 +1788,40 @@ def api_cmd(cmd):
 
         # --- CONFIG- & INTERNE ROUTEN ---
         elif cmd.startswith('SET_'):
-
-            if cmd == "SET_CURRENT_BAND":
+            # --- 1. SCHRITTWEITE FÜR VFO SPEICHERN ---
+            if cmd == "SET_VFO_STEP":
+                radio.vfo_step = int(val)
+                radio.config["vfo_step"] = int(val)
+                print(f"[VFO SETTER] Schrittweite auf {radio.vfo_step} Hz geändert.")
+            
+            # --- 2. BAND-UMSCHALTUNG (EU, DE, VFO, etc.) ---
+            elif cmd == "SET_CURRENT_BAND":
                 radio.config["current_band"] = val
                 
-                # --- DYNAMISCHE STRUKTURIERUNG DER HARDWARE-MODI ---
-                #global MODES
                 if val == "UK":
-                    # Albrecht-Reihenfolge für das U-Band:
                     MODES = ["PA", "CW", "FM", "UK", "AM", "USB", "LSB"]
                     print("[HARDWARE] Modus-Reihenfolge auf UK-Norm umgestellt.")
                 else:
-                    # Standard-Reihenfolge für alle anderen Länder:
                     MODES = ["PA", "CW", "FM", "AM", "USB", "LSB"]
                     print("[HARDWARE] Modus-Reihenfolge auf EU-Standard zurückgesetzt.")
 
-                # Failsafe: Wenn wir Kanäle verlassen, die es im neuen Band nicht gibt
+                # Failsafe-Kanalgrenzen beim Bandwechsel einhalten
                 if val == "IN" and radio.current_ch > 27:
                     radio.current_ch = 1
                 elif val != "DE" and radio.current_ch > 40:
                     radio.current_ch = 1
                 
-                # Sicherstellen, dass der mode_idx nach dem Umbau nicht außerhalb des Arrays liegt
                 if radio.mode_idx >= len(MODES):
-                    radio.mode_idx = 2 # Fallback auf FM (Index 2)
+                    radio.mode_idx = 2 # Fallback auf FM
                     
-                radio.save_config()
-                print(f"BAND-UMSCHALTUNG: Aktiviertes Band: {val}, Aktueller Modus-Index: {radio.mode_idx}")
-            
-            if cmd == "SET_ACTIVE_P_BLOCK":
+                print(f"BAND-UMSCHALTUNG: Aktiviertes Band: {val}, Modus-Index: {radio.mode_idx}")
+
+            # --- 3. ACTIVE P BLOCK SETZEN ---
+            elif cmd == "SET_ACTIVE_P_BLOCK":
                 radio.config["active_p_block"] = val
-                radio.save_config()
                 print(f"API-SETTER: active_p_block erfolgreich auf '{val}' umgestellt.")
             
+            # --- 4. STANDARD-RESTE AUS DEINER ALTEN LOGIK ---
             elif "VOX" in cmd: radio.config["vox_enabled"] = (val.lower() == 'true')
             elif "MUTE" in cmd: radio.config["mute_enabled"] = (val.lower() == 'true')
             elif "ASQ" in cmd: radio.config["asq_enabled"] = (val.lower() == 'true')
@@ -1693,7 +1829,6 @@ def api_cmd(cmd):
             elif "BEEP" in cmd: radio.config["current_beep"] = val
             elif "PTTHOTKEY" in cmd: radio.config["ptt_hotkey"] = val
             elif "MW_LABEL" in cmd: radio.config["mw_label"] = val
-                
             elif "SKIP" in cmd: 
                 key_name = "skip_pa" if "PA" in cmd else "skip_cw"
                 radio.config[key_name] = (val.lower() == 'true')
@@ -1706,9 +1841,11 @@ def api_cmd(cmd):
                     if "CUST" in cmd:
                         label_name = cmd.lower().replace("set_", "").replace("_label", "")
                         radio.config[label_name] = val
-                        print(f"API-SICKERUNG: Custom-Variable '{label_name}' felsenfest auf '{val}' gesetzt.")
+                        print(f"API-SICKERUNG: Custom-Variable '{label_name}' auf '{val}' gesetzt.")
                     else:
                         radio.config[f"{parts[1].lower()}_label"] = val
+            
+            # Am Ende JEDES Set-Befehls wird die Konfiguration einheitlich weggeschrieben!
             radio.save_config()
 
         elif cmd.startswith('T'): 
@@ -1736,10 +1873,61 @@ def api_cmd(cmd):
                 play_roger_beep()
                 
 
-    # --- STATUS RÜCKGABE ---
-    if len(radio.key_buffer) == 1 and (time.time() - getattr(radio, 'key_input_start_time', 0) >= 10.0):
-        radio.key_buffer = ""
-        print("KEYPAD-TIMEOUT: Puffer geloescht.")
+    ## --- STATUS RÜCKGABE ---
+    #if len(radio.key_buffer) == 1 and (time.time() - getattr(radio, 'key_input_start_time', 0) >= 10.0):
+    #    radio.key_buffer = ""
+    #    print("KEYPAD-TIMEOUT: Puffer geloescht.")
+        
+    # --- INTELLIGENTER WEICHEN-WÄCHTER NACH 2 SEKUNDEN INAKTIVITÄT ---
+    # --- DUALER WEICHEN- & AUFRÄUM-WÄCHTER (CB VS. VFO TIMEOUTS) ---
+    if len(radio.key_buffer) > 0:
+        band = radio.config.get("current_band", "EU")
+        zeit_seit_letzter_taste = time.time() - getattr(radio, 'key_input_start_time', 0)
+        
+        # --- SONDERFALL: VFO MODUS (2 SEKUNDEN TIMEOUT) ---
+        if band == "VFO":
+            if zeit_seit_letzter_taste >= 2.0:
+                # FALL 1: 1-2 Ziffern im VFO -> In Frequenz wandeln und als Kette an Albrecht senden!
+                if len(radio.key_buffer) in [1, 2]:
+                    val = int(radio.key_buffer)
+                    max_allowed_ch = 80 if band == "DE" else (27 if band == "IN" else 40)
+                    
+                    if 1 <= val <= max_allowed_ch:
+                        radio.current_ch = val
+                        matrix = bandMatrices.get(band, BASE_EU)
+                        ch_str = str(radio.current_ch).zfill(2)
+                        
+                        if ch_str in matrix:
+                            freq_float = float(matrix[ch_str])
+                            radio.vfo_freq = int(freq_float * 1_000_000)
+                            radio.config["vfo_freq"] = radio.vfo_freq
+                            radio.save_config()
+                            
+                            hardware_vfo_string = str(int(freq_float * 100000)).zfill(7)
+                            
+                            if radio.ser:
+                                print(f"[WÄCHTER VFO-SYNC] Übersetze CB-Kanal {ch_str} zu '{hardware_vfo_string}'...")
+                                for char in hardware_vfo_string:
+                                    if char in key_codes:
+                                        radio.ser.write(bytes.fromhex(f"41000100{key_codes[char]}000006"))
+                                        time.sleep(0.10) # Synchronisiert mit dem optimierten 0.10s Timing
+                                        radio.ser.write(bytes.fromhex(f"41000000{key_codes[char]}000006"))
+                                        time.sleep(0.10)
+                        print(f"[WÄCHTER] VFO-Kanal {val} erfolgreich synchronisiert.")
+                    else:
+                        print(f"[WÄCHTER ERROR] VFO-Kanal {val} ungültig.")
+                
+                # FALL 2: Unfertige 3-6 Ziffern im VFO -> Verwerfen
+                else:
+                    print(f"[WÄCHTER] Unvollständige VFO-Eingabe '{radio.key_buffer}' nach 2s verworfen.")
+                
+                radio.key_buffer = "" # Puffer in jedem Fall löschen
+
+        # --- SONDERFALL: KLASSISCHER CB-MODUS (10 SEKUNDEN TIMEOUT) ---
+        else:
+            if zeit_seit_letzter_taste >= 10.0:
+                print(f"[CB TIMEOUT] Unvollständige Kanaleingabe '{radio.key_buffer}' nach 10s Inaktivität verworfen.")
+                radio.key_buffer = ""
 
     current_ch_str = str(radio.current_ch).zfill(2)
     current_channel_offset = radio.config["clar_offsets"].get(current_ch_str, 0)
@@ -1782,7 +1970,8 @@ def api_cmd(cmd):
         "MAX_ASQ": radio.config.get("max_asq_steps", 9),
         "ACTIVE_P_BLOCK": radio.config.get("active_p_block", "standard"),
         "AUDIO_RECORDING": getattr(radio, 'is_recording_live', False),
-        "CURRENT_BAND": radio.config.get("current_band", "EU")
+        "CURRENT_BAND": radio.config.get("current_band", "EU"),
+        "VFO_FREQ": radio.vfo_freq
     })
 @app.route('/api/config/override', methods=['POST'])
 def api_config_override():
@@ -1795,6 +1984,13 @@ def api_config_override():
             for json_key, config_key in mapping.items():
                 if data.get(json_key) is True: 
                     radio.config[config_key] = not radio.config.get(config_key, False)
+            
+            # --- NEU: ERZWUNGENE MODULATIONS-EICHUNG IM RAM ---
+            force_mode = data.get("force_mode", "KEEP")
+            if force_mode in MODES:
+                radio.mode_idx = MODES.index(force_mode)
+                print(f"[OVERRIDE ENGINE] Modulation manuell auf '{force_mode}' (Index: {radio.mode_idx}) synchronisiert.")
+
             radio.save_config()
             current_ch_str = str(radio.current_ch).zfill(2)
             rem = int(radio.config["ptt_timeout"] - (time.time() - radio.ptt_start_time)) if radio.is_tx else radio.config["ptt_timeout"]
@@ -1835,7 +2031,8 @@ def api_config_override():
                 "MAX_ASQ": radio.config.get("max_asq_steps", 9),
                 "ACTIVE_P_BLOCK": radio.config.get("active_p_block", "standard"),
                 "AUDIO_RECORDING": getattr(radio, 'is_recording_live', False),
-                "CURRENT_BAND": radio.config.get("current_band", "EU")
+                "CURRENT_BAND": radio.config.get("current_band", "EU"),
+                "VFO_FREQ": radio.vfo_freq
             })
     except Exception as e: 
         return jsonify({"status": "error", "message": str(e)}), 500
@@ -1929,7 +2126,8 @@ def get_current_status_dict():
         "MAX_ASQ": radio.config.get("max_asq_steps", 9),
         "ACTIVE_P_BLOCK": radio.config.get("active_p_block", "standard"),
         "AUDIO_RECORDING": getattr(radio, 'is_recording_live', False),
-        "CURRENT_BAND": radio.config.get("current_band", "EU")
+        "CURRENT_BAND": radio.config.get("current_band", "EU"),
+        "VFO_FREQ": radio.vfo_freq
     }
 
 threading.Thread(target=auto_patch_streams, daemon=True).start()
