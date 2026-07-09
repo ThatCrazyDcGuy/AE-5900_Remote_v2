@@ -159,8 +159,18 @@ Sie dienen hier lediglich als Beispiel.
 
 #### Hamlib / Rigctl / Openwebrx setup
 
+- Tutorial AE5900_REMOTE_V2: VFO am Gerät und in der WebUI aktivieren.
+
+[![AE5900 Webinterface V2 ](https://img.youtube.com/vi/Qk8EmSfFJvY/0.jpg)](https://www.youtube.com/watch?v=Qk8EmSfFJvY)
+
+- Tutorial AE5900_REMOTE_V2: OpenWebRX zur Steuerung des AE5900 einrichten und verwenden
+
+[![AE5900 Webinterface V2 ](https://img.youtube.com/vi/0zt2-Wdh3UA/0.jpg)](https://www.youtube.com/watch?v=0zt2-Wdh3UA)
+
+- PTT-Code in den OpenWebRX-Einstellungen unter „Allgemein“ im Feld „Bildbeschreibung bearbeiten“ (Hostname/IP-Adresse) hinzufügen.
 
 - settings/general in Photo description bearbeiten (Hostname/IP-Adresse) und Folgendes hinzufügen:
+
 ```bash
 <script type="text/javascript">
 // === CONFIGURATION ===
@@ -244,7 +254,13 @@ Ein guter WebSDR lässt sich einfach mit OpenWebRX, einem Raspberry Pi, einem RT
 
 ### Versionsinformationen & Änderungsübersicht (Aktualisierungen immer mit „git pull“ durchführen)
 
-Aktuell: V-050426 i1/a9 RIGC
+Aktuell: V-090726 i3/a6 B-VFO
+
+1. VFO-Modus hinzugefügt.
+2. Video-Tutorials hinzugefügt.
+3. Diverse Fehlerbehebungen in der Benutzeroberfläche.
+
+Vorherige Version: V-050726 i1/a9 RIGC
 
 1. hamctl/rigctl-Funktionen hinzugefügt.
 Abhängigkeiten installieren (sudo apt install libhamlib-utils)
