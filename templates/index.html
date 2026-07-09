@@ -131,6 +131,15 @@
             animation: pulse-red 1.2s infinite linear !important;
             color: white !important;
         }
+        /* --- VISUELLES FEEDBACK FÜR DIE ULTRA-OMs BEIM KANALWECHSEL --- */
+        @keyframes vfo-blink {
+            0% { opacity: 1.0; color: #ffff00; }
+            50% { opacity: 0.3; color: #ff8800; }
+            100% { opacity: 1.0; color: #ffff00; }
+        }
+        .vfo-switching {
+            animation: vfo-blink 0.8s infinite ease-in-out !important;
+        }
         .progress-bar { 
             position: absolute; 
             bottom: 0; left: 0; 
@@ -337,6 +346,8 @@
                 <option value="PL" {% if config.current_band == 'PL' %}selected{% endif %}>PL (40 CH -5kHz AM/FM / 40 CH EU SSB)</option>
                 <option value="IN" {% if config.current_band == 'IN' %}selected{% endif %}>IN (27 CH AM/FM/SSB)</option>
                 <option value="EC" {% if config.current_band == 'EC' %}selected{% endif %}>EC (40 CH FM)</option>
+                <option value="VFO" {% if config.current_band == 'VFO' %}selected{% endif %}>VFO (VFO HAM)</option>
+
             </select>
         </p>
 
@@ -371,6 +382,17 @@
         {% endif %}
 
         <p>Scan Speed (ms): <input type="number" id="scanSpeedInput" value="{{ config.scan_speed * 1000 | int }}" style="width: 70px;" onchange="send('SETSPEED_' + this.value)"> </p>
+        <p>VFO Schrittweite (Step): 
+            <select onchange="fetch('/api/cmd/SET_VFO_STEP?val=' + this.value)" style="background: #333; color: white; border: 1px solid #555; padding: 3px; border-radius: 3px;">
+                <option value="10" {% if config.vfo_step == 10 %}selected{% endif %}>10 Hz</option>
+                <option value="100" {% if config.vfo_step == 100 %}selected{% endif %}>100 Hz</option>
+                <option value="1000" {% if config.vfo_step == 1000 %}selected{% endif %}>1 kHz (Default)</option>
+                <option value="5000" {% if config.vfo_step == 5000 %}selected{% endif %}>5 kHz</option>
+                <option value="10000" {% if config.vfo_step == 10000 %}selected{% endif %}>10 kHz</option>
+                <option value="100000" {% if config.vfo_step == 100000 %}selected{% endif %}>100 kHz</option>
+                <option value="1000000" {% if config.vfo_step == 1000000 %}selected{% endif %}>1 MHz</option>
+            </select>
+        </p>
         <p>FFT Gain RX: <input type="number" value="{{config.fft_rx_gain}}" onchange="send('SETGAIN_RX_' + this.value)" style="width:80px;"></p>
         <p>FFT Gain TX: <input type="number" value="{{config.fft_tx_gain}}" onchange="send('SETGAIN_TX_' + this.value)" style="width:80px;"></p>
         <p>PTT Hotkey (e.g. F6, Space, p): 
@@ -390,15 +412,31 @@
 
     <div style="border-top: 1px solid #444; margin-top: 15px; padding-top: 15px;">
         <strong style="color: #0f0;">🔧 Status correction override:</strong>
-        <p style="font-size: 0.85em; color: #888; margin-top: 5px;">Select the checkbox for all asynchronously running processes...</p>
+        <p style="font-size: 0.85em; color: #888; margin-top: 5px;">Select the checkbox or modulation to force synchronisation...</p>
         
         <table style="width: 100%; color: #aaa; font-size: 0.95em; margin-bottom: 10px;">
             <tr><td>VOX - Reverse status:</td><td style="text-align: right;"><input type="checkbox" id="tog_vox"></td></tr>
             <tr><td>MUTE - Reverse status:</td><td style="text-align: right;"><input type="checkbox" id="tog_mute"></td></tr>
             <tr><td>ASQ - Reverse status:</td><td style="text-align: right;"><input type="checkbox" id="tog_asq"></td></tr>
             <tr><td>LOCK - Reverse status:</td><td style="text-align: right;"><input type="checkbox" id="tog_lock"></td></tr>
+            
+            <tr>
+                <td>MODE - Correct status:</td>
+                <td style="text-align: right;">
+                    <select id="force_mode_select" style="background: #222; color: #0f0; border: 1px solid #444; font-family: monospace; padding: 2px;">
+                        <option value="KEEP" selected>-- Unverändert --</option>
+                        <option value="PA">PA</option>
+                        <option value="CW">CW</option>
+                        <option value="FM">FM</option>
+                        <option value="UK">UK</option>
+                        <option value="AM">AM</option>
+                        <option value="USB">USB</option>
+                        <option value="LSB">LSB</option>
+                    </select>
+                </td>
+            </tr>
         </table>
-        <button onclick="submitConfigOverride()" style="width: 100%; background: #4a4a00; color: #fff; padding: 8px; font-weight: bold;">REVERSE & CORRECT CHECKBOXES</button>
+        <button onclick="submitConfigOverride()" style="width: 100%; background: #4a4a00; color: #fff; padding: 8px; font-weight: bold;">REVERSE & CORRECT ALL STATES</button>
     </div>
 
     <div class="anleitung-box" style="background: #111; border: 1px solid #333; padding: 10px; margin-top: 10px; font-size: 0.9em; line-height: 1.4;">
@@ -420,7 +458,7 @@
 <script>
     const BASE_EU = {"01":"26.965","02":"26.975","03":"26.985","04":"27.005","05":"27.015","06":"27.025","07":"27.035","08":"27.055","09":"27.065","10":"27.075","11":"27.085","12":"27.105","13":"27.115","14":"27.125","15":"27.135","16":"27.155","17":"27.165","18":"27.175","19":"27.185","20":"27.205","21":"27.215","22":"27.225","23":"27.255","24":"27.235","25":"27.245","26":"27.265","27":"27.275","28":"27.285","29":"27.295","30":"27.305","31":"27.315","32":"27.325","33":"27.335","34":"27.345","35":"27.355","36":"27.365","37":"27.375","38":"27.385","39":"27.395","40":"27.405"};
     const BASE_DE = { ...BASE_EU };
-    const deFM = ["26.565","26.575","26.585","26.605","26.615","26.625","26.635","26.655","26.665","26.675","26.685","26.705","26.715","26.725","26.735","26.755","26.765","26.775","26.785","26.805","26.815","26.825","26.855","26.835","26.845","26.865","26.875","26.885","26.895","26.905","26.915","26.925","26.955","26.935","26.945","26.515","26.525","26.535","26.545","26.555"];
+    const deFM = ["26.565","26.575","26.585","26.595","26.605","26.615","26.625","26.635","26.645","26.655","26.665","26.675","26.685","26.695","26.705","26.715","26.725","26.735","26.745","26.755","26.765","26.775","26.785","26.795","26.805","26.815","26.825","26.835","26.845","26.855","26.865","26.875","26.885","26.895","26.905","26.915","26.925","26.935","26.945","26.955"];
     deFM.forEach((freq, idx) => { BASE_DE[String(41 + idx)] = freq; });
 
     const BASE_PL_NULL = {};
@@ -448,8 +486,7 @@
     function initSocket() {
         // 400ms Atempause für das Notebook-Backend, um Session-Konflikte zu vermeiden
         setTimeout(() => {
-            // Wir starten SICHER mit Polling, damit die Oberfläche sofort erwacht,
-            // und lassen Socket.IO danach den Upgrade auf WebSockets versuchen.
+
             socket = io({
                 transports: ['polling', 'websocket'],
                 upgrade: true,
@@ -459,7 +496,7 @@
             socket.on('connect', () => {
                 console.log("Socket.IO verbunden via: " + socket.io.engine.transport.name);
                 const vInd = document.getElementById('versionIndicator');
-                if (vInd) vInd.textContent = "V-050726 i1 a9 RIGC";
+                if (vInd) vInd.textContent = "V-090726 i3 a6 B-VFO";
             });
 
             socket.on('audio', (data) => { 
@@ -505,10 +542,62 @@
         const ch = data.CH; const keyBuf = data.KEY_BUF || '';
         const mhzDisp = document.getElementById('mhzDisp'); const chDisp = document.getElementById('chDisp');
         
-        if (data.SIMULATION === true) { if (chDisp) chDisp.innerText = "XX"; if (mhzDisp) { mhzDisp.innerText = "SIMULATION / NO DEVICE"; mhzDisp.style.color = "#ff3333"; } }
-        else if (currentMode === "PA") { if (chDisp) chDisp.innerText = "--"; if (mhzDisp) { mhzDisp.innerText = "PA DEV. VOLUME"; mhzDisp.style.color = "#00ff00"; } }
-        else if (keyBuf.length === 1) { if (chDisp) chDisp.innerText = keyBuf + "-"; if (mhzDisp) { mhzDisp.innerText = "ENTER DIGIT 2..."; mhzDisp.style.color = "#ffff00"; } }
-        else { if (chDisp) chDisp.innerText = ch; if (mhzDisp) { mhzDisp.innerText = (freqs[ch] || "---.---") + " MHz"; mhzDisp.style.color = "#00ff00"; } }
+        // --- MULTIFUNKTIONALE ANZEIGE-WEICHE (KANAL V S. VFO) ---
+        if (data.SIMULATION === true) { 
+            if (chDisp) chDisp.innerText = "XX"; 
+            if (mhzDisp) { mhzDisp.innerText = "SIMULATION / NO DEVICE"; mhzDisp.style.color = "#ff3333"; } 
+        }
+        else if (currentMode === "PA") { 
+            if (chDisp) chDisp.innerText = "--"; 
+            if (mhzDisp) { mhzDisp.innerText = "PA DEV. VOLUME"; mhzDisp.style.color = "#00ff00"; } 
+        }
+        // Fall 1: User tippt gerade aktiv eine lange VFO-Frequenz ein (Länge 3 bis 6)
+        else if (keyBuf.length >= 3) {
+            if (chDisp) chDisp.innerText = "--";
+            if (mhzDisp) {
+                mhzDisp.innerText = keyBuf.padEnd(7, "_") + " kHz";
+                mhzDisp.style.color = "#ffff00"; // Gelb signalisiert "Eingabe läuft"
+            }
+        }
+        // Fall 2: User tippt die erste Ziffer für einen normalen CB-Kanal
+        else if (keyBuf.length === 1) { 
+            if (chDisp && !chDisp.classList.contains('vfo-switching')) chDisp.innerText = keyBuf + "-"; 
+            if (mhzDisp) { mhzDisp.innerText = "ENTER DIGIT 2 OR FREQ..."; mhzDisp.style.color = "#ffff00"; } 
+        }
+        // Fall 3: Normaler Betriebszustand (VFO aktiv oder CB-Kanal)
+        else { 
+            // --- NEU: IM VFO-BAND, ZEIGT IMMER DIE EXAKTE FREQUENZ ---
+            if (data.CURRENT_BAND === "VFO") {
+                if (data.KEY_BUF === '' && chDisp) {
+                    chDisp.classList.remove('vfo-switching');
+                }
+
+                // Zeige den Kanal an, AUSSER der OM lässt gerade die gelbe Vorschau blinken!
+                if (chDisp && !chDisp.classList.contains('vfo-switching')) {
+                    chDisp.innerText = (ch == "00") ? "--" : ch;
+                }
+                
+                if (mhzDisp) {
+                    let rawVfo = data.VFO_FREQ || 27555000;
+                    let mhzPart = Math.floor(rawVfo / 1000000);
+                    let khzPart = String(Math.floor((rawVfo % 1000000) / 10)).padStart(5, '0');
+                    
+                    // Formatiert auf volle 5 Nachkommastellen: z.B. 27.404.60 MHz
+                    mhzDisp.innerText = `${mhzPart}.${khzPart.substring(0,3)}.${khzPart.substring(3,5)} MHz`;
+                    
+                    // Optisches Schmankerl: Cyan für freie Frequenz, helles Grün-Blau wenn ein CB-Kanal getroffen wurde
+                    mhzDisp.style.color = (ch == "00") ? "#00ffff" : "#00ffaa"; 
+                }
+            } 
+            // --- KLASSISCHER CB-FUNK-MODUS (HIER BLEIBT ALLES BEIM ALTEN) ---
+            else {
+                if (chDisp) chDisp.innerText = ch; 
+                if (mhzDisp) { 
+                    mhzDisp.innerText = (freqs[ch] || "---.---") + " MHz"; 
+                    mhzDisp.style.color = "#00ff00"; 
+                } 
+            }
+        }
 
         if (document.getElementById('modeName')) document.getElementById('modeName').innerText = data.MODE;
         const btn = document.getElementById('pttBtn'); const stat = document.getElementById('pttStat'); const sBtn = document.getElementById('scanBtn');
@@ -553,25 +642,6 @@
 
         const lockInd = document.getElementById('lockIndicator'); if (lockInd) { lockInd.style.color = isWebUILocked ? "#ff8800" : "#333"; lockInd.style.opacity = isWebUILocked ? "1" : "0.5"; }
 
-        const allButtons = document.querySelectorAll('.ctrl-btn, .channel-selectors button, .controls button, .keypad button, .keypad-wrapper button, button[onclick]');
-        const sqBtn = document.getElementById('sqResetBtn'); 
-
-        if (currentSqTimeout > 0) {
-            allButtons.forEach(b => { b.disabled = true; b.style.opacity = "0.4"; });
-            if (sqBtn) { sqBtn.innerText = `RESET (${currentSqTimeout}s)`; sqBtn.style.color = "#ff3333"; sqBtn.style.opacity = "1"; }
-        } else if (currentAsqTimeout > 0 || currentMuteTimeout > 0) {
-            allButtons.forEach(b => { b.disabled = true; b.style.opacity = "0.4"; });
-        } else if (isWebUILocked) {
-            if (sqBtn) { sqBtn.innerText = "A/SQ Res."; sqBtn.style.color = ""; }
-            allButtons.forEach(b => { b.style.opacity = ""; b.disabled = !(b.getAttribute('onclick') || '').includes('LOCKDEV'); });
-        } else if (currentMode === "PA") {
-            allButtons.forEach(b => { const oc = b.getAttribute('onclick') || ''; b.disabled = !(oc === "send('P')" || oc === "send('M')"); });
-        } else {
-            if (sqBtn) { sqBtn.innerText = "A/SQ Res."; sqBtn.style.color = ""; }
-            allButtons.forEach(b => { b.disabled = false; b.style.opacity = ""; });
-            if (asqBtn && (currentMode !== "AM" && currentMode !== "FM")) asqBtn.disabled = true;
-        }
-
         const btnRec = document.getElementById('btn-rec'); const btnCqRec = document.getElementById('btn-cqrec');
         if (data.AUDIO_RECORDING === true) { if (btnRec) btnRec.classList.add('recording-active'); if (btnCqRec) btnCqRec.classList.add('recording-active'); }
         else { if (btnRec) btnRec.classList.remove('recording-active'); if (btnCqRec) btnCqRec.classList.remove('recording-active'); }
@@ -589,16 +659,38 @@
         const chUpBtn = document.querySelector('button[onclick="send(\'U\')"]'); const chDnBtn = document.querySelector('button[onclick="send(\'D\')"]');
         if (chUpBtn && chDnBtn && !isWebUILocked) { if (clarTimer || (data.CLAR_STEP && data.CLAR_STEP !== "STEP") || currentSqTimeout > 0 || currentAsqTimeout > 0 || currentMuteTimeout > 0) { chUpBtn.disabled = true; chDnBtn.disabled = true; } else { chUpBtn.disabled = false; chDnBtn.disabled = false; } }
         if (data.PTT_HOTKEY !== undefined) radioConfigGlobal.ptt_hotkey = data.PTT_HOTKEY;
+        updateUIState();
     }
 
     function updateUIState() {
         const allButtons = document.querySelectorAll('.ctrl-btn, .channel-selectors button, .controls button, .keypad button, .keypad-wrapper button, button[onclick]');
         if (currentSqTimeout > 0 || currentAsqTimeout > 0 || currentMuteTimeout > 0 || isWebUIBusy === true) {
             allButtons.forEach(b => { b.disabled = true; if (currentSqTimeout > 0) b.style.opacity = "0.4"; });
-        } else if (!isWebUILocked && currentMode !== "PA") {
+        } else {
             allButtons.forEach(b => {
-                const oc = b.getAttribute('onclick') || ''; if (oc.includes('CLARUP') || oc.includes('CLARDN')) return;
+                const oc = b.getAttribute('onclick') || ''; 
+                if (oc.includes('CLARUP') || oc.includes('CLARDN')) return;
                 if (oc.includes('CLARHZ') && (currentMode !== "CW" && currentMode !== "USB" && currentMode !== "LSB")) { b.disabled = true; return; }
+                
+                // 1. GEMEINSAME SPERRE FÜR SCAN UND MW IM VFO-MODUS
+                if (currentBandGlobal === "VFO" && (oc.includes('SSCAN') || oc.includes('MW_TOGGLE'))) {
+                    b.disabled = true;
+                    b.style.opacity = "0.4";
+                    return;
+                }
+
+                // 2. RETTUNG DER MODE-TASTE IM PA-MODUS FÜR DEN VFO
+                if (currentMode === "PA") {
+                    if (oc === "send('P')" || oc === "send('M')") {
+                        b.disabled = false;
+                        b.style.opacity = "";
+                    } else {
+                        b.disabled = true;
+                        b.style.opacity = "0.4";
+                    }
+                    return;
+                }
+
                 b.disabled = false; b.style.opacity = "";
             });
         }
@@ -606,12 +698,53 @@
 
     function send(cmd) { 
         if (isWebUILocked && cmd !== 'LOCKDEV') return;
-        if (cmd !== 'STATUS' && cmd !== 'ASQ_ON_OFF' && cmd !== 'MUTECOMBBTN' && cmd !== 'FULL_ASQ_SQ_SYNC') { if (currentSqTimeout > 0 || currentAsqTimeout > 0 || currentMuteTimeout > 0) return; }
+
+        // --- DER INTERNE TÜRSTEHER FÜR DIE ERSTE '9' IM CB-MODUS ---
+        if (cmd.startsWith('K') && currentBandGlobal !== "VFO") {
+            let digit = cmd.substring(1);
+            let dispText = document.getElementById('chDisp').innerText;
+            if (!dispText.includes('-') && dispText !== '--' && digit === '9') {
+                console.warn("[TÜRSTEHER VETO] Erste Ziffer 9 im CB-Modus blockiert!");
+                return;
+            }
+        }
+
+        if (cmd !== 'STATUS' && cmd !== 'ASQ_ON_OFF' && cmd !== 'MUTECOMBBTN' && cmd !== 'FULL_ASQ_SQ_SYNC') { 
+            if (currentSqTimeout > 0 || currentAsqTimeout > 0 || currentMuteTimeout > 0) return; 
+        }
         if (cmd === 'ASQ_ON_OFF') { currentAsqTimeout = 2; updateUIState(); }
         if (cmd === 'MUTECOMBBTN') { currentMuteTimeout = 2; updateUIState(); }
         if (cmd === 'FULL_ASQ_SQ_SYNC') { currentSqTimeout = 25; updateUIState(); }
+        
         isWebUIBusy = true; updateUIState();
-        fetch('/api/cmd/' + cmd).then(r => r.json()).then(data => { updateUI(data); isWebUIBusy = false; updateUIState(); if (webuiQueue.length > 0) send(webuiQueue.shift()); }).catch(err => { isWebUIBusy = false; updateUIState(); if (webuiQueue.length > 0) send(webuiQueue.shift()); });
+        
+        const chDisp = document.getElementById('chDisp');
+        let dispText = chDisp ? chDisp.innerText : '';
+        
+        // --- LOGIK-FIX: WENN DIE ZWEITE ZIFFER IM VFO GEWÄHLT WIRD ---
+        if (cmd.startsWith('K') && dispText.includes('-') && currentBandGlobal === "VFO") {
+            const naechsteZiffer = cmd.substring(1);
+            if (chDisp) {
+                chDisp.innerText = dispText.replace('-', naechsteZiffer); // Zeige z.B. sofort "27"
+                chDisp.classList.add('vfo-switching');                  // Starte das Dauerblinken
+            }
+        }
+
+        fetch('/api/cmd/' + cmd).then(r => r.json()).then(data => { 
+            // WICHTIG: Wir löschen das Blinken NUR DANN, wenn der Key-Puffer im Backend wieder leer ist!
+            // Solange das Backend die 2 Sekunden abwartet, bleibt das Display im Blinkmodus gesperrt!
+            if (data.KEY_BUF === '' || data.CURRENT_BAND !== "VFO") {
+                if (chDisp) chDisp.classList.remove('vfo-switching');
+            }
+            
+            updateUI(data); 
+            isWebUIBusy = false; updateUIState(); 
+            if (webuiQueue.length > 0) send(webuiQueue.shift()); 
+        }).catch(err => { 
+            if (chDisp) chDisp.classList.remove('vfo-switching');
+            isWebUIBusy = false; updateUIState(); 
+            if (webuiQueue.length > 0) send(webuiQueue.shift()); 
+        });
     }
 
     function handleClarClick(cmd) {
@@ -668,8 +801,27 @@
     if (sB) { sB.addEventListener('mousedown', startS); sB.addEventListener('mouseup', stopS); sB.addEventListener('mouseleave', stopS); sB.addEventListener('touchstart', startS, { passive: true }); sB.addEventListener('touchend', stopS); }
 
     function submitConfigOverride() {
-        const payload = { toggle_vox: document.getElementById('tog_vox').checked, toggle_mute: document.getElementById('tog_mute').checked, toggle_asq: document.getElementById('tog_asq').checked, toggle_lock: document.getElementById('tog_lock').checked };
-        fetch('/api/config/override', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }).then(r => r.json()).then(data => { updateUI(data); document.getElementById('tog_vox').checked = false; document.getElementById('tog_mute').checked = false; document.getElementById('tog_asq').checked = false; document.getElementById('tog_lock').checked = false; alert("Die asynchronen Zustände wurden erfolgreich invertiert!"); });
+        const payload = { 
+            toggle_vox: document.getElementById('tog_vox').checked, 
+            toggle_mute: document.getElementById('tog_mute').checked, 
+            toggle_asq: document.getElementById('tog_asq').checked, 
+            toggle_lock: document.getElementById('tog_lock').checked,
+            force_mode: document.getElementById('force_mode_select').value
+        };
+        
+        fetch('/api/config/override', { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify(payload) 
+        }).then(r => r.json()).then(data => { 
+            updateUI(data); 
+            document.getElementById('tog_vox').checked = false; 
+            document.getElementById('tog_mute').checked = false; 
+            document.getElementById('tog_asq').checked = false; 
+            document.getElementById('tog_lock').checked = false; 
+            document.getElementById('force_mode_select').value = "KEEP";
+            alert("Die asynchronen Zustände und Modulation wurden erfolgreich kalibriert!"); 
+        });
     }
 
     function pollStatus() { fetch('/api/cmd/STATUS').then(r => r.json()).then(data => { updateUI(data); setTimeout(pollStatus, 850); }).catch(e => { setTimeout(pollStatus, 1500); }); }
