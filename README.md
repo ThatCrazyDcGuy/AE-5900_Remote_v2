@@ -160,8 +160,18 @@ They serve merely as an example here.
 
 #### Hamlib / Rigctl / Openwebrx setup
 
+- Tutorial AE5900_REMOTE_V2: Activate VFO on device and WebUI.
 
-- settings/general in Photo description edit (hostname/ip) and add:
+[![AE5900 Webinterface V2 ](https://img.youtube.com/vi/Qk8EmSfFJvY/0.jpg)](https://www.youtube.com/watch?v=Qk8EmSfFJvY)
+
+
+- Tutorial AE5900_REMOTE_V2: Setup and use Openwebrx to control ae5900
+
+
+[![AE5900 Webinterface V2 ](https://img.youtube.com/vi/0zt2-Wdh3UA/0.jpg)](https://www.youtube.com/watch?v=0zt2-Wdh3UA)
+
+
+- Add PTT Code to openwebrx settings/general in Photo description edit (hostname/ip) and add:
 
 ```bash
 <script type="text/javascript">
