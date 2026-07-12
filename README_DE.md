@@ -36,6 +36,7 @@ Flexible Lösungen verschaffen besseren Zugang. Und genau das soll dieses Projek
 12. Physische PTT-Taste/Sondertaste am Telefon oder an der Tastatur verwenden.
 13. Ländercodes müssen im WebUI und am Gerät eingestellt werden.
 14. Hamlib/Rigctl kompatibel (flrig, fldigi, rigctl, grig, openwebrx, js8call & wsjt-cb)
+15. Wenn man sich traut das Gerät zu öffnen und zu löten ist nun S-METER per Bluetooth möglich
 
 ![AE5900_Remote_v2](/pictures/webui_last.jpg)
 
