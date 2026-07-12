@@ -244,7 +244,40 @@ if (!document.getElementById('owrx-cat-ptt')) {
 
 ![AE5900_Remote_v2](/pictures/owrx3.png)
 
-It's a good idea to run a WebSDR at home to check your installation if necessary (channel/modulation).
+
+### The bluetooth s-meter part // device mod needed
+
+I was able to find the pinout for external s-meter.
+Instead of using another wire/output/plug i decided to use a esp32 wroom and now we have a s-meter ober bt.
+
+Lets see some photos and screenshots here:
+
+![AE5900_Remote_v2](/pictures/bt-smeter.png)
+
+![AE5900_Remote_v2](/pictures/bt-arduino.png)
+
+![AE5900_Remote_v2](/pictures/bt-esp32device.png)
+
+![AE5900_Remote_v2](/pictures/bt-soldering0.png)
+
+![AE5900_Remote_v2](/pictures/bt-soldering1.png)
+
+![AE5900_Remote_v2](/pictures/bt-soldering2.png)
+
+Code is available in the ino folder.
+
+Pair device to you raspi/host by bluetoothctl / pair / trust / connect
+
+Run once:
+
+sudo rfcomm bind rfcomm0 EC:E3:34:46:D8:7E <- use your own mac here
+
+echo "$USER ALL=(ALL) NOPASSWD: /usr/bin/rfcomm" | sudo tee /etc/sudoers.d/ae5900_rfcomm && sudo chmod 0440 /etc/sudoers.d/ae5900_rfcomm
+
+Have fun!
+
+
+### It's a good idea to run a WebSDR at home to check your installation if necessary (channel/modulation).
 A good WebSDR can be easily set up with OpenWebRX, a Raspberry Pi, an RTL-SDR dongle (e.g., RTL-SDR Blog V3 or V4 / Nooelec NESDR V5), and an antenna.
 
 Check out OpenwebrxPlus: https://luarvique.github.io/ppa/ RTL-SDR Blog v4: https://www.rtl-sdr.com/v4/
@@ -257,7 +290,13 @@ Check out OpenwebrxPlus: https://luarvique.github.io/ppa/ RTL-SDR Blog v4: https
 
 ### Version Info & Changelog (always perform updates with 'git pull')
 
-Current: V-090726 i3/a6 B-VFO
+Current: V-120726 BTVO
+
+1. S-Meter over BT option
+2. More stable VFO
+3. CH50 bugfix
+
+Previous version: V-090726 i3/a6 B-VFO
 
 1. VFO Mode added.
 2. Video tutorials added
