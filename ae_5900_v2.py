@@ -49,11 +49,6 @@ for i in range(1, 41):
     BASE_UK[str(i).zfill(2)] = f"{uk_freq:.5f}"
 
 
-#BASE_UK = dict(BASE_EU) # 1-40 ist normales EU-Raster
-#for i in range(1, 41):
-#    # Die UK-Frequenzen starten bei 27.60125 MHz und steigen im 10-kHz-Schritt
-#    uk_freq = 27.60125 + (i - 1) * 0.010
-#    BASE_UK[str(40 + i)] = f"{uk_freq:.5f}"
 
 bandMatrices = {"EU": BASE_EU, "DE": BASE_DE, "UK": BASE_UK, "PL": BASE_PL_NULL, "IN": BASE_EU, "EC": BASE_EU, "VFO": BASE_EU}
 
@@ -146,6 +141,7 @@ class RadioInterface:
         self.macro_active = False
         self.current_ch = self.config.get("last_ch", 1)
         self.mode_idx = self.config.get("last_mode", 2)
+        self.config["bt_mac_address"] = self.config.get("bt_mac_address", "00:00:00:00:00:00")
         self.key_input_start_time = 0
         self.last_ptt_release_time = 0
         self.squelch_timeout_until = 0.0
@@ -156,7 +152,22 @@ class RadioInterface:
         # --- NEU: SPEICHER FÜR DEN AKTUELLEN VFO-ZUSTAND ---
         self.vfo_freq = self.config.get("vfo_freq", 27555000)
         self.vfo_step = self.config.get("vfo_step", 1000)
+        self.owrx_rssi_live = 0
+        self.rssi_s0_voltage_val = 62    # Der rohe Wert vom ESP32, wenn die Albrecht S0 anzeigt (~0.05V)
+        self.rssi_max_voltage_val = 7020 # Der rohe Wert vom ESP32, wenn die Albrecht S9+30 anzeigt (~3.00V)
         
+        try:
+            mac = self.config.get("bt_mac_address", "00:00:00:00:00:00")
+            if mac and mac != "00:00:00:00:00:00":
+                subprocess.run(["sudo", "rfcomm", "release", "rfcomm0"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                subprocess.Popen(["sudo", "rfcomm", "bind", "rfcomm0", mac, "1"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                print(f"[BLUETOOTH INIT] Automatische Brücke zu {mac} initiiert.")
+            else:
+                print("[BLUETOOTH INIT] Keine gültige MAC-Adresse hinterlegt. Überspringe automatischen Bind.")
+        except Exception as e:
+            print(f"[BLUETOOTH INIT] Fehler beim System-Bind: {e}")
+        # =========================================================================
+
         threading.Thread(target=self.hamlib_emulator_task, daemon=True).start()
         threading.Thread(target=self.sync_radio_to_hamlib_loop, daemon=True).start()
 
@@ -195,6 +206,7 @@ class RadioInterface:
             "clar_step": "STEP", "clar_offsets": {str(ch).zfill(2): 0 for ch in range(1, 41)},
             "ptt_hotkey": "F6", "current_beep": "None", "roger_beep_enabled": True, "max_sq_steps": 80, 
             "max_asq_steps": 9, "current_sq_level": 0, "current_asq_level": 1, "full_sync_active": False,
+            "bt_mac_address": "00:00:00:00:00:00",
             
             # --- NEU: VFO DEFAULTS FÜR DEN HARDWARE-SYNC ---
             "vfo_freq": 27555000,      # Default Startfrequenz in Hz (27.555 MHz)
@@ -501,7 +513,6 @@ class RadioInterface:
                                         self.save_config()
                                         self.forward_to_real_hamlib(f"F {target_hz}\n")
                                         
-                                        # Jage die 7-stellige Frequenzkette direkt an die serielle Leitung!
                                         if self.ser:
                                             hardware_vfo_string = str(int(target_hz / 10)).zfill(7)
                                             print(f"[HAMLIB VFO] Wasserfall setzt Frequenz: {target_hz} Hz -> Sende Kette '{hardware_vfo_string}'")
@@ -516,9 +527,7 @@ class RadioInterface:
                                         try: socketio.emit('status', get_current_status_dict())
                                         except: pass
                                 
-                                # --- NEU: Absolut präziser String-Vergleich verhindert mathematische Hänger ---
                                 else:
-                                    # Wir wandeln die vom SDR/Hamlib kommende Frequenz sauber in ein MHz-String-Format um (z.B. 26655000 Hz -> "26.655")
                                     target_mhz_str = f"{target_hz / 1_000_000:.3f}"
                                     
                                     if c_band == "UK":
@@ -584,8 +593,7 @@ class RadioInterface:
                 print(f"[CAT-PROXY ERROR] Fehler im Verbindungs-Thread: {e}")
                 break
         client_socket.close()
-        
-
+            
     def heartbeat_task(self):
         while self.ser:
             try:
@@ -593,7 +601,8 @@ class RadioInterface:
                     with self.lock:
                         self.ser.write(bytes.fromhex("41 00 00 00 82 00 00 06"))
                         time.sleep(0.03)
-                        status = bytes([0xAA, 0x53, 0, 0, 0, 0, 0, 0, 0, 0, self.current_ch + 15, 0, 0, 1, 0, 0, 0x06])
+                        # KORREKTUR: Wir senden stur Kanal 1 (1 + 15 = 16), damit NIEMALS die kritische 0x41 (Kanal 50) im Byte-Stream auftaucht!
+                        status = bytes([0xAA, 0x53, 0, 0, 0, 0, 0, 0, 0, 0, 16, 0, 0, 1, 0, 0, 0x06])
                         self.ser.write(status)
             except: break
             time.sleep(0.6)
@@ -1928,6 +1937,7 @@ def api_cmd(cmd):
             if zeit_seit_letzter_taste >= 10.0:
                 print(f"[CB TIMEOUT] Unvollständige Kanaleingabe '{radio.key_buffer}' nach 10s Inaktivität verworfen.")
                 radio.key_buffer = ""
+                
 
     current_ch_str = str(radio.current_ch).zfill(2)
     current_channel_offset = radio.config["clar_offsets"].get(current_ch_str, 0)
@@ -1937,6 +1947,9 @@ def api_cmd(cmd):
     sq_remains = max(0, int(radio.squelch_timeout_until - now))
     asq_remains = max(0, int(radio.asq_timeout_until - now))
     mute_remains = max(0, int(radio.mute_timeout_until - now))
+    
+    # --- HARDWARE BLUETOOTH-PEGEL REINREICHEN ---
+    test_rssi = radio.owrx_rssi_live if not radio.is_tx else 0
 
     return jsonify({
         "CH": current_ch_str, 
@@ -1947,7 +1960,8 @@ def api_cmd(cmd):
         "MUTE_ENABLED": radio.config.get("mute_enabled", False), 
         "ASQ_ENABLED": radio.config.get("asq_enabled", False),
         "REMAINING": max(0, rem), 
-        "BUSY": radio.is_rx, 
+        "BUSY": radio.is_rx,
+        "RSSI_PEGEL": radio.owrx_rssi_live if not radio.is_tx else 0,
         "SW_SCAN": radio.sw_scan_active, 
         "VOL": radio.config.get("vol", 50),
         "SKIP_PA": radio.config.get("skip_pa", False), 
@@ -2000,6 +2014,9 @@ def api_config_override():
             asq_remains = max(0, int(radio.asq_timeout_until - now))
             mute_remains = max(0, int(radio.mute_timeout_until - now))
             
+            # --- HARDWARE BLUETOOTH-PEGEL REINREICHEN ---
+            test_rssi = radio.owrx_rssi_live if not radio.is_tx else 0
+            
             return jsonify({
                 "CH": current_ch_str, 
                 "MODE": MODES[radio.mode_idx], 
@@ -2009,7 +2026,8 @@ def api_config_override():
                 "ASQ_ENABLED": radio.config.get("asq_enabled", False), 
                 "MUTE_ENABLED": radio.config.get("mute_enabled", False), 
                 "REMAINING": max(0, rem), 
-                "BUSY": radio.is_rx, 
+                "BUSY": radio.is_rx,
+                "RSSI_PEGEL": radio.owrx_rssi_live if not radio.is_tx else 0,
                 "SW_SCAN": radio.sw_scan_active, 
                 "VOL": radio.config.get("vol", 50), 
                 "SKIP_PA": radio.config.get("skip_pa", False), 
@@ -2037,7 +2055,6 @@ def api_config_override():
     except Exception as e: 
         return jsonify({"status": "error", "message": str(e)}), 500
 
-
 def ptt_heartbeat_watchdog(radio):
     global LAST_BROWSER_HEARTBEAT
     print("PTT Heartbeat-Waechter (30 Sek.) aktiv und synchronisiert.")
@@ -2064,6 +2081,66 @@ def ptt_heartbeat_watchdog(radio):
 
 threading.Thread(target=ptt_heartbeat_watchdog, args=(radio,), daemon=True).start()
 
+# =========================================================================
+# DIE BLUETOOTH-STEUERUNGS ROUTE (GANZ LINKS AM RAND STARTEN!)
+# =========================================================================
+@app.route('/api/bluetooth/connect')
+def api_bluetooth_connect():
+    raw_mac = request.args.get('mac', '').strip().upper().replace(':', '')
+    if len(raw_mac) == 12:
+        target_mac = ":".join(raw_mac[i:i+2] for i in range(0, 12, 2))
+    else:
+        target_mac = request.args.get('mac', '').strip().upper()
+
+    if not target_mac or target_mac == "00:00:00:00:00:00" or len(target_mac) != 17:
+        return jsonify({"status": "error", "message": "Bitte gib eine gueltige MAC-Adresse ein!"}), 400
+        
+    try:
+        with radio.lock:
+            radio.config["bt_mac_address"] = target_mac
+            radio.save_config()
+        
+        print(f"[BLUETOOTH CONTROL] Adresse {target_mac} erfolgreich in config.json gesichert.")
+        
+        subprocess.run(["sudo", "rfcomm", "release", "rfcomm0"], check=False)
+        time.sleep(0.5)
+        subprocess.Popen(["sudo", "rfcomm", "bind", "rfcomm0", target_mac, "1"])
+        
+        return jsonify({"status": "success", "message": f"Adresse gespeichert und Brücke zu {target_mac} initiiert!"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+# =========================================================================
+
+def bluetooth_rssi_receiver_worker():
+    import serial
+    bt_port = '/dev/rfcomm0'
+    print(f"[BLUETOOTH-RSSI] Klinke mich auf {bt_port} ein...")
+    while True:
+        try:
+            with serial.Serial(bt_port, 9600, timeout=1) as bt_ser:
+                print("[BLUETOOTH-RSSI] Kabellose Verbindung zum ESP32 steht!")
+                while True:
+                    line = bt_ser.readline().decode('utf-8', errors='ignore').strip()
+                    if line.isdigit():
+                        raw_adc = int(line)
+                        
+
+                        if raw_adc <= 100:
+                            min_p = 60  # Prozentwert den dein Rauschen aktuell hat
+                            max_p = 98  # Prozentwert für Vollanschlag
+                            percent = (raw_adc - min_p) / (max_p - min_p)
+                        else:
+                            min_adc = radio.rssi_min_adc
+                            max_adc = radio.rssi_max_adc
+                            percent = (raw_adc - min_adc) / (max_adc - min_adc)
+                        
+                        # Begrenzen auf saubere 0 bis 100%
+                        percent = max(0.0, min(1.0, percent))
+                        radio.owrx_rssi_live = int(percent * 100)
+        except Exception:
+            time.sleep(2.0)
+
+threading.Thread(target=bluetooth_rssi_receiver_worker, daemon=True).start()
 
 def audio_broadcast_task():
     while True:
@@ -2107,7 +2184,8 @@ def get_current_status_dict():
         "ASQ_ENABLED": radio.config.get("asq_enabled", False), 
         "MUTE_ENABLED": radio.config.get("mute_enabled", False),
         "REMAINING": max(0, rem), 
-        "BUSY": radio.is_rx, 
+        "BUSY": radio.is_rx,
+        "RSSI_PEGEL": radio.owrx_rssi_live if not radio.is_tx else 0,
         "SW_SCAN": radio.sw_scan_active, 
         "VOL": radio.config.get("vol", 50), 
         "LOCK_ENABLED": radio.config.get("lock_enabled", False), 
