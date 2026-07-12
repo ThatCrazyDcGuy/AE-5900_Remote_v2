@@ -44,7 +44,7 @@ Hier werden verschiedene Funktionen demonstriert. Die Bedienung ist über mehrer
 
 [![AE5900 Webinterface V2 TX ](https://img.youtube.com/vi/Icj-ElM95ao/0.jpg)](https://www.youtube.com/watch?v=Icj-ElM95ao)
 
-- Ein Foto vom nesten Prototyp ohne Klinkenstecker. Audio und Sterung über RJ45.
+- Ein Foto vom neusten Prototyp ohne Klinkenstecker. Audio und Sterung über RJ45.
 
 ![AE5900_Remote_v2](/pictures/v218mar2.jpeg)
 
