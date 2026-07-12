@@ -41,6 +41,46 @@
             overflow: hidden; 
             box-sizing: border-box;
         }
+        /* --- DEDENTRAT-LOOK: S-METER UNTEN ZWISCHEN SQ UND VERSION --- */
+        .s-meter-container {
+            position: absolute;
+            bottom: 10px;
+            left: 85px;           /* Startet sicher rechts neben dem SQ-Label */
+            right: 140px;          /* Endet sicher links vor dem Versions-Indikator */
+            z-index: 3;
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+        }
+        .s-meter-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.60em;     /* Extra dezent und klein */
+            color: #00ccff;
+            line-height: 1;
+            padding: 0 1px;
+        }
+        .s-meter-labels .db-red {
+            color: #ff3333;
+        }
+        .s-meter-track {
+            height: 6px;           /* Schön flach und unaufdringlich */
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 1px;
+            display: flex;
+            gap: 1px;
+            padding: 1px;
+            overflow: hidden;
+        }
+        .s-segment {
+            flex: 1;
+            height: 100%;
+            background: #222;
+            transition: background 0.05s ease;
+        }
+        .s-segment.active-cyan { background: #00ffff; box-shadow: 0 0 3px #00ffff77; }
+        .s-segment.active-red { background: #ff4400; box-shadow: 0 0 3px #ff440077; }
         #audioVisualizer { 
             position: absolute; 
             top: 0; left: 0; 
@@ -255,13 +295,30 @@
         <div id="muteIndicator" style="position: absolute; top: 10px; right: 85px; font-weight: bold; font-size: 0.9em; z-index: 3;">MUTE</div>
         <div id="lockIndicator" style="position: absolute; top: 10px; right: 125px; font-weight: bold; font-size: 0.9em; z-index: 3;">LOCK</div>
         <div id="micgainIndicator" style="position: absolute; top: 10px; left: 15px; font-weight: bold; font-size: 0.9em; z-index: 3; color: #00ff00;">MIC: <span id="displayVolDisp">--</span>%</div>
-        <div id="clarIndicator" style="position: absolute; top: 10px; left: 110px; font-weight: bold; font-size: 0.9em; z-index: 3; color: #00ff00; display: none;">CLAR: <span id="displayClarDisp">+0</span> Hz</div>
-        <div id="versionIndicator" style="position: absolute; bottom: 10px; right: 15px; font-weight: bold; font-size: 0.7em; z-index: 3; color: #ff8800;">Reload...</div>
+        <div id="modeName" style="font-weight: bold; font-size: 0.9em; color: #ff8800; position: absolute; top: 10px; right: 165px; z-index: 2;">FM</div>
+        <div id="clarIndicator" style="position: absolute; top: 10px; left: 100px; font-weight: bold; font-size: 0.9em; z-index: 3; color: #00ff00; display: none;">CLAR: <span id="displayClarDisp">+0</span> Hz</div>
+        <div id="versionIndicator" style="position: absolute; bottom: 10px; right: 10px; font-weight: bold; font-size: 0.7em; z-index: 3; color: #ff8800;">Reload...</div>
 
-        <div id="pttStat" style="font-weight:bold; color:#444; position: relative; z-index: 2;">○ RX IDLE</div>
+        <div id="pttStat" style="font-weight:bold; color:#444; position: relative; z-index: 2; margin-bottom: 25px;">○ RX IDLE</div>
+
         <div class="freq" id="chDisp">01</div>
         <div class="mhz" id="mhzDisp">26.965 MHz</div>
-        <div id="modeName" style="font-size: 1.2em; color: #888; position: relative; z-index: 2;">FM</div>
+        <!--<div id="modeName" style="font-size: 1.2em; color: #888; position: relative; z-index: 2;">FM</div>-->
+        
+        <div class="s-meter-container">
+             <!--<div class="s-meter-labels">-->
+                 <!--<span>SIG 1 . 3 . 5 . 7 . 9</span>-->
+                 <!--<span class="db-red">+30dB</span>-->
+             <!--</div>-->
+            <div class="s-meter-track" id="sMeterTrack">
+                <div class="s-segment"></div><div class="s-segment"></div><div class="s-segment"></div>
+                <div class="s-segment"></div><div class="s-segment"></div><div class="s-segment"></div>
+                <div class="s-segment"></div><div class="s-segment"></div><div class="s-segment"></div>
+                <div class="s-segment"></div><div class="s-segment"></div><div class="s-segment"></div>
+                <div class="s-segment"></div><div class="s-segment"></div><div class="s-segment"></div>
+            </div>
+        </div>
+
         <div id="sqDisplayLabel" style="position: absolute; bottom: 5px; left: 10px; font-size: 0.9em; color: #0f0;">SQ: 0%</div>
     </div>
 
@@ -408,6 +465,12 @@
                 {% endfor %}
             </select>
         </p>
+
+<p>Bluetooth S-Meter MAC: 
+            <input type="text" id="btMacInput" value="{{ config.bt_mac_address if config.bt_mac_address and config.bt_mac_address != '00:00:00:00:00:00' else '' }}" placeholder="AA:BB:CC:DD:EE:FF" style="width:160px; font-family:monospace; text-align:center;">
+            <button onclick="reconnectHardwareBluetooth()" style="padding: 2px 8px; font-size: 0.8em; background: #004444; border-color: #00ff00;">CONNECT</button>
+        </p>        
+        
     </div>
 
     <div style="border-top: 1px solid #444; margin-top: 15px; padding-top: 15px;">
@@ -496,7 +559,7 @@
             socket.on('connect', () => {
                 console.log("Socket.IO verbunden via: " + socket.io.engine.transport.name);
                 const vInd = document.getElementById('versionIndicator');
-                if (vInd) vInd.textContent = "V-090726 i3 a6 B-VFO";
+                if (vInd) vInd.textContent = "V-090726 i3/a6 VFO";
             });
 
             socket.on('audio', (data) => { 
@@ -510,7 +573,7 @@
 
             socket.on('disconnect', () => {
                 const vInd = document.getElementById('versionIndicator');
-                if (vInd) vInd.textContent = "SOCKET RECONNECTING...";
+                if (vInd) vInd.textContent = "  SOCKET RECONNECTING";
             });
         }, 400); 
     }
@@ -606,6 +669,28 @@
         if (sqLabel && data.SQ_LEVEL !== undefined && data.MAX_SQ && data.MAX_ASQ) {
             if (data.ASQ_ENABLED === true) { sqLabel.innerText = `A: ${Math.round((data.AS_LEVEL / data.MAX_ASQ) * 100)}%`; sqLabel.style.color = "#00ffff"; }
             else { sqLabel.innerText = `SQ: ${Math.round((data.SQ_LEVEL / data.MAX_SQ) * 100)}%`; sqLabel.style.color = "#00ff00"; }
+        }
+        // --- NEU: S-METER SEGMENTE DYNAMISCH ANSTEUERN ---
+        const sTrack = document.getElementById('sMeterTrack');
+        if (sTrack && data.RSSI_PEGEL !== undefined) {
+            const segments = sTrack.getElementsByClassName('s-segment');
+            // Berechne, wie viele der 15 Segmente bei dem aktuellen Prozentwert leuchten müssen
+            const activeCount = Math.round((data.RSSI_PEGEL / 100) * segments.length);
+            
+            for (let i = 0; i < segments.length; i++) {
+                if (i < activeCount) {
+                    if (i >= 9) {
+                        // Ab Segment 10 (S9 überschritten) wird es rot/orange
+                        segments[i].className = 's-segment active-red';
+                    } else {
+                        // Darunter klassisch cyan
+                        segments[i].className = 's-segment active-cyan';
+                    }
+                } else {
+                    // Ausgeschaltete Segmente dunkel lassen
+                    segments[i].className = 's-segment';
+                }
+            }
         }
 
         if (btn && stat) {
@@ -822,6 +907,37 @@
             document.getElementById('force_mode_select').value = "KEEP";
             alert("Die asynchronen Zustände und Modulation wurden erfolgreich kalibriert!"); 
         });
+    }
+
+    function reconnectHardwareBluetooth() {
+        const macField = document.getElementById('btMacInput');
+        if (!macField) return;
+        const macValue = macField.value.trim();
+        
+        if (macValue === "") {
+            alert("Bitte zuerst eine MAC-Adresse eingeben!");
+            return;
+        }
+        
+        macField.style.background = "#442200"; // Orange: "Ich arbeite..."
+        
+        fetch('/api/bluetooth/connect?mac=' + encodeURIComponent(macValue))
+            .then(r => r.json())
+            .then(data => {
+                if (data.status === "success") {
+                    macField.style.background = "#004400"; // Grün: Erfolg!
+                    console.log("BT-Status:", data.message);
+                } else {
+                    macField.style.background = "#440000"; // Rot: Fehler
+                    alert("Fehler: " + data.message);
+                }
+                setTimeout(() => { macField.style.background = "#000"; }, 2000);
+            })
+            .catch(err => {
+                macField.style.background = "#440000";
+                alert("Netzwerkfehler beim Bluetooth-Sync.");
+                setTimeout(() => { macField.style.background = "#000"; }, 2000);
+            });
     }
 
     function pollStatus() { fetch('/api/cmd/STATUS').then(r => r.json()).then(data => { updateUI(data); setTimeout(pollStatus, 850); }).catch(e => { setTimeout(pollStatus, 1500); }); }
