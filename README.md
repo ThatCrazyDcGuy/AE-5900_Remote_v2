@@ -36,7 +36,7 @@ Flexible solutions provide better access. And that's exactly what this project s
 12. Physically PTT key / Special key on phone or keyboard
 13. Country codes must be set in the web interface and on the device.
 14. Hamlib/Rigctl compatible (flrig, fldigi, rigctl, grig, openwebrx, js8call & wsjt-cb)
-15. If you decide to open and solder the device, S-METER can now be used via Bluetooth.
+15. If you decide to open and solder the device, extrenal S-METER can now be used via Bluetooth.
 
 ![AE5900_Remote_v2](/pictures/webui_last.jpg)
 
