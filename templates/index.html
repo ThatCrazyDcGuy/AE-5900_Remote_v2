@@ -44,21 +44,30 @@
         /* --- DEDENTRAT-LOOK: S-METER UNTEN ZWISCHEN SQ UND VERSION --- */
         .s-meter-container {
             position: absolute;
-            bottom: 10px;
-            left: 85px;           /* Startet sicher rechts neben dem SQ-Label */
-            right: 140px;          /* Endet sicher links vor dem Versions-Indikator */
+            bottom: 5px;          /* Von 10px auf 14px angehoben, damit nichts abgeschnitten wird */
+            left: 85px;           
+            right: 140px;          
             z-index: 3;
-            display: flex;
-            flex-direction: column;
-            gap: 1px;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 2px;
+            overflow: visible !important; /* Wichtig! */
         }
         .s-meter-labels {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.60em;     /* Extra dezent und klein */
+            display: grid !important;
+            grid-template-columns: repeat(15, 1fr) !important; 
+            font-size: 0.7em;     
             color: #00ccff;
-            line-height: 1;
-            padding: 0 1px;
+            line-height: 1.2;
+            text-align: center;
+            width: 100%;
+            margin-bottom: 1px;
+        }
+        .s-meter-labels span {
+            display: block !important;
+            width: 100%;
+            white-space: nowrap;
+            overflow: visible !important;
         }
         .s-meter-labels .db-red {
             color: #ff3333;
@@ -98,8 +107,8 @@
             font-size: 0.95em;
             z-index: 2;
         }
-        .freq { font-size: 3.5em; font-weight: bold; margin: 5px 0; transition: font-size 0.2s; }
-        .mhz { font-size: 1.1em; color: #008800; margin-bottom: 10px; }
+        .freq { font-size: 3.5em; font-weight: bold; margin: 5px 0; transition: font-size 0.2s; margin-bottom: 5px; }
+        .mhz { font-size: 1.1em; color: #008800; margin-bottom: 30px; }
         
         .controls { 
             display: grid; 
@@ -297,19 +306,20 @@
         <div id="micgainIndicator" style="position: absolute; top: 10px; left: 15px; font-weight: bold; font-size: 0.9em; z-index: 3; color: #00ff00;">MIC: <span id="displayVolDisp">--</span>%</div>
         <div id="modeName" style="font-weight: bold; font-size: 0.9em; color: #ff8800; position: absolute; top: 10px; right: 165px; z-index: 2;">FM</div>
         <div id="clarIndicator" style="position: absolute; top: 10px; left: 100px; font-weight: bold; font-size: 0.9em; z-index: 3; color: #00ff00; display: none;">CLAR: <span id="displayClarDisp">+0</span> Hz</div>
-        <div id="versionIndicator" style="position: absolute; bottom: 10px; right: 10px; font-weight: bold; font-size: 0.7em; z-index: 3; color: #ff8800;">Reload...</div>
+        <div id="versionIndicator" style="position: absolute; bottom: 5px; right: 10px; font-weight: bold; font-size: 0.7em; z-index: 3; color: #ff8800;">Reload...</div>
 
         <div id="pttStat" style="font-weight:bold; color:#444; position: relative; z-index: 2; margin-bottom: 25px;">○ RX IDLE</div>
 
         <div class="freq" id="chDisp">01</div>
         <div class="mhz" id="mhzDisp">26.965 MHz</div>
-        <!--<div id="modeName" style="font-size: 1.2em; color: #888; position: relative; z-index: 2;">FM</div>-->
         
         <div class="s-meter-container">
-             <!--<div class="s-meter-labels">-->
-                 <!--<span>SIG 1 . 3 . 5 . 7 . 9</span>-->
-                 <!--<span class="db-red">+30dB</span>-->
-             <!--</div>-->
+             <div class="s-meter-labels">
+                 
+                 <span>0</span><span>.</span><span>1</span><span>.</span><span>3</span><span>.</span><span>5</span><span>.</span><span>7</span><span>.</span>
+                 
+                 <span class="db-red">9</span><span class="db-red">.</span><span class="db-red">+10</span><span class="db-red">.</span><span class="db-red">+30</span><span></span>
+             </div>
             <div class="s-meter-track" id="sMeterTrack">
                 <div class="s-segment"></div><div class="s-segment"></div><div class="s-segment"></div>
                 <div class="s-segment"></div><div class="s-segment"></div><div class="s-segment"></div>
@@ -417,29 +427,29 @@
 
         {% if config.active_p_block == 'custom' %}
             <div style="border-left: 2px solid #00ff00; padding-left: 10px; margin: 10px 0;">
-                <p style="color: #00ff00; font-weight: bold; margin-bottom: 5px;"> Knopf 1 (z.B. Antenne 1):</p>
+                <p style="color: #00ff00; font-weight: bold; margin-bottom: 5px;"> Button 1 (e.g. Antenna 1):</p>
                 <p>Label: <input type="text" value="{{config.cust_lbl_1}}" onchange="setCfg('CUST_LBL_1', this.value)" style="width:100px;">
-                   Befehl: <input type="text" value="{{config.cust_cmd_1}}" onchange="setCfg('CUST_CMD_1', this.value)" style="width:160px;" placeholder="z.B. curl ..."></p>
+                  Terminal command: <input type="text" value="{{config.cust_cmd_1}}" onchange="setCfg('CUST_CMD_1', this.value)" style="width:160px;" placeholder="z.B. curl ..."></p>
             </div>
             <div style="border-left: 2px solid #00ff00; padding-left: 10px; margin: 10px 0;">
-                <p style="color: #00ff00; font-weight: bold; margin-bottom: 5px;"> Knopf 2 (z.B. Antenne 2):</p>
+                <p style="color: #00ff00; font-weight: bold; margin-bottom: 5px;"> Button 2 (e.g. Antenna 2):</p>
                 <p>Label: <input type="text" value="{{config.cust_lbl_2}}" onchange="setCfg('CUST_LBL_2', this.value)" style="width:100px;">
-                   Befehl: <input type="text" value="{{config.cust_cmd_2}}" onchange="setCfg('CUST_CMD_2', this.value)" style="width:160px;"></p>
+                   Terminal command: <input type="text" value="{{config.cust_cmd_2}}" onchange="setCfg('CUST_CMD_2', this.value)" style="width:160px;"></p>
             </div>
             <div style="border-left: 2px solid #00ff00; padding-left: 10px; margin: 10px 0;">
-                <p style="color: #00ff00; font-weight: bold; margin-bottom: 5px;"> Knopf 3 (z.B. System-Reboot):</p>
+                <p style="color: #00ff00; font-weight: bold; margin-bottom: 5px;"> Button 3 (e.g. System-Reboot):</p>
                 <p>Label: <input type="text" value="{{config.cust_lbl_3}}" onchange="setCfg('CUST_LBL_3', this.value)" style="width:100px;">
-                   Befehl: <input type="text" value="{{config.cust_cmd_3}}" onchange="setCfg('CUST_CMD_3', this.value)" style="width:160px;"></p>
+                   Terminal command: <input type="text" value="{{config.cust_cmd_3}}" onchange="setCfg('CUST_CMD_3', this.value)" style="width:160px;"></p>
             </div>
             <div style="border-left: 2px solid #00ff00; padding-left: 10px; margin: 10px 0;">
-                <p style="color: #00ff00; font-weight: bold; margin-bottom: 5px;"> Knopf 4:</p>
+                <p style="color: #00ff00; font-weight: bold; margin-bottom: 5px;"> Button 4:</p>
                 <p>Label: <input type="text" value="{{config.cust_lbl_4}}" onchange="setCfg('CUST_LBL_4', this.value)" style="width:100px;">
-                   Befehl: <input type="text" value="{{config.cust_cmd_4}}" onchange="setCfg('CUST_CMD_4', this.value)" style="width:160px;"></p>
+                   Terminal command: <input type="text" value="{{config.cust_cmd_4}}" onchange="setCfg('CUST_CMD_4', this.value)" style="width:160px;"></p>
             </div>
         {% endif %}
 
         <p>Scan Speed (ms): <input type="number" id="scanSpeedInput" value="{{ config.scan_speed * 1000 | int }}" style="width: 70px;" onchange="send('SETSPEED_' + this.value)"> </p>
-        <p>VFO Schrittweite (Step): 
+        <p>VFO freq. step: 
             <select onchange="fetch('/api/cmd/SET_VFO_STEP?val=' + this.value)" style="background: #333; color: white; border: 1px solid #555; padding: 3px; border-radius: 3px;">
                 <option value="10" {% if config.vfo_step == 10 %}selected{% endif %}>10 Hz</option>
                 <option value="100" {% if config.vfo_step == 100 %}selected{% endif %}>100 Hz</option>
@@ -475,7 +485,7 @@
 
     <div style="border-top: 1px solid #444; margin-top: 15px; padding-top: 15px;">
         <strong style="color: #0f0;">🔧 Status correction override:</strong>
-        <p style="font-size: 0.85em; color: #888; margin-top: 5px;">Select the checkbox or modulation to force synchronisation...</p>
+        <p style="font-size: 0.85em; color: #888; margin-top: 5px;">If you face some asyncron issues, e.g. ASQ is of but the WebUI shows on or you're on FM but the WebUI shows USB, select the checkbox or modulation to force synchronisation...</p>
         
         <table style="width: 100%; color: #aaa; font-size: 0.95em; margin-bottom: 10px;">
             <tr><td>VOX - Reverse status:</td><td style="text-align: right;"><input type="checkbox" id="tog_vox"></td></tr>
@@ -487,7 +497,7 @@
                 <td>MODE - Correct status:</td>
                 <td style="text-align: right;">
                     <select id="force_mode_select" style="background: #222; color: #0f0; border: 1px solid #444; font-family: monospace; padding: 2px;">
-                        <option value="KEEP" selected>-- Unverändert --</option>
+                        <option value="KEEP" selected>-- SELECT --</option>
                         <option value="PA">PA</option>
                         <option value="CW">CW</option>
                         <option value="FM">FM</option>
@@ -559,7 +569,7 @@
             socket.on('connect', () => {
                 console.log("Socket.IO verbunden via: " + socket.io.engine.transport.name);
                 const vInd = document.getElementById('versionIndicator');
-                if (vInd) vInd.textContent = "V-120726 BTVO";
+                if (vInd) vInd.textContent = "V-130726 SMT";
             });
 
             socket.on('audio', (data) => { 
@@ -867,7 +877,7 @@
 
     function changePTTHotkey() {
         const inputField = document.getElementById('pttHotkeyInput'); if (!inputField) return;
-        inputField.value = "DRUECKE TASTE..."; inputField.style.background = "#440000";
+        inputField.value = "PRESS BUTTON..."; inputField.style.background = "#440000";
         const captureHotkey = (e) => {
             e.preventDefault(); e.stopPropagation(); let newKey = e.key; if (["Escape", "Enter", "Tab"].includes(newKey)) newKey = "F6";
             inputField.value = newKey; inputField.style.background = "#000"; radioConfigGlobal.ptt_hotkey = newKey;
@@ -905,7 +915,7 @@
             document.getElementById('tog_asq').checked = false; 
             document.getElementById('tog_lock').checked = false; 
             document.getElementById('force_mode_select').value = "KEEP";
-            alert("Die asynchronen Zustände und Modulation wurden erfolgreich kalibriert!"); 
+            alert("The asynchronous states and modulation have been successfully calibrated!"); 
         });
     }
 
