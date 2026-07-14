@@ -22,6 +22,8 @@ Flexible Lösungen verschaffen besseren Zugang. Und genau das soll dieses Projek
 
 - Ein Screenshot vom aktuellen UI, im Browser, auf dem Smartphone
 
+![AE5900_Remote_v2](/pictures/webui_last.jpg)
+  
 1. Visuelles Audiofeedback
 2. Lautstärke des Mikrofons regelbar
 3. Optimierte Scan-Funktion mit regelbarer Geschwindigkeit
@@ -38,11 +40,10 @@ Flexible Lösungen verschaffen besseren Zugang. Und genau das soll dieses Projek
 14. Hamlib/Rigctl kompatibel (flrig, fldigi, rigctl, grig, openwebrx, js8call & wsjt-cb).
 15. Wenn man sich traut das Gerät zu öffnen und zu löten ist nun ein extrenes S-METER per Bluetooth möglich.
 
-![AE5900_Remote_v2](/pictures/webui_last.jpg)
 
-Hier werden verschiedene Funktionen demonstriert. Die Bedienung ist über mehrere Geräte gleichzeitig möglich. Außerdem sind rigctl und hamlib implementiert. Der hier gezeigte Code wird bereinigt und anschließend veröffentlicht.
+Hier werden verschiedene Funktionen demonstriert. Die Bedienung ist über mehrere Softwareprogramme und Geräte gleichzeitig möglich. Außerdem sind rigctl und hamlib sowie ein Bluetooth-S-Meter implementiert.
 
-[![AE5900 Webinterface V2 TX ](https://img.youtube.com/vi/Icj-ElM95ao/0.jpg)](https://www.youtube.com/watch?v=Icj-ElM95ao)
+[![AE5900 Webinterface V2 ](https://img.youtube.com/vi/0-UP0ARVENU/0.jpg)](https://www.youtube.com/watch?v=0-UP0ARVENU)
 
 - Ein Foto vom neusten Prototyp ohne Klinkenstecker. Audio und Sterung über RJ45.
 
