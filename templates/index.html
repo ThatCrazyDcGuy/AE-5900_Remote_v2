@@ -41,12 +41,12 @@
             overflow: hidden; 
             box-sizing: border-box;
         }
-        /* --- DEDENTRAT-LOOK: S-METER UNTEN ZWISCHEN SQ UND VERSION --- */
+        
         .s-meter-container {
             position: absolute;
-            bottom: 5px;          /* Von 10px auf 14px angehoben, damit nichts abgeschnitten wird */
+            bottom: 5px;          
             left: 85px;           
-            right: 140px;          
+            right: 110px;          
             z-index: 3;
             display: flex !important;
             flex-direction: column !important;
@@ -73,7 +73,7 @@
             color: #ff3333;
         }
         .s-meter-track {
-            height: 6px;           /* Schön flach und unaufdringlich */
+            height: 6px;           
             background: #111;
             border: 1px solid #333;
             border-radius: 1px;
@@ -316,9 +316,9 @@
         <div class="s-meter-container">
              <div class="s-meter-labels">
                  
-                 <span>0</span><span>.</span><span>1</span><span>.</span><span>3</span><span>.</span><span>5</span><span>.</span><span>7</span><span>.</span>
+                 <span>0</span><span>.</span><span>1</span><span>.</span><span>3</span><span>.</span><span>5</span><span>.</span><span>7</span><span>.</span><span>9</span>
                  
-                 <span class="db-red">9</span><span class="db-red">.</span><span class="db-red">+10</span><span class="db-red">.</span><span class="db-red">+30</span><span></span>
+                 <span class="db-red">+</span><span class="db-red">10</span><span class="db-red">+</span><span class="db-red">30</span><span></span>
              </div>
             <div class="s-meter-track" id="sMeterTrack">
                 <div class="s-segment"></div><div class="s-segment"></div><div class="s-segment"></div>
@@ -569,7 +569,7 @@
             socket.on('connect', () => {
                 console.log("Socket.IO verbunden via: " + socket.io.engine.transport.name);
                 const vInd = document.getElementById('versionIndicator');
-                if (vInd) vInd.textContent = "V-130726 SMT";
+                if (vInd) vInd.textContent = "V-170726 BGF";
             });
 
             socket.on('audio', (data) => { 
@@ -583,7 +583,7 @@
 
             socket.on('disconnect', () => {
                 const vInd = document.getElementById('versionIndicator');
-                if (vInd) vInd.textContent = "  SOCKET RECONNECTING";
+                if (vInd) vInd.textContent = "CONNECTING...";
             });
         }, 400); 
     }
@@ -689,8 +689,8 @@
             
             for (let i = 0; i < segments.length; i++) {
                 if (i < activeCount) {
-                    if (i >= 9) {
-                        // Ab Segment 10 (S9 überschritten) wird es rot/orange
+                    if (i >= 11) {
+                        // Ab Segment X (S9 überschritten) wird es rot/orange
                         segments[i].className = 's-segment active-red';
                     } else {
                         // Darunter klassisch cyan
@@ -768,7 +768,7 @@
                 if (oc.includes('CLARHZ') && (currentMode !== "CW" && currentMode !== "USB" && currentMode !== "LSB")) { b.disabled = true; return; }
                 
                 // 1. GEMEINSAME SPERRE FÜR SCAN UND MW IM VFO-MODUS
-                if (currentBandGlobal === "VFO" && (oc.includes('SSCAN') || oc.includes('MW_TOGGLE'))) {
+                if (currentBandGlobal === "VFO" && (oc.includes('SSCAN') || oc.includes('MW_TOGGLE') || oc.includes('CLARUP') || oc.includes('CLARDN') || oc.includes('CLARHZ') )) {
                     b.disabled = true;
                     b.style.opacity = "0.4";
                     return;
