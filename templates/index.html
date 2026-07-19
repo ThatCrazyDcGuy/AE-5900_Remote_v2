@@ -312,7 +312,7 @@
         <div id="modeName" style="font-weight: bold; font-size: 0.9em; color: #ff8800; position: absolute; top: 52px; right: 10px; z-index: 3;">FM</div>
         <div id="clarIndicator" style="position: absolute; top: 10px; left: 85px; font-weight: bold; font-size: 0.9em; z-index: 3; color: #00ff00; display: none;">CLAR:<span id="displayClarDisp">+0</span> Hz</div>
         <div id="versionIndicator" style="position: absolute; bottom: 5px; right: 10px; font-weight: bold; font-size: 0.7em; z-index: 3; color: #ff8800;">Reload...</div>
-        <div id="pttStat" style="font-weight:bold; color:#444; position: absolute; top: 52px; left: 5px; z-index: 3;">○ RX IDLE</div>
+        <div id="pttStat" style="font-weight:bold; color:#444; position: absolute; top: 52px; left: 10px; z-index: 3;">○ RX IDLE</div>
 
         <div class="freq" id="chDisp">01</div>
         <div class="mhz" id="mhzDisp">26.965 MHz</div>
@@ -710,7 +710,7 @@
         if (btn && stat) {
             if (data.PTT === "ON") { currentBarColor = 'red'; btn.style.background = "#ff0000"; btn.innerText = "TX ACTIVE (" + data.REMAINING + "s)"; stat.innerText = "● TRANSMIT"; stat.style.color = "red"; }
             else if (data.VOX_TX) { currentBarColor = 'orange'; btn.style.background = "#ff8800"; btn.innerText = "VOX TRANSMITTING"; stat.innerText = "● VOX ACTIVE"; stat.style.color = "#ff8800"; }
-            else if (data.BUSY) { currentBarColor = 'green'; btn.style.background = "#4a0000"; btn.innerText = "PTT TOGGLE"; stat.innerHTML = '<span style="color: #FFD700;">●</span> <span style="color: #00ff00;">SIGNAL DETECTED</span>'; }
+            else if (data.BUSY) { currentBarColor = 'green'; btn.style.background = "#4a0000"; btn.innerText = "PTT TOGGLE"; stat.innerHTML = '<span style="color: #FFD700;">●</span> <span style="color: #00ff00;">SIGNAL</span>'; }
             else { currentBarColor = 'green'; btn.style.background = "#4a0000"; btn.innerText = "PTT TOGGLE"; stat.innerText = "○ RX IDLE"; stat.style.color = "#444"; }
             btn.classList.toggle('active', data.PTT === "ON");
         }
