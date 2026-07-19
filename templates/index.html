@@ -101,11 +101,11 @@
         }
         #pttStat { 
             position: absolute; 
-            top: 12px; 
-            left: 0; right: 0; 
-            margin: 0 auto; 
-            font-size: 0.95em;
-            z-index: 2;
+            top: 52px;            /* Perfekt ausgemessen für die 3.5em Kanalhöhe auf dem Handy */
+            left: 5px;            /* Exakt 5px vom linken Rand des Displays */
+            font-size: 0.85em;
+            z-index: 3;
+            text-align: left;
         }
         .freq { font-size: 3.5em; font-weight: bold; margin: 5px 0; transition: font-size 0.2s; margin-bottom: 5px; }
         .mhz { font-size: 1.1em; color: #008800; margin-bottom: 30px; }
@@ -226,6 +226,10 @@
                 flex-direction: column;
                 justify-content: center;
             }
+            #pttStat {
+                top: 72px;        /* Schiebt den Status auf exakte Höhe des großen 5.5em Kanals */
+                left: 5px;        /* Bleibt stur bei den gewünschten 5px */
+            }
             
             .freq { font-size: 5.5em; margin: 5px 0; }
             .mhz { font-size: 1.4em; }
@@ -308,7 +312,9 @@
         <div id="clarIndicator" style="position: absolute; top: 10px; left: 90px; font-weight: bold; font-size: 0.9em; z-index: 3; color: #00ff00; display: none;">CLAR:<span id="displayClarDisp">+0</span> Hz</div>
         <div id="versionIndicator" style="position: absolute; bottom: 5px; right: 10px; font-weight: bold; font-size: 0.7em; z-index: 3; color: #ff8800;">Reload...</div>
 
-        <div id="pttStat" style="font-weight:bold; color:#444; position: relative; z-index: 2; margin-bottom: 25px;">○ RX IDLE</div>
+        <!--<div id="pttStat" style="font-weight:bold; color:#444; position: relative; z-index: 2; margin-bottom: 25px;">○ RX IDLE</div>-->
+        <!--<div id="pttStat" style="font-weight:bold; color:#444; position: absolute; top: 60px; left: 5px; z-index: 3;">○ RX IDLE</div>-->
+        <div id="pttStat" style="font-weight:bold; color:#444; position: absolute; top: 60px; left: 5px; z-index: 3;">○ RX IDLE</div>
 
         <div class="freq" id="chDisp">01</div>
         <div class="mhz" id="mhzDisp">26.965 MHz</div>
