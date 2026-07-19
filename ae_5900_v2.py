@@ -154,7 +154,7 @@ class RadioInterface:
         self.vfo_step = self.config.get("vfo_step", 1000)
         self.owrx_rssi_live = 0
         self.rssi_s0_voltage_val = 62    # Der rohe Wert vom ESP32, wenn die Albrecht S0 anzeigt (~0.05V)
-        self.rssi_max_voltage_val = 7020 # Der rohe Wert vom ESP32, wenn die Albrecht S9+30 anzeigt (~3.00V)
+        self.rssi_max_voltage_val = 4020 # Der rohe Wert vom ESP32, wenn die Albrecht S9+30 anzeigt (~3.00V)
         
         try:
             mac = self.config.get("bt_mac_address", "00:00:00:00:00:00")
