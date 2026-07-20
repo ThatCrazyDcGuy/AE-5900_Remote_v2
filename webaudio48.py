@@ -199,8 +199,8 @@ if __name__ == '__main__':
             cert_found = True
 
     if cert_found:
-        print("Direkt-Audio-Gateway RX 16 / TX 48 LAEUFT auf Port 5001...")
+        print("Direkt-Audio-Gateway RX 16 / TX 48 LAEUFT auf Port 5002...")
     else:
         print("[WARNUNG] Keine SSL-Zertifikate gefunden!")
 
-    socketio.run(app, host='0.0.0.0', port=5001, debug=False, **ssl_args)
+    socketio.run(app, host='0.0.0.0', port=5002, debug=False, **ssl_args)
